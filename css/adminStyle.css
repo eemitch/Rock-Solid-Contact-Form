@@ -1,0 +1,217 @@
+/* Administration Styles */
+
+.eeAdmin {
+	width: 60%;
+	min-width: 600px;
+	float: left;
+	font-size: 120%;	
+}
+
+.eeAdmin h2,
+.eeAdmin h3 {
+	clear: left;
+	width: 75%;
+}
+.eeAdmin h4 {
+	width: 58%;
+	text-align: right;
+}
+
+.eeActiveTab {
+	background: #54595f;
+	color: #FFF;
+}
+
+.eeAdmin .eeAlignRight {
+	float: right;
+	margin: 0 1em 1em 0;
+}
+
+.eeAdmin .eeAlignLeftTwoThirds {
+	float: left;
+	width: 66%;
+}
+
+.eeAdmin fieldset {
+	display: block;
+	position: relative;
+	clear: both;
+	border: 2px solid #DDD;
+	padding: 1em;
+	margin: 1em;
+	background-color: #f4f4f4;
+}
+
+.eeAdmin label, .eeAdmin span {
+	float: left;
+	clear: left;
+	width: 25%;
+	text-align: right;
+	margin-right: .5em;
+	padding: 5px;
+	margin-bottom: 1em;
+	background: #DDD;
+}
+.eeAdmin .eeRadioLabel {
+	clear: none;
+	width: auto;
+	background: transparent;
+}
+
+.eeAdmin select, 
+.eeAdmin input[type=text],  
+.eeAdmin input[type=url],
+.eeAdmin input[type=number], 
+.eeAdmin input[type=password], 
+.eeAdmin input[type=tel], 
+.eeAdmin input[type=email],
+.eeAdmin textarea, 
+.eeAdmin span.eeValueDisplay {
+	float: left;
+	width: 65%;
+	padding: 4px;
+}
+.eeAdmin textarea {
+	margin-bottom: 10px;
+}
+.eeAdmin input[type=radio] {
+	float: left;
+	width: 1.2em;
+	height: 1.2em;
+	display: inline-block;
+	margin-top: .325em;
+	margin-right: 2em;
+}
+#eeSFL_Settings input[type=checkbox] {
+	float: left;
+	width: 1.4em;
+	height: 1.4em;
+	display: inline-block;
+	margin-top: .325em;
+	margin-right: .5em;
+}
+.eeAdmin input[type=submit], 
+.eeAdmin button {
+	font-size: 130%;
+	margin-bottom: .5em;
+}
+
+.eeAdmin p {
+	margin: 0;
+	margin-top: .325em;
+/* 	margin-bottom: 2em; */
+}
+
+.eeNote {
+	float: left;
+	clear: both;
+	margin-bottom: 30px;
+}
+
+
+
+#eeAdminFooter {
+	clear: both;
+	padding-top: 100px;
+}
+
+
+
+
+/* SUPPORT TABS */
+
+.eeSupp {
+	display: block;
+	clear: both;
+	border: 2px solid #DDD;
+	padding: 1em;
+	margin: 1em;
+	width: 60%;
+}
+
+.eeSupp .eeSupp {
+	width: auto;
+}
+
+.eeSupp h2 {
+	font-size: 150%;
+}
+
+.eeSupp h3 {
+	font-size: 120%;
+	font-style: italic;
+}
+
+.eeSupp p {
+	font-size: 100%;
+	margin-bottom: 2em;
+}
+
+.eeSupp input[type=text],
+.eeSupp input[type=email],
+.eeSupp input[type=url],
+.eeSupp textarea {
+	float: left;
+	width: 70%;
+	font-size: 120%;
+}
+
+.eeSupp textarea {
+	height: 300px;
+	width: 70%;
+}
+
+.eeSupp label {
+	float: left;
+	clear: left;
+	width: 25%;
+	text-align: right;
+	margin-right: 1%;
+	padding: 5px;
+	margin-bottom: 1em;
+	background: #DDD;
+	font-size: 110%;
+}
+
+.eeSupp #eeSupportFormSubmit {
+	font-size: 200%;
+	display: block;
+	margin: 0 auto;
+	margin-bottom: 30px;
+}
+
+.eeSupp strong {
+	font-size: 120%;
+}
+
+
+#eeSupportBanner {
+	width: 300px;
+	height: auto;
+	float: right;
+	padding: 5px;
+	margin: 5px;
+	border: 1px solid #DDD;
+	
+}
+
+/* OTHER THINGS */
+
+.eeClearFix {
+	clear: both;
+}
+
+.eeBacklink {
+	display: block;
+	text-align: center;
+	font-size: 70%;
+}
+
+.eeNoClear {
+	clear: none !important;
+	width: auto !important;
+}
+
+.eeRight {
+	float: right;
+}
