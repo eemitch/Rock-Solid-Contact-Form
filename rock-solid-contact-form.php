@@ -19,28 +19,17 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 define('eeRSCF_PluginName', 'Rock Solid Contact Form');
 define('eeRSCF_WebsiteLink', 'https://elementengage.com');
-define('eeRSCF_Version', '1.1.1');
-
-// SMTP Email with Authentication
-define( 'RSCF_SMTP_USER',   'mail@' . basename( get_site_url() ) ); // Username to use for SMTP authentication
-define( 'RSCF_SMTP_PASS',   'eLemenTenGage2019' ); // Password to use for SMTP authentication
-define( 'RSCF_SMTP_HOST',   'secure.eeserver2.net' ); // The hostname of the mail server
-define( 'RSCF_SMTP_FROM',   RSCF_SMTP_USER ); // SMTP From email address
-define( 'RSCF_SMTP_NAME',   'Website Contact Form' ); // SMTP From name
-define( 'RSCF_SMTP_PORT',   '465' ); // SMTP port number - likely to be 25, 465 or 587
-define( 'RSCF_SMTP_SECURE', 'ssl' ); // Encryption system to use - ssl or tls
-define( 'RSCF_SMTP_AUTH',    TRUE ); // Use SMTP authentication (true|false)
-define( 'RSCF_SMTP_HTML',   FALSE ); // Send in HTML format (Not Ready)
-define( 'RSCF_SMTP_DEBUG',   2 ); // for debugging purposes only set to 1 or 2
-
+define('eeRSCF_version', '1.1.1');
 
 $eeRSCF = ''; // Our Main class
+$eeRSCFU = ''; // Our Upload class
 
 // The Log
 $eeRSCF_Log = array();
 // Format: [] => 'log entry'
 //	['messages'][] = 'Message to the user'
 //	['errors'][] = 'Error condition'
+
 
 define('eeRSCF_DevMode', TRUE); // Enables extended reporting
 /*  --> When TRUE, the log file is written in the plugin's logs folder.
@@ -74,43 +63,19 @@ $eeDisclaimer = 'IMPORTANT - Allowing the public to send you computer files come
 
 
 // Catch the post and process it
-function eeRSCF_FormProcess() {
+function eeRSCF_ContactProcess() {
 	
-	global $eeRSCF, $eeRSCF_Log;
+	global $eeRSCF, $eeRSCFU, $eeRSCF_Log;
 	
-	// Back end
-	if( @check_admin_referer('ee-rock-solid-settings', @$_POST['ee-rock-solid-settings-nonce']) ) {
+	if(wp_verify_nonce(@$_POST['ee-rock-solid-nonce'], 'ee-rock-solid')) { // Front-end
 		
-		$eeRSCF_Log['submission'][] = 'Form Submitted...';
-		$eeRSCF_Log['submission']['post'] = $_POST;
-		
-		
-		
-		
-		
-		
-		
-		// $eeRSCF->eeRSCF_SendEmail($_POST);
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	} elseif(@wp_verify_nonce($_POST['ee-rock-solid-nonce'], 'ee-rock-solid')) { // Front-end
-		
-		
-		
+		$eeRSCF->eeRSCF_SendEmail($_POST);
 		
 	}
 	
 } // Add this Form Processor to the WP Flow
-if(@$_POST['eeRSCF_Settings'] == 'TRUE') {
-	add_action('init', 'eeRSCF_FormProcess'); // Process a form submission (front or back)
+if(@$_POST['eeRSCF'] == 'TRUE') {
+	add_action('wp_loaded', 'eeRSCF_ContactProcess'); // Process a form submission (front or back)
 }
 
 
@@ -120,22 +85,21 @@ if(@$_POST['eeRSCF_Settings'] == 'TRUE') {
 // Plugin Setup
 function eeRSCF_Setup() {
 	
-	global $eeRSCF;
+	global $eeRSCF, $eeRSCFU;
 	
 	$eeRSCF_Nonce = wp_create_nonce('eeAwesomeness'); // Security
 	
 	include_once(plugin_dir_path(__FILE__) . 'includes/eeFunctions.php'); // General Functions
-	
-	include_once('includes/ee-rock-solid-class.php');
-	include_once('includes/ee-rock-solid-upload-class.php');
-	
+
 	// Initiate the Class
+	include_once('includes/ee-rock-solid-class.php');
 	$eeRSCF = new eeRSCF_Class();
 	$eeRSCF->eeRSCF_Setup(TRUE); // Run the setup
 	
 	// Get the Uploader class
-	// $eeRSCF_FileUpload = new eeRSCF_FileUpload();
-	// $eeRSCF_FileUpload->eeRSCF_Setup(TRUE); // Run the setup
+	include_once('includes/ee-rock-solid-upload-class.php');
+	$eeRSCFU = new eeRSCFU_FileUpload();
+	$eeRSCFU->eeRSCFU_Setup(TRUE); // Run the setup
 
 }
 
@@ -154,14 +118,12 @@ function eeRSCF_AdminHead($eeHook) {
         
         // Only load scripts if on these Admin pages.
         $eeHooks = array(
-        	'toplevel_page_rock-solid-contact-form',
-        	'',
-        	''
+        	'toplevel_page_rock-solid-contact-form'
         );
         
         if(in_array($eeHook, $eeHooks)) {
-            wp_enqueue_style( 'rock-solid-contact-form-style', plugins_url( 'css/adminStyle.css', __FILE__ ) );
-			wp_enqueue_script('ee-plugin-js', plugins_url('js/adminScripts.js', __FILE__) );
+            wp_enqueue_style( 'rock-solid-contact-form-admin-style', plugins_url( 'css/adminStyle.css', __FILE__ ) );
+			wp_enqueue_script('rock-solid-contact-form-admin-js', plugins_url('js/adminScripts.js', __FILE__) );
         }
         
 
@@ -177,12 +139,13 @@ function eeRSCF_Enqueue() {
 	
 	// Register the style like this for a theme:
     wp_register_style( 'ee-plugin-css', plugin_dir_url(__FILE__) . 'css/style.css');
- 
-    // Enqueue the style:
-    wp_enqueue_style('ee-plugin-css');
-	
-	wp_enqueue_script('ee-plugin-js',plugin_dir_url(__FILE__) . 'js/scripts.js');
+	wp_enqueue_style('ee-plugin-css');
+    
+    // Javascript
+    $deps = array('jquery');
+    wp_enqueue_script('ee-rock-solid-contact-form-js-head',plugin_dir_url(__FILE__) . 'js/scripts.js',$deps,'30',TRUE);
 }
+
 add_action( 'wp_enqueue_scripts', 'eeRSCF_Enqueue' );
 
 
@@ -195,11 +158,23 @@ add_action( 'wp_enqueue_scripts', 'eeRSCF_Enqueue' );
 
 
 // Shortcode Setup
-function eeRSCF_Shortcode() {
+function eeRSCF_Shortcode($atts, $content = null) {
     
     global $eeRSCF;
     
-    return $eeRSCF->eeRSCF_FormDisplay(); // Usage: [rock-solid-contact]
+     // Over-Riding Shortcode Attributes
+	if($atts) {
+		
+		// Use lowercase att names only
+		$atts = shortcode_atts( array( 'department' => ''), $atts );
+		
+		extract($atts);
+    
+		
+    
+    }
+		
+	return $eeRSCF->eeRSCF_formDisplay(); // Usage: [rock-solid-contact]
 }
 add_shortcode( 'rock-solid-contact', 'eeRSCF_Shortcode' );
 
@@ -229,20 +204,7 @@ add_action( 'admin_menu', 'eeRSCF_plugin_menu' );
 
 
 
-/**
- * This function will connect wp_mail to your authenticated
- * SMTP server. This improves reliability of wp_mail, and 
- * avoids many potential problems.
- *
- * Values are constants set in wp-config.php. Be sure to
- * define the using the wp_config.php example in this gist.
- *
- * Author:     Chad Butler
- * Author URI: http://butlerblog.com
- *
- * For more information and instructions, see:
- * http://b.utler.co/Y3
- */
+
 
 function eeRSCF_SMTP( $phpmailer ) {
 	
@@ -253,25 +215,23 @@ function eeRSCF_SMTP( $phpmailer ) {
 	$phpmailer->Mailer     = 'smtp';
 	// $phpmailer->isSMTP();
 	
-	$phpmailer->Host       = RSCF_SMTP_HOST;
-	$phpmailer->SMTPAuth   = RSCF_SMTP_AUTH;
-	$phpmailer->Port       = RSCF_SMTP_PORT;
-	$phpmailer->Username   = RSCF_SMTP_USER;
-	$phpmailer->Password   = RSCF_SMTP_PASS;
-	$phpmailer->SMTPSecure = RSCF_SMTP_SECURE;
-	$phpmailer->From       = RSCF_SMTP_FROM;
-	$phpmailer->FromName   = RSCF_SMTP_NAME;
+	$phpmailer->From       = $eeRSCF->email;
+	$phpmailer->FromName   = $eeRSCF->emailName;
+	$phpmailer->Host       = $eeRSCF->emailServer;
+	$phpmailer->Username   = $eeRSCF->emailUsername;
+	$phpmailer->Password   = $eeRSCF->emailPassword;
+	$phpmailer->SMTPSecure = $eeRSCF->emailSecure;
+	$phpmailer->Port       = $eeRSCF->emailPort;
+	$phpmailer->SMTPAuth   = $eeRSCF->emailAuth;
 	
-	if(RSCF_SMTP_HTML) {
+	if($eeRSCF->emailFormat == 'HTML') {
 		$phpmailer->isHTML(TRUE);
 		// $phpmailer->msgHTML = $body;
 		// $phpmailer->Body = nl2br($body);
 	}
 	
-	
-	
 }
-add_action( 'phpmailer_init', 'eeRSCF_SMTP' );
+// add_action( 'phpmailer_init', 'eeRSCF_SMTP' );
 
 
 
@@ -297,42 +257,62 @@ function eeRSCF_UpdatePlugin() {
 		return FALSE;
 	}
 	
-	$eeInstalled = get_option('eeRSCF_Version');
+	$eeInstalled = get_option('eeRSCF_version');
 	
 	$eeContactForm = get_option('eeContactForm'); // Check for old version
 	
-	if($eeInstalled AND eeRSCF_Version < $eeInstalled) { // If this is a newer version
+	if($eeInstalled AND eeRSCF_version < $eeInstalled) { // If this is a newer version
 	
-		$eeRSCF_Log[] = 'New Version: ' . eeRSCF_Version;
+		$eeRSCF_Log[] = 'New Version: ' . eeRSCF_version;
 		
-		update_option('eeRSCF_Version' , eeRSCF_Version);
+		update_option('eeRSCF_version' , eeRSCF_version);
 		
 		
 	} elseif($eeContactForm) { // Upgrade to New
+		
+		
+		
+		
 		
 		$eeRSCF->eeRSCF_UpgradeFromEE( get_option('eeContactForm') ); // Update, then delete the old option
 		
 	
 	} elseif(!$eeInstalled) { // A New Installation !!!
 		
-		$eeRSCF_Log[] = 'New Install: ' . eeRSCF_Version;
+		$eeRSCF_Log[] = 'New Install: ' . eeRSCF_version;
 		
-		update_option('eeRSCF_fields', $eeRSCF->default_formFields);
-		update_option('eeRSCF_allowUploads', $eeRSCF->default_allowUploads);
-		update_option('eeRSCF_maxFileSize', $eeRSCF->default_maxFileSize);
+		// Forms
+		$eeString = serialize($eeRSCF->eeRSCF_1);
+		update_option('eeRSCF_1', $eeString);
+		
+		// Files
+		update_option('eeRSCF_fileAllowUploads', $eeRSCF->default_fileAllowUploads);
+		update_option('eeRSCF_fileMaxSize', $eeRSCF->default_fileMaxSize);
 		update_option('eeRSCF_fileFormats', $eeRSCF->default_fileFormats);
+		
+		// Spam
 		update_option('eeRSCF_spamBlock', $eeRSCF->default_spamBlock);
 		update_option('eeRSCF_spamWords', $eeRSCF->default_spamWords);
 		
 		// Get current user info
-		global $current_user;
-		get_currentuserinfo();
+		$current_user = wp_get_current_user();
 		$userEmail = (string) $current_user->user_email;
-		update_option('eeRSCF_from' , $userEmail);
+		update_option('eeRSCF_email' , $userEmail);
+		update_option('eeRSCF_emailMode' , 'PHP');
+		update_option('eeRSCF_emailFormat' , 'TEXT');
+		update_option('eeRSCF_emailName' , get_bloginfo('name') . ' Contact Form' );
+		update_option('eeRSCF_emailUsername' , ' ');
+		update_option('eeRSCF_emailPassword' , ' ');
+		update_option('eeRSCF_emailServer' , 'mail.' . $_SERVER['HTTP_HOST']);
+		update_option('eeRSCF_emailSecure' , 'NO');
+		update_option('eeRSCF_emailPort' , '25');
+		update_option('eeRSCF_emailAuth' , 'NO');
+		update_option('eeRSCF_emailDebug' , 1); // 1 for No, 2 for Yes
 		
-		update_option('eeRSCF_departments' , 'N/A^TO:' . $userEmail);
 		
-		update_option('eeRSCF_Version' , eeRSCF_Version);	
+		// update_option('eeRSCF_departments' , 'MAIN^' . $userEmail);
+		
+		update_option('eeRSCF_version', eeRSCF_version);	
 		
 	} else {
 		
@@ -343,9 +323,10 @@ function eeRSCF_UpdatePlugin() {
 }
 
 // Check Version and Update if Needed
-if( is_admin() ) {
-	$eeRSCF_Version = get_option('eeRSCF_Version');
-	if(!$eeRSCF_Version OR eeRSCF_Version > $eeRSCF_Version) {
+// Check on Plugins pages only
+if( is_admin() AND (strpos($_SERVER['PHP_SELF'], 'plugins.php') OR  strpos($_SERVER['PHP_SELF'], 'plugin-install.php')) ) {
+	$eeRSCF_version = get_option('eeRSCF_version');
+	if(!$eeRSCF_version OR eeRSCF_version > $eeRSCF_version) {
 		add_action( 'plugins_loaded', 'eeRSCF_UpdatePlugin' );
 	}
 }

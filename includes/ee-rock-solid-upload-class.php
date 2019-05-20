@@ -2,42 +2,42 @@
 	
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 	
-class eeRSCF_FileUpload {
+class eeRSCFU_FileUpload {
 
 	// Properties ------------------------------------
-	public $uploadFolderName = 'eeRSCF_FileUploads';
+	public $uploadFolderName = 'eeRSCF_Files';
 	public $fileUploaded = FALSE;
 	public $maxUploadLimit;
-	private $uploadDir;
+	public $uploadDir;
 	public $uploadUrl;
 	
 	// METHODS ---------------------------------
 
 
 	// Class setup
-	public function eeRSCF_Setup() {
+	public function eeRSCFU_Setup() {
 		
-		global $eeContactForm;
+		global $eeRSCF;
 		
-		$eeContactForm->log[] = 'Running upload setup...';
+		$eeRSCF->log[] = 'Running upload setup...';
 		
 		$uploadDirArray = wp_upload_dir();
 		
 		$this->uploadDir = $uploadDirArray['basedir'] . '/' . $this->uploadFolderName . '/';
-		$eeContactForm->log[] = 'Upload Directory: ' . $this->uploadDir;
+		$eeRSCF->log[] = 'Upload Directory: ' . $this->uploadDir;
 		
 		$this->uploadUrl = $uploadDirArray['baseurl'] . '/' . $this->uploadFolderName . '/';
-		$eeContactForm->log[] = 'Upload URL: ' . $this->uploadUrl;
+		$eeRSCF->log[] = 'Upload URL: ' . $this->uploadUrl;
 		
-		self::eeRSCF_DetectUploadLimit();
+		self::eeRSCFU_DetectUploadLimit();
 		
 		if(!is_dir($this->uploadDir)) {
-			self::eeRSCF_CreateUploadDir();
+			self::eeRSCFU_CreateUploadDir();
 		}
 	}
 
 	// Detect max upload size.
-	private function eeRSCF_DetectUploadLimit() {
+	private function eeRSCFU_DetectUploadLimit() {
 		
 		$upload_max_filesize = substr(ini_get('upload_max_filesize'), 0, -1); // Strip off the "M".
 		$post_max_size = substr(ini_get('post_max_size'), 0, -1); // Strip off the "M".
@@ -46,37 +46,39 @@ class eeRSCF_FileUpload {
 		} else {
 			$this->maxUploadLimit = $post_max_size;
 		}
+		
+		$eeRSCF->log[] = 'Upload Limit: ' . $this->maxUploadLimit;
 	}
 	
 	// Create the upload folder if required.
-	private function eeRSCF_CreateUploadDir() {
+	private function eeRSCFU_CreateUploadDir() {
 	
-		$eeContactForm->log[] = 'Creating the upload directory.';
+		$eeRSCF->log[] = 'Creating the upload directory.';
 		
 		if(!@is_writable($this->uploadDir)) {
-			$eeContactForm->log[] = 'No Upload Directory Found.';
-			$eeContactForm->log[] = 'Creating Upload Directory ...';
+			$eeRSCF->log[] = 'No Upload Directory Found.';
+			$eeRSCF->log[] = 'Creating Upload Directory ...';
 			
 			if(!@mkdir($this->uploadDir, 0755)) {
-				$eeContactForm->errors = 'Could not create the upload directory: ' . $this->uploadDir;
+				$eeRSCF->errors = 'Could not create the upload directory: ' . $this->uploadDir;
 				return FALSE;
 			
 			} else {
 				
 				if(!@is_writable($this->uploadDir)) {
-					$eeContactForm->errors = 'Upload directory not writable: ' . $this->uploadDir;
+					$eeRSCF->errors = 'Upload directory not writable: ' . $this->uploadDir;
 				} else {
 					return TRUE;
 				}
 			}
 		} else {
-			$eeContactForm->log[] = 'Upload Folder: ' . $this->uploadDir;
+			$eeRSCF->log[] = 'Upload Folder: ' . $this->uploadDir;
 			return TRUE;
 		}
 	}
 
 	
-	private function eeRSCF_BytesToSize($bytes, $precision = 2) {  
+	private function eeRSCFU_BytesToSize($bytes, $precision = 2) {  
 	    
 	    $kilobyte = 1024;
 	    $megabyte = $kilobyte * 1024;
@@ -103,15 +105,15 @@ class eeRSCF_FileUpload {
 	}
 	
 	
-	public function eeRSCF_Uploader() {
+	public function eeRSCFU_Uploader() {
 	
-		global $eeContactForm;
+		global $eeRSCF;
 		
-		$eeContactForm->log[] = 'Preparing for the upload...';
+		$eeRSCF->log[] = 'Preparing for the upload...';
 		
 		if($_FILES['file']['name']) {
 			
-			$eeContactForm->log[] = 'File Name: ' . $_FILES['file']['name'];
+			$eeRSCF->log[] = 'File Name: ' . $_FILES['file']['name'];
 			
 			$time = date('m-d-Y_G-i-s'); // We'll add a timestamp so files don't get overwritten.
 			
@@ -121,18 +123,18 @@ class eeRSCF_FileUpload {
 			$ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 			$ext = '.' . $ext;
 			
-			$eeContactForm->log[] = 'File Ext: ' . $ext;
+			$eeRSCF->log[] = 'File Ext: ' . $ext;
 			
 			// Make array and remove white space from array values
-			$formatsArray = explode(',', $eeContactForm->formats);
+			$formatsArray = explode(',', $eeRSCF->fileFormats);
 			$formatsArray = array_filter(array_map('trim', $formatsArray));
 			
-			$eeContactForm->log[] = 'Allowed Formats: ' . implode(', ', $formatsArray);
+			$eeRSCF->log[] = 'Allowed Formats: ' . implode(', ', $formatsArray);
 			
 			// Only allow allowed files, ah?
 			if (in_array($ext,$formatsArray)) {
 			
-				$eeContactForm->log[] = 'Beginning the upload...';
+				$eeRSCF->log[] = 'Beginning the upload...';
 				
 				// File Naming
 				$fileName = pathinfo($_FILES['file']['name'], PATHINFO_FILENAME) . '_(' . $time . ')'; 
@@ -144,45 +146,45 @@ class eeRSCF_FileUpload {
 				if (@move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) { // Move the file to the final destination
 						
 					$this->fileUploaded = $this->uploadUrl . $newFile;
-					$eeContactForm->log[] = "File Uploaded: " . $newFile . " \n\n(" . self::eeRSCF_BytesToSize(filesize($this->uploadDir . $newFile)) . ')';
+					$eeRSCF->log[] = "File Uploaded: " . $newFile . " \n\n(" . self::eeRSCFU_BytesToSize(filesize($this->uploadDir . $newFile)) . ')';
 					return TRUE;
 					
 				} else { // Upload Problem
 					
-					$eeContactForm->errors[] = 'No file was uploaded';
+					$eeRSCF->errors[] = 'No file was uploaded';
 					
 					switch ($_FILES['file']['error']) {
 						case 1:
 							// The file exceeds the upload_max_filesize setting in php.ini
-							$eeContactForm->errors[] = 'File Too Large - Please resize your file to meet the file size limit.';
+							$eeRSCF->errors[] = 'File Too Large - Please resize your file to meet the file size limit.';
 							break;
 						case 2:
 							// The file exceeds the MAX_FILE_SIZE setting in the HTML form
-							$eeContactForm->errors[] = 'File Too Large - Please resize your file to meet the file size limits.';
+							$eeRSCF->errors[] = 'File Too Large - Please resize your file to meet the file size limits.';
 							break;
 						case 3:
 							// The file was only partially uploaded
-							$eeContactForm->errors[] = 'Upload Interrupted - Please back up and try again.';
+							$eeRSCF->errors[] = 'Upload Interrupted - Please back up and try again.';
 							break;
 						case 4:
 							// No file was uploaded
-							$eeContactForm->errors[] = 'No File was Uploaded - Please back up and try again.';
+							$eeRSCF->errors[] = 'No File was Uploaded - Please back up and try again.';
 							break;
 					}
 					
 				}
 			} else {
-				$eeContactForm->errors[] = 'Sorry, the file type being uploaded is not accepted by this website.';
-				$eeContactForm->errors[] = "Your Format: $ext";
-				$eeContactForm->errors[] = 'Allowed Formats: ' . implode(', ', $formatsArray);
+				$eeRSCF->errors[] = 'Sorry, the file type being uploaded is not accepted by this website.';
+				$eeRSCF->errors[] = "Your Format: $ext";
+				$eeRSCF->errors[] = 'Allowed Formats: ' . implode(', ', $formatsArray);
 			}
 			
 			
 		} else {
-			$eeContactForm->errors[] = 'No file reference.';
+			$eeRSCF->errors[] = 'No file reference.';
 		}
 					
-		$eeContactForm->log[] = $eeContactForm->errors;
+		$eeRSCF->log[] = $eeRSCF->errors;
 			
 	} // END uploader
 

@@ -1,18 +1,18 @@
 /* Administration Styles */
 
-.eeAdmin {
-	width: 60%;
+.eeRSCF_Admin {
+	width: 80%;
 	min-width: 600px;
-	float: left;
+/* 	float: left; */
 	font-size: 120%;	
 }
 
-.eeAdmin h2,
-.eeAdmin h3 {
+.eeRSCF_Admin h2,
+.eeRSCF_Admin h3 {
 	clear: left;
 	width: 75%;
 }
-.eeAdmin h4 {
+.eeRSCF_Admin h4 {
 	width: 58%;
 	text-align: right;
 }
@@ -22,17 +22,47 @@
 	color: #FFF;
 }
 
-.eeAdmin .eeAlignRight {
+.eeRSCF_Admin .eeAlignRight {
 	float: right;
 	margin: 0 1em 1em 0;
 }
 
-.eeAdmin .eeAlignLeftTwoThirds {
+.eeRSCF_Admin .eeAlignLeftTwoThirds {
 	float: left;
 	width: 66%;
 }
 
-.eeAdmin fieldset {
+
+
+
+table.eeRSCF_formSettings th,
+table.eeRSCF_formSettings td {
+	padding: 10px;
+}
+table.eeRSCF_formSettings th {
+	text-align: left;
+	background-color: #54595F;
+	color: #FFF;
+}
+table.eeRSCF_formSettings td input[type=text] {
+	width: 300px;
+	font-size: 120%;
+}
+table.eeRSCF_formSettings td input[type=checkbox] {
+	display: block;
+	margin: 0 auto;
+	-ms-transform: scale(1.5); /* IE */
+	-moz-transform: scale(1.5); /* FF */
+	-webkit-transform: scale(1.5); /* Safari and Chrome */
+	-o-transform: scale(1.5); /* Opera */
+	transform: scale(1.5);
+/* 	padding: 10px; */
+}
+
+
+
+
+.eeRSCF_Admin fieldset {
 	display: block;
 	position: relative;
 	clear: both;
@@ -42,9 +72,13 @@
 	background-color: #f4f4f4;
 }
 
-.eeAdmin label, .eeAdmin span {
+.eeRSCF_Admin fieldset p {
+	margin-bottom: 25px;
+}
+
+.eeRSCF_Admin label, .eeRSCF_Admin span {
 	float: left;
-	clear: left;
+	clear: both;
 	width: 25%;
 	text-align: right;
 	margin-right: .5em;
@@ -52,29 +86,32 @@
 	margin-bottom: 1em;
 	background: #DDD;
 }
-.eeAdmin .eeRadioLabel {
+.eeRSCF_Admin .eeRadioLabel {
 	clear: none;
 	width: auto;
 	background: transparent;
 }
 
-.eeAdmin select, 
-.eeAdmin input[type=text],  
-.eeAdmin input[type=url],
-.eeAdmin input[type=number], 
-.eeAdmin input[type=password], 
-.eeAdmin input[type=tel], 
-.eeAdmin input[type=email],
-.eeAdmin textarea, 
-.eeAdmin span.eeValueDisplay {
+.eeRSCF_Admin select, 
+.eeRSCF_Admin input[type=text],  
+.eeRSCF_Admin input[type=url],
+.eeRSCF_Admin input[type=number], 
+.eeRSCF_Admin input[type=password], 
+.eeRSCF_Admin input[type=tel], 
+.eeRSCF_Admin input[type=email],
+.eeRSCF_Admin textarea, 
+.eeRSCF_Admin span.eeValueDisplay {
 	float: left;
 	width: 65%;
 	padding: 4px;
 }
-.eeAdmin textarea {
+.eeRSCF_Admin textarea {
+	height: 200px;
+	font-size: 130%;
 	margin-bottom: 10px;
+	padding: 5px;
 }
-.eeAdmin input[type=radio] {
+.eeRSCF_Admin input[type=radio] {
 	float: left;
 	width: 1.2em;
 	height: 1.2em;
@@ -90,22 +127,37 @@
 	margin-top: .325em;
 	margin-right: .5em;
 }
-.eeAdmin input[type=submit], 
-.eeAdmin button {
+.eeRSCF_Admin input[type=submit], 
+.eeRSCF_Admin button {
+	float: right;
 	font-size: 130%;
-	margin-bottom: .5em;
+	margin: 0 20px 10px 20px;
 }
 
-.eeAdmin p {
+.eeRSCF_Admin p {
 	margin: 0;
 	margin-top: .325em;
 /* 	margin-bottom: 2em; */
 }
 
-.eeNote {
-	float: left;
-	clear: both;
-	margin-bottom: 30px;
+.eeRemoveSet {
+	display: block;
+	width: 20%;
+	text-align: center;
+	margin: 5px auto;
+}
+
+
+
+
+
+
+
+.eeRSCF_Admin p.eeNote {
+	width: 65%;
+	float: right;
+	clear: right;
+	margin: 0 20px 40px 0;
 }
 
 
@@ -214,4 +266,8 @@
 
 .eeRight {
 	float: right;
+}
+
+.eeHide {
+	display:none;
 }

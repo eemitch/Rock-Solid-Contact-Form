@@ -5,16 +5,38 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 class eeRSCF_Class {
 	
 	public $pluginName = "Rock Solid Contact Form";
-	public $eeRSCFDBVersion = '1.2'; // The version of the database data format, needed for updates.
-	private $pluginAuthorEmail = 'admin@elementengage.net'; // Set an email address to get bounce notices.
-	private $eeRemoteSpamWordsURL = ''; // Master words list. https://elementengage.com/eeCF/index.php?eePIN=ee0606
+	
+	// private $pluginAuthorEmail = 'admin@elementengage.net'; // Set an email address to get bounce notices.
+	// private $eeRemoteSpamWordsURL = ''; // Master words list. https://elementengage.com/eeCF/index.php?eePIN=ee0606
 	
 	public $dbFieldName = "eeRSCF"; // The name of the options field in the database
+	
+	public $eeRSCF_1 = array(
+		
+		'name' => 'Main',
+		'to' => '',
+		'cc' => '',
+		'bcc' => '',
+		'first-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'First Name'), 
+		'last-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Last Name'), 
+		'biz-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Business Name'), 
+		'address1' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Address'), 
+		'address2' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Address 2'), 
+		'city' => array('show' => 'YES', 'req' => 'NO', 'label' => 'City'), 
+		'state' => array('show' => 'YES', 'req' => 'NO', 'label' => 'State'), 
+		'zip' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Postal Code'), 
+		'phone' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Phone'), 
+		'website' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Website'), 
+		'other' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Other'), 
+		'subject' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Subject'), 
+		'files' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Attachments')
+	);
+	
 	
 	
 	// fields=first-name^SHOW^First Name^REQ|last-name^SHOW^Last Name^REQ|business^SHOW^Business^REQ|address^SHOW^Address^REQ|address-2^SHOW^Address 2^REQ|city^SHOW^City^REQ|state^SHOW^State^REQ|zip^SHOW^Zip^REQ|phone^SHOW^Phone^REQ|website^SHOW^Website^REQ|other^SHOW^Other^REQ|subject^SHOW^Subject^REQ
 	// ][
-	// allowUploads=Yes
+	// fileAllowUploads=Yes
 	// ][
 	// uploadMaxFilesize=10
 	// ][
@@ -33,21 +55,39 @@ class eeRSCF_Class {
 	
 	// Our Default Settings
 	public $default_formFields = 'first-name^SHOW^First Name^REQ|last-name^SHOW^Last Name^REQ|business^SHOW^Business^REQ|address^SHOW^Address^REQ|address-2^SHOW^Address 2^REQ|city^SHOW^City^REQ|state^SHOW^State^REQ|zip^SHOW^Zip^REQ|phone^SHOW^Phone^REQ|website^SHOW^Website^REQ|other^SHOW^Other^REQ|subject^SHOW^Subject^REQ';
-	public $default_allowUploads = 'YES';
-	public $default_maxFileSize = 8;
+	public $default_fileAllowUploads = 'YES';
+	public $default_fileMaxSize = 8;
 	public $default_fileFormats = '.gif, .jpg, .jpeg, .bmp, .png, .tif, .tiff, .txt, .eps, .psd, .ai, .pdf, .doc, .xls, .ppt, .docx, .xlsx, .pptx, .odt, .ods, .odp, .odg, .wav, .wmv, .wma, .flv, .3gp, .avi, .mov, .mp4, .m4v, .mp3, .webm, .zip';
 	public $default_spamBlock = 'Yes';
 	public $default_spamWords = 'I am a web, websites, website design, web design, web designer, web developer, web development, more leads, more sales, leads and sales, first page of google, seo, search engine, more profitable';
+	public $default_departments = 'Main^support@elementengage.com^mitch@elementengage.com';
+	public $default_departmentName = 'Main';
 	
-	// Our Current Settings
-	public $fields;
-	public $allowUploads;
-	public $maxFileSize;
+	// Our Form Settings
+	public $formFields;
+	public $fileAllowUploads;
+	public $fileMaxSize;
 	public $fileFormats;
 	public $spamBlock;
 	public $spamWords;
-	public $from;
 	public $departments;
+	
+	
+	
+	// Email
+	public $email;
+	public $emailMode;
+	public $emailName;
+	public $emailServer;
+	public $emailUsername;
+	public $emailPassword;
+	public $emailPort;
+	public $emailSecure;
+	public $emailAuth;
+	public $emailFormat;
+	public $emailDebug;
+	
+	
 	
 	// Various Properties
 	public $permalink;
@@ -67,7 +107,7 @@ class eeRSCF_Class {
 	private $bcc;
 	public $adminTo;
 	public $department;		
-	private $deptArray = array();
+	// private $deptArray = array();
 	
 	// Messaging
 	public $errors = array();
@@ -103,37 +143,94 @@ class eeRSCF_Class {
 		
 		
 		
-		// Get DB Settings
-		$this->fields = get_option('eeRSCF_fields');
-		$this->log['settings'][] = $this->fields;
+		
+		// Get Database Settings
+		
+		// FORM FIELDS
+		$fields = get_option('eeRSCF_formFields');
+		$this->log['settings'][] = $fields;
+		$this->formFields = explode('|', $fields);
 		
 		
-		$this->allowUploads = get_option('eeRSCF_allowUploads');
-		$this->log['settings'][] = $this->allowUploads;
+		
+		// FILES
+		$this->fileAllowUploads = get_option('eeRSCF_fileAllowUploads');
+		$this->log['settings'][] = $this->fileAllowUploads;
 		
 		
-		$this->maxFileSize = get_option('eeRSCF_maxFileSize');
-		$this->log['settings'][] = $this->maxFileSize;
+		$this->fileMaxSize = get_option('eeRSCF_fileMaxSize');
+		$this->log['settings'][] = $this->fileMaxSize;
 		
 		
 		$this->fileFormats = get_option('eeRSCF_fileFormats');
 		$this->log['settings'][] = $this->fileFormats;
 		
 		
+		
+		// SPAM
 		$this->spamBlock = get_option('eeRSCF_spamBlock');
 		$this->log['settings'][] = $this->spamBlock;
-		
 		
 		$this->spamWords = get_option('eeRSCF_spamWords');
 		$this->log['settings'][] = $this->spamWords;
 		
 		
-		$this->from = get_option('eeRSCF_from');
-		$this->log['settings'][] = $this->from;
+		
+		// EMAIL
+		$this->email = get_option('eeRSCF_email');
+		$this->log['settings'][] = $this->email;
+		
+		$this->emailMode = get_option('eeRSCF_emailMode');
+		$this->log['settings'][] = $this->emailMode;
+		
+		// SMTP
+		if($this->emailMode == 'SMTP') {
+		
+			$this->emailName = get_option('eeRSCF_emailName');
+			$this->log['settings'][] = $this->emailName;
+			
+			$this->emailServer = get_option('eeRSCF_emailServer');
+			$this->log['settings'][] = $this->emailServer;
+		
+			$this->emailFormat = get_option('eeRSCF_emailFormat');
+			$this->log['settings'][] = $this->emailFormat;
+			
+			$this->emailUsername = get_option('eeRSCF_emailUsername');
+			$this->log['settings'][] = $this->emailUsername;
+			
+			$this->emailPassword = get_option('eeRSCF_emailPassword');
+			$this->log['settings'][] = $this->emailPassword;
+			
+			$this->emailSecure = get_option('eeRSCF_emailSecure');
+			$this->log['settings'][] = $this->emailSecure;
+			
+			$this->emailAuth = get_option('eeRSCF_emailAuth');
+			$this->log['settings'][] = $this->emailAuth;
+			
+			$this->emailPort = get_option('eeRSCF_emailPort');
+			$this->log['settings'][] = $this->emailPort;
+			
+			$this->emailDebug = get_option('eeRSCF_emailDebug');
+			$this->log['settings'][] = $this->emailDebug;
+		
+		}
 		
 		
-		$this->departments = get_option('eeRSCF_departments');
-		$this->log['settings'][] = $this->departments;
+		
+		// DEPARTMENTS
+		$departments = get_option('eeRSCF_departments');
+		$this->log['settings'][] = $departments;
+		if(!$departments) {
+			$departments = $this->default_departments;
+		}
+		
+		
+		if(strpos($departments, '|')) {
+			$this->departments = explode('|', $departments);
+		} else {
+			$this->departments = array($departments);
+		}
+		
 		
 		
 		
@@ -161,6 +258,8 @@ class eeRSCF_Class {
 	
 	private function eeRSCF_PostProcess($post) {
 	     
+	     echo '<pre> eeRSCF_PostProcess '; print_r($post); echo '</pre>'; exit;
+	     
 	     $this->log[] = 'Processing the post...';
 	     
 	     $ignore = array('eeRSCF', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER');
@@ -171,7 +270,7 @@ class eeRSCF_Class {
 					
 				$value = filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_ENCODE_HIGH);
 				
-				if($key != 'message') { $value = ucwords($value); }
+				if($key != 'message') { $value = ucwords($value); } else { $value = striptags($value); }
 				
 				if(strpos($key, 'mail')) { 
 					if(!preg_match('/^[[:alnum:]][a-z0-9_\.\-]*@[a-z0-9\.\-]+\.[a-z]{2,4}$/', $value)) {
@@ -195,7 +294,7 @@ class eeRSCF_Class {
 					}
 				}
 				
-				$field = self::unSlug($key);
+				$field = self::eeRSCF_UnSlug($key);
 				$this->thePost[] = $field . ': ' . $value;
 			}
 	        
@@ -209,11 +308,11 @@ class eeRSCF_Class {
 	        
 	    $this->log[] = $this->thePost;
 	    
-	    // echo '<pre>'; print_r($this->thePost); echo '</pre>'; exit;
+	    
 	    
 	}
 	
-	function eeRSCF_FormTamperCheck() {
+	function eeRSCF_formTamperCheck() {
 		
 		$this->log[] = 'Form Tamper Check...';
 		
@@ -258,8 +357,8 @@ class eeRSCF_Class {
 			$this->errors[] =  "Submission is not from this website";
 		}
 		
-		if($this->spamBlock AND $_POST['ee-link']) { // Spambot catcher. This field should never be completed.
-			$this->errors[] = 'Spambot catch. Hidden field completed: ' . $_POST['ee-link'];
+		if($this->spamBlock AND $_POST['eeRSCF_Link']) { // Spambot catcher. This field should never be completed.
+			$this->errors[] = 'Spambot catch. Hidden field completed: ' . $_POST['eeRSCF_Link'];
 		}
 		
 		if($this->spamBlock AND $this->spamWords) {
@@ -379,7 +478,7 @@ class eeRSCF_Class {
     }
 	
 	
-	// fields=first-name^SHOW^First Name^REQ|last-name^SHOW^Last Name^REQ|business^SHOW^Business^REQ|address^SHOW^Address^REQ|address-2^SHOW^Address 2^REQ|city^SHOW^City^REQ|state^SHOW^State^REQ|zip^SHOW^Zip^REQ|phone^SHOW^Phone^REQ|website^SHOW^Website^REQ|other^SHOW^Other^REQ|subject^SHOW^Subject^REQ][allowUploads=Yes][uploadMaxFilesize=10][formats=.gif, .jpg, .jpeg, .bmp, .png, .tif, .tiff, .txt, .eps, .psd, .ai, .pdf, .doc, .xls, .ppt, .docx, .xlsx, .pptx, .odt, .ods, .odp, .odg, .wav, .wmv, .wma, .flv, .3gp, .avi, .mov, .mp4, .m4v, .mp3, .webm, .zip][spamBlock=Yes][spamWords=I am a web, websites, website design, web design, web designer, web developer, web development, more leads, more sales, leads and sales, first page of google, seo, search engine, more profitable][FROM:admin@elementengage.net][DEPT:N/A^TO:admin@elementengage.net^^)][version=1.2
+	// fields=first-name^SHOW^First Name^REQ|last-name^SHOW^Last Name^REQ|business^SHOW^Business^REQ|address^SHOW^Address^REQ|address-2^SHOW^Address 2^REQ|city^SHOW^City^REQ|state^SHOW^State^REQ|zip^SHOW^Zip^REQ|phone^SHOW^Phone^REQ|website^SHOW^Website^REQ|other^SHOW^Other^REQ|subject^SHOW^Subject^REQ][fileAllowUploads=Yes][uploadMaxFilesize=10][formats=.gif, .jpg, .jpeg, .bmp, .png, .tif, .tiff, .txt, .eps, .psd, .ai, .pdf, .doc, .xls, .ppt, .docx, .xlsx, .pptx, .odt, .ods, .odp, .odg, .wav, .wmv, .wma, .flv, .3gp, .avi, .mov, .mp4, .m4v, .mp3, .webm, .zip][spamBlock=Yes][spamWords=I am a web, websites, website design, web design, web designer, web developer, web development, more leads, more sales, leads and sales, first page of google, seo, search engine, more profitable][FROM:admin@elementengage.net][DEPT:N/A^TO:admin@elementengage.net^^)][version=1.2
 	
 		
 	private function eeRSCF_UpgradeFromEE($eeString) {
@@ -396,11 +495,11 @@ class eeRSCF_Class {
 			$fieldsArray = explode('=', $settings[0]);
 			$eeArray[ 'eeRSCF_' . $fieldsArray[0] ] = $fieldsArray[1];
 			
-			$allowUploads = explode('=', $settings[1]);
-			$eeArray[ 'eeRSCF_' . $allowUploads[0] ] = $allowUploads[1];
+			$fileAllowUploads = explode('=', $settings[1]);
+			$eeArray[ 'eeRSCF_' . $fileAllowUploads[0] ] = $fileAllowUploads[1];
 			
-			$maxFileSize = explode('=', $settings[2]);
-			$eeArray[ 'eeRSCF_' . $maxFileSize[0] ] = $maxFileSize[1];
+			$fileMaxSize = explode('=', $settings[2]);
+			$eeArray[ 'eeRSCF_' . $fileMaxSize[0] ] = $fileMaxSize[1];
 			
 			$formats = explode('=', $settings[3]);
 			$eeArray[ 'eeRSCF_' . $formats[0] ] = $formats[1];
@@ -421,6 +520,9 @@ class eeRSCF_Class {
 			
 			// Insert the New Options
 			foreach( $eeArray as $eeKey => $eeValue){
+				
+				if( str_replace('^TO:', '', $eeValue) ) {}
+				
 				update_option($eeKey, $eeValue);
 			}
 			
@@ -466,33 +568,33 @@ class eeRSCF_Class {
 	}
 	
 	
-	public function eeRSCF_FormDisplay() {
+	public function eeRSCF_formDisplay() {
 		
 		$this->log[] = 'Displaying the Form...';
 		
-		global $eeRSCFDevMode;
+		global $eeRSCF_DevMode;
 		
-		self::setup(TRUE);
+		self::eeRSCF_Setup(TRUE);
 		
-		$eeMessageDisplay = new eeMessageDisplay(); // Initialize the display messaging class
+		// $eeMessageDisplay = new eeRSCF_MessageDisplay(); // Initialize the display messaging class
 		
 		if($this->confirmation) {
 			
-			$this->theForm .= '<div class="eeRSCFConfirm">
+			$this->theForm .= '<div class="eeRSCF_Confirm">
 				<h2>Thank You</h2>
 				<p>' . $this->confirmation . '</p>
 				</div>';
 				
 			// Log Display - Dev Mode Only
-			if($eeRSCFDevMode) { $eeMessageDisplay->display($this->log); }
+			if($eeRSCF_DevMode) { $this->eeRSCF_MessageDisplay($this->log); }
 			
 			return $this->theForm;
 			
 		} elseif($this->errors) {
 		
-			$this->theForm .= '<div class="eeRSCFConfirm">
+			$this->theForm .= '<div class="eeRSCF_Confirm">
 				<h2 class="eeError">Opps, we have a problem.</h2>';
-			$eeMessageDisplay->display($this->errors);
+			$this->eeRSCF_MessageDisplay($this->errors);
 			$this->theForm .= '</div>';	
 			
 		}
@@ -502,7 +604,7 @@ class eeRSCF_Class {
 			
 		$this->theForm .= $this->permalink;
 		
-		$this->theForm .= '" method="post" enctype="multipart/form-data" id="eeRSCF">
+		$this->theForm .= '" method="post" enctype="multipart/form-data" id="eeRSCF_form">
 				<input type="hidden" name="eeRSCF" value="TRUE" />
 				<input type="hidden" name="SCRIPT_REFERER" value="';
 				
@@ -512,51 +614,59 @@ class eeRSCF_Class {
 				
 		$this->theForm .= wp_nonce_field( 'ee-rock-solid', 'ee-rock-solid-nonce' );
 		
-		$this->theForm .= '<fieldset>';
+		$this->theForm .= '
+		
+		<fieldset>';
 		
 		// Is there more than one department?
-		$num = count($this->deptArray);
+		$num = count($this->departments);
 		
 		if($num > 1) {
 			
-			$this->theForm .= '<div class="eeRSCFRow">
+			$this->theForm .= '<div class="eeRSCF_Row">
 							<label for="department">Department</label><select name="department" id="department" required>
 								<option value="">Please Choose</option>';
 			
-			foreach($this->deptArray as $department){
+			foreach($this->departments as $department){
 				$array = explode('^', $department);
 				$this->theForm .= '<option value="' . $array[0] . '">' . $array[0] . '</option>';
 			}
 			
-			$this->theForm .= '</select>';
+			$this->theForm .= '</select></div>';
 		
+		} else {
+			
+			// $this->theForm .= '<input type="hidden" name="department" value="' . $this->departments[0] . '" />';
+			
 		}
 		
-		if(is_array($this->fields)) {
+		if(is_array($this->formFields)) {
 					
-			foreach($this->fields as $field) {
+			foreach($this->formFields as $field) {
 							
 				$field = explode('^', $field);
 							
 				if(@$field[1] == 'SHOW') {
 						
-					$this->theForm .= '<div class="eeRSCFRow">
-							<label for="';
+					$this->theForm .= '
+					<div class="eeRSCF_Row">
+					<label for="';
 							
 					$this->theForm .= $field[0];
 					
 					$this->theForm .=  '">';
 					
 					// Chech for custom label
-					if($field[2]) { $this->theForm .= $field[2]; } else { $this->theForm .= self::unSlug($field[0]); }
+					if($field[2]) { $this->theForm .= $field[2]; } else { $this->theForm .= self::eeRSCF_UnSlug($field[0]); }
 					
 					$this->theForm .= '</label>';
 					
-					$this->theForm .= '<input ';
+					$this->theForm .= '
+					<input ';
 					if(@$field[3] == 'REQ') { $this->theForm .= 'required '; }
 					$this->theForm .= 'name="';
 					// Chech for custom label
-					if($field[2]) { $this->theForm .= self::makeSlug($field[2]); } else { $this->theForm .= self::unSlug($field[0]); }
+					if($field[2]) { $this->theForm .= self::eeRSCF_MakeSlug($field[2]); } else { $this->theForm .= self::eeRSCF_UnSlug($field[0]); }
 					$this->theForm .= '"';
 					
 					$this->theForm .= ' id="';
@@ -568,9 +678,11 @@ class eeRSCF_Class {
 							else { $this->theForm .= 'text'; }
 					$this->theForm .= '" size="30" value="' . @$_POST[$field[0]] . '" />';
 					
-					if(@$field[3] == 'REQ') { $this->theForm .=  '<span class="eeRequired">*</span>'; }
+					if(@$field[3] == 'REQ') { $this->theForm .=  '
+						<span class="eeRequired">*</span>'; }
 					
-					$this->theForm .=  '</div>';	
+					$this->theForm .=  '
+					</div>';	
 				}
 
 			}
@@ -578,34 +690,62 @@ class eeRSCF_Class {
 			$this->theForm .= 'No Fields';
 		}
 		
-		$this->theForm .= '<div class="eeRSCFRow">
-			<label for="message">Your Email:</label>
-			<input type="email" name="email" id="email" value="' . @$_POST['email'] . '" required /><span class="eeRequired">*</span>';
+		$this->theForm .= '<div class="eeRSCF_Row">
+			<label for="message">Your Email</label>
+			<input type="email" name="email" id="email" value="' . @$_POST['email'] . '" required /><span class="eeRequired">*</span>
+			</div>';
 					
 					
-		if($this->allowUploads == 'Yes') {
+		if($this->fileAllowUploads == 'YES') {
 		
-		$this->theForm .= '<div class="eeRSCFRow">
-			<label for="file">Attachment:</label><input type="file" name="file" id="file" accept="';
+		$this->theForm .= '<div class="eeRSCF_Row">
+			<label for="file">Attachment</label>
+			<input type="file" name="file" id="file" accept="';
 			
-			$this->theForm .= $this->formats . '" />';
+			$this->theForm .= $this->fileFormats . '" />';
 			
-			$this->theForm .= '<span class="eeNote">Files up to ' . $this->maxFileSize . ' MB allowed.</span></div>';
+			$this->theForm .= '
+			
+			<!-- <span class="eeNote">Files up to ' . $this->fileMaxSize . ' MB allowed.</span> -->
+			
+			</div>';
 			
 		}
 		
-		$this->theForm .= '<div class="eeRSCFRow">
-			<label for="message">Message:</label>
+		$this->theForm .= '<div class="eeRSCF_Row">
+			<label for="message">Message</label>
 			<textarea required name="message" id="message" cols="60" rows="6">';
 			
 		$this->theForm .= @$_POST['message'];
 		
-		$this->theForm .= '</textarea><span class="eeRequired">*</span></div><br class="eeClearFix" /><div class="eeRSCFRoww"><label for="ee-link">Link:</label><input type="text" name="ee-link" value="" id="ee-link"></div>
-			<span id="eeRSCFSubmitMessage"><img src="' . $this->pluginURL . 'images/sending.gif" width="32" height="32" alt="Sending Icon" /> Sending Your Message</span>
-				<input type="submit" id="eeRSCFSubmit" value="SEND"></fieldset></form><br class="eeClearFix" /></div>';
+		$this->theForm .= '</textarea>
+		
+		<span class="eeRequired">*</span>
+		
+		</div>
+		
+		<br class="eeClearFix" />
+		
+		<div class="eeRSCF_Roww">
+			<label for="eeRSCF_Link">Link:</label><input type="text" name="eeRSCF_Link" value="" id="eeRSCF_Link">
+		</div>
+		
+		<span id="eeRSCF_SubmitMessage"><img src="' . $this->pluginURL . 'images/sending.gif" width="32" height="32" alt="Sending Icon" /> Sending Your Message</span>
+		
+		</fieldset>
+		
+		<input type="submit" id="eeRSCF_Submit" value="SEND">
+		
+		</form>
+		
+		
+		<br class="eeClearFix" />Mode: ' . $this->emailMode . '
+		
+		
+		</div>';
 	
 		// Log Display - Dev Mode Only
-		if($eeRSCFDevMode) { $eeMessageDisplay->display($this->log); }
+		if($eeRSCF_DevMode) { $this->eeMessageDisplay($this->log); }
 		
 		return $this->theForm;
 			
@@ -614,31 +754,27 @@ class eeRSCF_Class {
 	
 	public function eeRSCF_SendEmail($post) {
 		
-		global $eeRSCF_FileUpload; $subject = FALSE;
+		global $eeRSCFU; $subject = FALSE;
 				
 		$this->log[] = 'Getting User Settings...';
-		self::setup(TRUE);
+		self::eeRSCF_Setup(TRUE);
 		
 		if($this->spamBlock == 'Yes') {
-			if(self::formTamperCheck()) {
+			if(self::eeRSCF_formTamperCheck()) {
 				return FALSE;
 			}
 		}
 		
 		$this->log[] = 'Sending the Email...';
-		
-		if(RSCF_SMTP_USER) {
-			$this->log[] = 'Using SMTP as ' . RSCF_SMTP_USER;
-		}
 			
-		self::postProcess($post);
+		self::eeRSCF_PostProcess($post);
 		
 		// There's a file and its size is less than our defined limit
 		if(@$_FILES['file']['name']) {
-			if($_FILES['file']['size'] <= $this->maxFileSize*1048576) {
-				$eeRSCF_FileUpload->uploader();
+			if($_FILES['file']['size'] <= $this->fileMaxSize*1048576) {
+				$eeRSCFU->eeRSCFU_Uploader();
 			} else {
-				$this->errors[] = 'File size is too large. Maximum allowed is ' . $this->maxFileSize . 'MB';
+				$this->errors[] = 'File size is too large. Maximum allowed is ' . $this->fileMaxSize . 'MB';
 			}
 		}
 
@@ -646,32 +782,32 @@ class eeRSCF_Class {
 				
 			$this->log[] = 'Preparing the Email...';
 			
-			if(count($this->deptArray) > 1) {
+			if(count($this->departments) > 1) {
 				
 				$string = $this->thePost[0]; // Department is first one in post
 				$field = explode(':', $string);
 				$this->department = trim($field[1]);
 				
-				foreach($this->deptArray as $dept) {
+				foreach($this->departments as $dept) {
 						
 					$array = explode('^', $dept);
 					
 					if($array[0] == $this->department) {
 					
 						$this->to = $array[1];
-						$this->cc = $array[2];
-						$this->bcc = $array[3];
+						$this->cc = @$array[2];
+						$this->bcc = @$array[3];
 						break;
 					}
 				}
 				
 			} else {
 				
-				// Add a custom department name
-				if($this->department != 'N/A') {
-					array_unshift($this->thePost, 'Department: ' . $this->department); 
-				}
+				$eeArray = explode('^', $this->departments[0]);
 				
+				$this->to = $eeArray[1];
+				$this->cc = @$eeArray[2];
+				$this->bcc = @$eeArray[3];
 			}
 			
 			// Loop through and see if we have a Subject field
@@ -685,10 +821,10 @@ class eeRSCF_Class {
 			if(!$subject) { $subject = 'Contact Form Message (' . $_SERVER['HTTP_HOST'] . ')'; }
 			
 			// Email assembly
-			$eeHeaders = "From: " . $this->from . "\n";
+			$eeHeaders = "From: " . $this->email . "\n";
 			if($this->cc) { $eeHeaders .= "CC: " . $this->cc . "\n"; }
 			if($this->bcc) { $eeHeaders .= "BCC: " . $this->bcc . "\n"; }
-			$eeHeaders .= "Return-Path: " . $this->from . "\n" . "Reply-To: " . $this->sender . "\n";
+			$eeHeaders .= "Return-Path: " . $this->email . "\n" . "Reply-To: " . $this->sender . "\n";
 			
 			$eeBody = '';
 			
@@ -696,31 +832,59 @@ class eeRSCF_Class {
 				$eeBody .= $value . "\n\n";
 			}
 			
-			if($eeRSCF_FileUpload->fileUploaded) { $eeBody .= 'File: ' . $eeRSCF_FileUpload->fileUploaded . "\n\n"; }
+			if($eeRSCFU->fileUploaded) { $eeBody .= 'File: ' . $eeRSCFU->fileUploaded . "\n\n"; }
 			
 			$eeBody .= "---\n\n" . 'This message was sent via the contact form located at http://' . $this->baseURL . '/' . "\n\n";
 			
 			$eeBody = stripslashes($eeBody);
-			$eeBody = strip_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));		
+			$eeBody = strip_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
 			
-			if(RSCF_SMTP_USER) {
+			
+			if($this->emailMode == 'SMTP') {
+				
+				// Define SMTP Settings
+				global $phpmailer;
+				
+				if ( !is_object( $phpmailer ) ) {
+					$phpmailer = (object) $phpmailer;
+				}
+				
+				$phpmailer->Mailer     = 'smtp';
+				// $phpmailer->isHTML(FALSE);
+				// $phpmailer->isSMTP();
+				
+				$phpmailer->From       = $this->email;
+				$phpmailer->FromName   = $this->emailName;
+				$phpmailer->Host       = $this->emailServer;
+				$phpmailer->Username   = $this->emailUsername;
+				$phpmailer->Password   = $this->emailPassword;
+				$phpmailer->SMTPSecure = $this->emailSecure;
+				$phpmailer->Port       = $this->emailPort;
+				$phpmailer->SMTPAuth   = $this->emailAuth;
+				
+				if($this->emailFormat == 'HTML') {
+					// $phpmailer->isHTML(TRUE);
+					// $phpmailer->msgHTML = $body;
+					// $phpmailer->Body = nl2br($body);
+				}
 				
 				if( wp_mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ----------------Send the message via Authenticated SMTP.
-					
-					$this->confirmation = 'Your message was sent successfully. (SMTP)';
-					
-				} else {
-					$this->errors[] = 'Message Failed to Send.';
-				}
-			} else {
-				$this->errors[] = 'NOT SMTP User. Defaulting to PHP';
-				
-				if( mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ---------------- OR send the message the basic PHP way.
 					
 					$this->confirmation = 'Your message was sent successfully.';
 					
 				} else {
-					$this->errors[] = 'Message Failed to Send.';
+					$this->errors[] = 'SMTP Message Failed to Send.';
+				}
+			
+			} else {
+				
+				if(mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ---------------- OR send the message the basic way.
+					
+					$this->confirmation = 'Your message was sent successfully.';
+					
+				} else {
+					$this->errors[] = 'PHP Message Failed to Send.';
+					$this->errors[] = 'To: ' . $this->to;
 				}
 			}
 		} else {
@@ -733,150 +897,6 @@ class eeRSCF_Class {
 	
 	
 	
-	// The Settings Form Display
-	public function eeRSCF_AdminSettingsDisplay() {
-		
-		$this->log[] = 'Displaying the settings form...';
-		
-		global $eeRSCF_FileUpload, $eeBackLinkTitle, $eeBackLink, $eeDisclaimer;
-		
-		// self::eeRSCF_Setup(TRUE);
-			
-		?>
-		
-		<div class="eeAdminEntry">
-			
-			
-				
-				<?php wp_nonce_field( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce' ); ?>
-				
-				
-				
-				
-				
-				
-				<fieldset>
-					
-					<h2>File Uploads</h2>
-					<div class="eeNote">Files are uploaded to the web server, then a link is included within the email delivered.</div>
-					
-					<span>Allow File Uploads?</span><label for="eeUploadYes" class="eeRadioLabel">Yes</label><input type="radio" name="eeAllowUploads" value="Yes" id="eeUploadYes" <?php if($this->allowUploads == 'Yes') { echo 'checked'; } ?> />
-						<label for="eeUploadNo" class="eeRadioLabel">No</label><input type="radio" name="eeAllowUploads" value="" id="eeUploadNo" <?php if($this->allowUploads != 'Yes') { echo 'checked'; } ?> />
-							<br class="eeClearFix" />
-							<div class="eeNote">Files will be uploaded to: <a href="<?php echo $eeRSCF_FileUpload->uploadUrl; ?>"><?php echo $eeRSCF_FileUpload->uploadUrl; ?></a>
-							</div>
-					<br class="eeClearFix" />
-					
-					
-					
-					<label for="eeMaxFileSize">How Big? (MB):</label><input type="number" min="1" max="<?php echo $eeRSCF_FileUpload->maxUploadLimit; ?>" step="1" name="eeMaxFileSize" value="<?php echo $this->maxFileSize; ?>" class="adminInput" id="eeMaxFileSize" />
-						<br class="eeClearFix" />
-						<div class="eeNote">Your hosting limits the maximum file upload size to <strong><?php echo $eeRSCF_FileUpload->maxUploadLimit; ?> MB</strong>.</div>
-					
-					
-					<br class="eeClearFix" />
-					
-					
-					
-					
-					<label for="eeFormats">Allowed Types:</label><textarea name="eeFormats" class="adminInput" id="eeFormats" /><?php echo $this->formats; ?></textarea>
-						<br class="eeClearFix" />
-						<div class="eeNote">Only use the file types you absolutely need, ie; .jpg, .jpeg, .png, .pdf, .mp4, etc</div>
-					
-				</fieldset>
-				
-				
-				<fieldset>
-					
-					<h2>Spam Prevention</h2>
-					
-					<span>Block Spambots</span><label for="spamBlockYes" class="eeRadioLabel">Yes</label><input type="radio" name="spamBlock" value="Yes" id="spamBlockYes" <?php if($this->spamBlock == 'Yes') { echo 'checked'; } ?> />
-						<label for="spamBlockNo" class="eeRadioLabel">No</label><input type="radio" name="spamBlock" value="" id="spamBlockNo" <?php if($this->spamBlock != 'Yes') { echo 'checked'; } ?> />
-					<br class="eeClearFix" />
-					
-					<label for="spamWords">Blocked Words:</label><textarea name="spamWords" class="adminInput" id="spamWords" /><?php echo $this->spamWords; ?></textarea>
-						<br class="eeClearFix" />
-						<div class="eeNote">You can filter messages as spam if they contain certain words or phrases defined here. Separate with a comma.</div>
-					
-					
-				</fieldset>
-				
-				
-				
-				
-				<fieldset>
-					
-					<h2 class="eeFloatLeft">Message Delivery</h2>
-					
-					<input type="hidden" name="eeRSCFDepartments" id="eeRSCFDepartments" value="<?php echo count($this->deptArray); ?>" />
-					
-					<?php
-						
-						foreach($this->deptArray as $num => $string) { 
-						
-						$num = $num + 1; // Don't wanna start with a zero
-						
-						$dept = explode('^', $string);
-					?>
-						
-					<fieldset id="eeDepartmentSet<?php echo $num; ?>">
-						
-						<?php if($num > 1) { echo '<button class="eeRemoveSet" type="button" onclick="eeRemoveSet(' . $num . ')">Remove</button>'; } ?>
-					
-						<label for="eeAdminDepartment<?php echo $num; ?>">Department:</label><input type="text" name="eeAdminDepartment<?php echo $num; ?>" value="<?php if(@$dept[0]) { echo $dept[0]; }  ?>" class="adminInput" id="eeAdminDepartment<?php echo $num; ?>" size="64" />
-						
-						<label for="eeAdminTO<?php echo $num; ?>">TO:</label><input type="text" name="eeAdminTO<?php echo $num; ?>" value="<?php if(@$dept[1]) { echo $dept[1]; } elseif($num == 1) { echo get_option('admin_email'); }  ?>" class="adminInput" id="eeAdminTO<?php echo $num; ?>" size="64" />
-							
-						<label for="eeAdminCC<?php echo $num; ?>">CC:</label><input type="text" name="eeAdminCC<?php echo $num; ?>" value="<?php if(@$dept[2]) { echo $dept[2]; } ?>" class="adminInput" id="eeAdminCC<?php echo $num; ?>" size="64" />
-						
-						<label for="eeAdminBCC<?php echo $num; ?>">BCC:</label><input type="text" name="eeAdminBCC<?php echo $num; ?>" value="<?php if(@$dept[3]) { echo $dept[3]; } ?>" class="adminInput" id="eeAdminBCC<?php echo $num; ?>" size="64" />	
-						<br class="eeClearFix" />
-					
-					</fieldset>
-					
-					<?php } ?>
-					
-					<button type="button" id="eeAddDepartment">Add New Department</button>
-					
-					<div class="eeNote">You can add more than one address per field by separating them using a comma.</div>
-					
-				</fieldset>
-				
-				
-				
-				
-				
-				<fieldset>
-				
-					<h2>Server Address</h2>
-					
-					<label for="eeAdminFROM">FROM:</label><input type="email" name="eeAdminFROM" value="<?php if($this->from) { echo $this->from; } else { echo get_option('admin_email'); } ?>" class="adminInput" id="eeAdminFROM" size="64" />	
-					<br class="eeClearFix" />
-					<div class="eeNote">To improve deliverability, the FROM address should be a working email address on this server.<br />
-						The senders email address will be the Reply-To address for all messages, not this address.
-					</div>
-					
-				</fieldset>
-				
-				
-				
-				<fieldset>
-				
-					<input type="submit" name="eeSubmitContactForm" id="eeSubmitContactForm" value="SAVE" />
-					
-					<p>USAGE: Place this bit of shortcode in any Post or Page that you would like the plugin to appear: <strong><em>[eeRSCF]</em></strong></p>
-			
-					<p><?php echo $eeDisclaimer; ?><br />
-					<a href="mailto:mitch@elementengage.com">Bug Reports / Feedback</a></p>
-					
-					<p><a class="eeBacklink" href="<?php echo $eeBackLink; ?>" target="_blank"><?php echo $eeBackLinkTitle; ?></a></p>
-				
-				</fieldset>
-				
-			</form>
-		</div><?php 
-			
-	}
 	
 	
 	
@@ -958,182 +978,327 @@ class eeRSCF_Class {
 		
 		$this->log[] = 'Processing Form Settings';
 		
+		$this->log['post'] = $post;
+		
 		if($post AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 			
-			// Store our settings in the options table as an inverse bracket set "][" delimited string.
-			// We'll turn this into an array on the other side.	
-		
-			global $wpdb, $eeRSCF_FileUpload;
+			global $wpdb, $eeRSCFU;
 			
-			// $this->log[] = 'The POST...';
-			// $this->log[] = implode('][', $post);
-			
-			// Email Form Fields
-			// Storage format: default-name-slug^show^default-name-or-custom-label
-			$settings = 'fields=';
-			$fields = '';
-			
-			
-			foreach($this->formFields as $defaultField) {
+			// Form Fields
+			if(@$_POST['eeRSCF_formSettings'] == 'TRUE') {
 				
-				$this->log[] = 'Looping through form fields...';
+				// Email Form Fields
+				// Storage format: default-name-slug^show^default-name-or-custom-label
+				$fields = '';
 				
-				$fieldSlug = self::makeSlug($defaultField);
-				
-				// Add the default
-				$fields .= $fieldSlug;
-				$this->log[] = 'Field: ' . $defaultField;
-				
-				
-				if(@$_POST['show_' . $fieldSlug]) {
+				foreach($this->formFields as $thisField) {
 					
-					// Do we show it and what is the label?
-					$fields .= '^SHOW';
+					// $this->log[] = 'Looping through form fields...';
 					
-					if(@$_POST['label_' . $fieldSlug]) {
-						$customLabel = filter_var($_POST['label_' . $fieldSlug], FILTER_SANITIZE_STRING);
-					}
+					$fieldArray = explode('^', $thisField);
+					$fieldSlug = $fieldArray[0];
 					
-					$fields .= '^' . $customLabel;
+					// Add the default
+					$fields .= $fieldSlug;
 					
-					if(@$_POST['req_' . $fieldSlug]) {
-						$fields .= '^REQ';
-					}	
-				}
-				$fields .= '|'; // Seperator for fields
-			}
-			
-			$fields = substr($fields, 0, -1); // Drop the last pipe.
-			
-			// $this->log[] = 'Form Fields: ' . $fields;
-			
-			$settings .= $fields . ']['; // END fields
+					if(@$_POST['show_' . $fieldSlug]) {
 						
+						// Do we show it and what is the label?
+						$fields .= '^SHOW';
 						
-			// Only accept Yes as the answer string. Gotta stay positive!
-			$settings .= 'allowUploads=';
-			if($_POST['eeAllowUploads'] == 'Yes') { $settings .= 'Yes'; } else { $settings .= 'No'; }
-			$settings .= '][';
-			
-			// This must be a number
-			$uploadMaxSize = (int) $_POST['eeMaxFileSize'];
-			// Can't be more than the system allows.
-			if(!$uploadMaxSize OR $uploadMaxSize > $eeRSCF_FileUpload->maxUploadLimit) { $uploadMaxSize = $eeRSCF_FileUpload->maxUploadLimit; }
-			$settings .= 'maxFileSize=' . $uploadMaxSize . '][';
-			
-			// Strip all but what we need for the comma list of file extensions
-			$formats = preg_replace("/[^a-z0-9.,]/i", "", $_POST['eeFormats']);
-			if(!$formats) { $formats = $this->fileFormats; } // Go with default if none.
-			$settings .= 'formats=' . $formats . '][';
-			
-			
-			// Spam Prevention
-			$settings .= 'spamBlock=';
-			if($_POST['spamBlock'] == 'Yes') { $settings .= 'Yes'; } else { $settings .= 'No'; }
-			$settings .= '][';
-			
-			$settings .= 'spamWords=';
-			if($_POST['spamWords']) { $settings .= filter_var($_POST['spamWords'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH); }
-			
-			$settings .= '][';
-				
-			// The FROM address
-			if(filter_var($_POST['eeAdminFROM'], FILTER_VALIDATE_EMAIL)) {
-				$settings .= 'FROM:' . $_POST['eeAdminFROM']; // Assemble addresses for storage
-			} else {
-				$this->errors[] = 'Bad FROM Address: ' . $_POST['eeAdminFROM'];
-			}
-			
-			$settings .= '][';
-			
-			// Departments -------
-			
-			$addresses = '';
-			
-			$num = filter_var($_POST['eeRSCFDepartments'], FILTER_SANITIZE_NUMBER_INT); // How many departments?
-			
-			for($i = 1; $i <= $num; $i++) {
-				
-				// The department
-				if($_POST['eeAdminDepartment' . $i]) {
-					$department = filter_var($_POST['eeAdminDepartment' . $i], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
-				
-				} else { // Account for a depertment in the middle removed (if more than one removed, others will be truncated)
-					$i++;
-					if($_POST['eeAdminDepartment' . $i]) {
-						$department = filter_var($_POST['eeAdminDepartment' . $i], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
-					}
-				}
-				
-				if($department) {
-					
-					$department = ucwords($department); // Make all lowercase look gooder
-				
-					// Email addresses.	
-					if($_POST['eeAdminTO' . $i]) {
-					
-						$addresses .= 'DEPT:' . $department . '^';
-						
-						$delivery = array('TO', 'CC', 'BCC');
-						
-						foreach($delivery as $to) { 
-							
-							// $this->log[] = 'Looping through ' . $to . ' addresses.' ;
-							
-							$addresses .= $to . ':';
-							
-							if(strpos($_POST['eeAdmin' . $to . $i], ',')) { // More than one address
-							
-								$this->log[] = 'Multiple address for ' . $to . ' field.';
-								
-								$emails = explode(',', $_POST['eeAdmin' . $to . $i]); // Make array
-								
-								foreach($emails as $email) { // Loop through them
-									
-									$email = trim($email); // Trim spaces
-									
-									if(filter_var($email, FILTER_VALIDATE_EMAIL)) { // Validate address
-										$addresses .= $email . ','; // Assemble addresses for storage
-									} else {
-										$this->errors[] = 'Bad ' . $to . ' Address: ' . $email;
-									}
-								}
-								$addresses = substr($addresses, 0, -1); // Clip the last comma
-								
-							} elseif(@$_POST['eeAdmin' . $to . $i]) { // Just one address
-								
-								$this->log[] = 'Single address for ' . $to . ' field.';
-								
-								if(filter_var($_POST['eeAdmin' . $to . $i], FILTER_VALIDATE_EMAIL)) {
-									$addresses .= $_POST['eeAdmin' . $to . $i]; // Assemble addresses for storage
-								} else {
-									$this->errors[] = 'Bad ' . $to . ' Address: ' . $_POST['eeAdmin' . $to . $i];
-								}
-							}
-							
-							$addresses .= '^'; // Seperate address fields				
+						if(@$_POST['label_' . $fieldSlug]) {
+							$customLabel = filter_var($_POST['label_' . $fieldSlug], FILTER_SANITIZE_STRING);
 						}
 						
-						$addresses .= ')'; // Seperate departments			
+						$fields .= '^' . $customLabel;
+						
+						if(@$_POST['req_' . $fieldSlug]) {
+							$fields .= '^REQ';
+						}	
 					}
+					$fields .= '|'; // Seperator for fields
 				}
 				
-			} // End for loop
-			
-			// Add to the settings string
-			$settings .= $addresses;
-			
-			// Tack on the DB version
-			$settings .= '][version=' . $this->eeRSCFDBVersion;
-			
-			
-			// Update the wp_options table setting the options_value to our $settings 
-			if(update_option($this->dbFieldName, $settings)) {
-				$this->confirmation = 'Settings Have Been Updated!';
-				$this->log[] = '>> Settings Updated: ' . $settings;
-			} else {
-				$this->log[] = @mysqli_error($wpdb);
+				$fields = substr($fields, 0, -1); // Drop the last pipe.
+				
+				$this->log[] = 'Form Fields: ' . $fields;
+				
+				update_option('eeRSCF_formFields', $fields); // Update the database
+
 			}
+			
+			
+			
+			
+			
+			
+			if(@$_POST['eeRSCF_FileSettings'] == 'TRUE') {
+							
+				// Only accept Yes as the answer string. Gotta stay positive!
+				if($_POST['eeAllowUploads'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
+				
+				// This must be a number
+				$uploadMaxSize = (int) $_POST['eeMaxFileSize'];
+				
+				// Can't be more than the system allows.
+				if(!$uploadMaxSize OR $uploadMaxSize > $eeRSCFU->maxUploadLimit) { 
+					$uploadMaxSize = $eeRSCFU->maxUploadLimit;
+				}
+				update_option('eeRSCF_fileMaxSize', $uploadMaxSize); // Update the database
+				
+				// Strip all but what we need for the comma list of file extensions
+				$formats = preg_replace("/[^a-z0-9.,]/i", "", $_POST['eeFormats']);
+				if(!$formats) { $formats = $this->fileFormats; } // Go with default if none.
+				update_option('eeRSCF_fileFormats', $formats); // Update the database
+			}			
+			
+			
+			
+			
+			if(@$_POST['eeRSCF_SpamSettings'] == 'TRUE') {
+			
+				// Spam Prevention
+				if($_POST['spamBlock'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
+				$eeRSCF->log[] = 'Spam Protection On: ' . $settings;
+				update_option('eeRSCF_spamBlock', $settings); // Update the database
+				
+				// Words Not Allowed
+				$settings = filter_var($_POST['spamWords'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+				$eeRSCF->log[] = 'Spam Words: ' . $settings;
+				update_option('eeRSCF_spamWords', $settings); // Update the database
+			
+			}
+			
+			
+			
+			
+			
+			
+			if(@$_POST['eeRSCF_EmailSettings'] == 'TRUE') {
+					
+				
+				// echo '<pre>'; print_r($_POST); echo '</pre>'; exit;
+				
+				// Form Address
+				$setting = 'eeRSCF_email';
+				$value = filter_var(@$_POST[$setting], FILTER_VALIDATE_EMAIL);
+				if($value) {
+					$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
+					update_option($setting, $value); 
+				} else {
+					$this->errors[] = 'Email Config Problem: ' . $setting . ' = ' . $value;
+				}
+				
+				// Form Mode
+				$setting = 'eeRSCF_emailMode';
+				$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+				if($value) {
+					$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
+					update_option($setting, $value); 
+				} else {
+					$this->errors[] = 'Email Config Problem: ' . $setting . ' = ' . $value;
+				}
+				
+				
+				if($value == 'SMTP') {
+				
+					// The Nice Name
+					$setting = 'eeRSCF_emailName';
+					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					if($value) {
+						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
+						update_option($setting, $value); 
+					} else {
+						$this->errors[] = 'Email Config Problem: ' . $setting . ' = ' . $value;
+					}
+					
+					// The Message Format
+					$setting = 'eeRSCF_emailFormat';
+					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					if($value) {
+						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
+						update_option($setting, $value); 
+					} else {
+						$this->errors[] = 'Email Config Problem: ' . $setting . ' = ' . $value;
+					}
+					
+					// Hostname
+					$setting = 'eeRSCF_emailServer';
+					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					if($value) {
+						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
+						update_option($setting, $value); 
+					} else {
+						$this->errors[] = 'Email Config Problem: ' . $setting . ' = ' . $value;
+					}
+					
+					// Username
+					$setting = 'eeRSCF_emailUsername';
+					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					if($value) {
+						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
+						update_option($setting, $value); 
+					} else {
+						$this->errors[] = 'Email Config Problem: ' . $setting . ' = ' . $value;
+					}
+					
+					// Password
+					$setting = 'eeRSCF_emailPassword';
+					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					if($value) {
+						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
+						update_option($setting, $value); 
+					} else {
+						$this->errors[] = 'Email Config Problem: ' . $setting . ' = ' . $value;
+					}
+					
+					// Security
+					$setting = 'eeRSCF_emailSecure';
+					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					if($value) {
+						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
+						update_option($setting, $value); 
+					} else {
+						$this->errors[] = 'Email Config Problem: ' . $setting . ' = ' . $value;
+					}
+					
+					// Security
+					$setting = 'eeRSCF_emailPort';
+					$value = filter_var(@$_POST[$setting], FILTER_VALIDATE_INT);
+					if($value) {
+						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
+						update_option($setting, $value); 
+					} else {
+						$this->errors[] = 'Email Config Problem: ' . $setting . ' = ' . $value;
+					}
+					
+					
+					// Port
+					$setting = 'eeRSCF_emailAuth';
+					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					if($value) {
+						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
+						update_option($setting, $value); 
+					} else {
+						$this->errors[] = 'Email Config Problem: ' . $setting . ' = ' . $value;
+					}
+					
+					// Debug
+					$setting = 'eeRSCF_emailDebug';
+					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					if($value) {
+						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
+						update_option($setting, $value); 
+					} else {
+						$this->errors[] = 'Email Config Problem: ' . $setting . ' = ' . $value;
+					}
+				
+				}
+				
+			}
+			
+			
+			
+			
+			
+			
+			if(@$_POST['eeRSCF_DepartmentSettings'] == 'TRUE') {
+
+				$departments = '';
+				$departmentSet = '';
+				
+				$num = filter_var($_POST['eeRSCF_Departments'], FILTER_SANITIZE_NUMBER_INT); // How many departments?
+				
+				$this->log[] = $num . ' departments';
+				
+				for($i = 1; $i <= $num; $i++) {
+					
+					// The department
+					if(@$_POST['eeAdminDepartment' . $i]) {
+						$department = filter_var($_POST['eeAdminDepartment' . $i], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+					
+					} else { // Account for a depertment in the middle removed (if more than one removed, others will be truncated)
+						$i++;
+						if(@$_POST['eeAdminDepartment' . $i]) {
+							$department = filter_var($_POST['eeAdminDepartment' . $i], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+						}
+					}
+					
+					if($department) {
+						
+						$department = ucwords($department); // Make all lowercase look gooder
+					
+						// Email addresses.	
+						if(@$_POST['eeAdminTO' . $i]) {
+						
+							$departmentSet = $department . '^';
+							
+							$delivery = array('TO', 'CC', 'BCC');
+							
+							foreach($delivery as $to) { 
+								
+								// $this->log[] = 'Looping through ' . $to . ' addresses.' ;
+								
+								// $departmentSet .= $to . ':';
+								
+								if(strpos(@$_POST['eeAdmin' . $to . $i], ',')) { // More than one address
+								
+									$this->log[] = 'Multiple address for ' . $to . ' field.';
+									
+									$emails = explode(',', $_POST['eeAdmin' . $to . $i]); // Make array
+									
+									foreach($emails as $email) { // Loop through them
+										
+										$email = trim($email); // Trim spaces
+										
+										if(filter_var($email, FILTER_VALIDATE_EMAIL)) { // Validate address
+											$departmentSet .= $email . ','; // Assemble addresses for storage
+										} else {
+											$this->errors[] = 'Bad ' . $to . ' Address: ' . $email;
+										}
+									}
+									$departmentSet = substr($departmentSet, 0, -1); // Clip the last comma
+									
+								} elseif(@$_POST['eeAdmin' . $to . $i]) { // Just one address
+									
+									$this->log[] = 'Single address for ' . $to . ' field.';
+									
+									if(filter_var($_POST['eeAdmin' . $to . $i], FILTER_VALIDATE_EMAIL)) {
+										$departmentSet .= $_POST['eeAdmin' . $to . $i]; // Assemble addresses for storage
+									} else {
+										$this->errors[] = 'Bad ' . $to . ' Address: ' . $_POST['eeAdmin' . $to . $i];
+									}
+								}
+								
+								$departmentSet .= '^'; // Seperate address fields				
+							}
+							
+							if($i < $num) {
+								$departmentSet .= '|'; // Seperate departments
+							}
+							
+										
+						} else {
+							$this->errors[] = 'Need at Least One Email Address';
+							
+						}
+					}
+				
+					// Add to the settings string
+					$departments .= $departmentSet;
+					
+				} // End for loop
+				
+				$this->log[] = 'Departments: ' . $departments;
+				
+				update_option('eeRSCF_departments', $departments); // Update the database
+				
+			
+			}
+			
+			// Re-Get our settings
+			self::eeRSCF_Setup(TRUE);
+			
 		}
 	}	
 			

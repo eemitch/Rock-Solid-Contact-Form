@@ -94,7 +94,7 @@ $eeOutput .= '<article class="eeSupp">
 			  
 			<fieldset>
 				
-				<input type="hidden" name="eeContact_plugin" value="' . eeRSCF_PluginName . ' (' . eeRSCF_Version . ')" />
+				<input type="hidden" name="eeContact_plugin" value="' . eeRSCF_PluginName . ' (' . eeRSCF_version . ')" />
 				
 				<label for="eeContact_name">' . __('Your Name', 'ee-simple-file-list') . ':</label>
 				<input type="text" name="eeContact_name" id="eeContact_name" value="' . $eeContact_name . '" required /><span class="eeContact_Required">*</span>

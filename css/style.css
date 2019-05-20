@@ -1,0 +1,84 @@
+/*  Rok Solid Contact Form CSS - mitchellbennis@gmail.com  */
+
+
+#eeRSCF {
+
+}
+
+#eeRSCF_Message {
+	float: right;
+}
+
+#eeRSCF label {
+	display: block;
+	float: left;
+	clear: both;
+	width: 25%;
+	margin-right: 2%;
+	margin-top: 5px;
+	padding: 3px;
+	padding-right: 6px;
+	background:  #666;
+	color: #EEE;
+	text-align: right;
+}
+#eeRSCF fieldset {
+	margin-bottom: 10px;
+	border: none;
+}
+
+#eeRSCF input[type="text"], 
+#eeRSCF input[type="email"], 
+#eeRSCF input[type="tel"],
+#eeRSCF input[type="file"],
+#eeRSCF select,    
+#eeRSCF textarea {
+	float: left;
+	width: 65%;
+	margin-top: 5px;
+	border: 1px solid #CCC;
+	padding: 3px;
+}
+#eeRSCF textarea {
+	height: 10em;
+}
+#eeRSCF input[type=submit],
+#eeRSCF_SubmitMessage {
+	float: right;
+	margin: 2em 10% 2em 0;
+}
+#eeRSCF .uploadMax {
+	font-size: 80%;
+}
+#eeRSCF span.eeRequired {
+	float: left;
+	color: #CCC;
+	padding-left: .5em;
+}
+#eeRSCF .eeNote {
+	float: left;
+	clear: both;
+	font-size: 80%;
+	font-style: italic;
+	margin-left: 27%;
+}
+
+.eeRSCF_Row {
+	clear: left;
+	padding-bottom: .75em;
+}
+
+.eeRSCF_Confirm h2,
+.eeRSCF_Confirm p {
+	text-align: center;
+}
+
+
+
+.eeRSCF_Roww {
+	display: none;
+}
+
+.eeClearFix {
+	clear: both;
+}
