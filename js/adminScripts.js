@@ -63,10 +63,10 @@ jQuery(document).ready(function() {
 	  
 	  // Replace old count numbers
 	  eeNewDepartment = eeFindAndReplace(eeNewDepartment, 'eeRemoveSet('+eeOldNum+')', 'eeRemoveSet('+eeDepartmentCount+')');
-	  eeNewDepartment = eeFindAndReplace(eeNewDepartment, 'eeAdminDepartment'+eeOldNum, 'eeAdminDepartment'+eeDepartmentCount);
-	  eeNewDepartment = eeFindAndReplace(eeNewDepartment, 'eeAdminTO'+eeOldNum, 'eeAdminTO'+eeDepartmentCount);
-	  eeNewDepartment = eeFindAndReplace(eeNewDepartment, 'eeAdminCC'+eeOldNum, 'eeAdminCC'+eeDepartmentCount);
-	  eeNewDepartment = eeFindAndReplace(eeNewDepartment, 'eeAdminBCC'+eeOldNum, 'eeAdminBCC'+eeDepartmentCount);
+	  eeNewDepartment = eeFindAndReplace(eeNewDepartment, 'eeRSCF_formName'+eeOldNum, 'eeRSCF_formName'+eeDepartmentCount);
+	  eeNewDepartment = eeFindAndReplace(eeNewDepartment, 'eeRSCF_formTo'+eeOldNum, 'eeRSCF_formTo'+eeDepartmentCount);
+	  eeNewDepartment = eeFindAndReplace(eeNewDepartment, 'eeRSCF_formCC'+eeOldNum, 'eeRSCF_formCC'+eeDepartmentCount);
+	  eeNewDepartment = eeFindAndReplace(eeNewDepartment, 'eeRSCF_formBCC'+eeOldNum, 'eeRSCF_formBCC'+eeDepartmentCount);
 	  
 	  // Add it to the form after the last one
 	  jQuery('#eeDepartmentSet' + eeOldNum).after(eeNewDepartment);

@@ -1,6 +1,11 @@
 <?php // EE Contact Form MAin Class
 	
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
+// NOTES -------
+
+// SELECT * FROM `wp_options` WHERE option_name LIKE 'eeRSCF_%' ORDER BY option_name
+
 	
 class eeRSCF_Class {
 	
@@ -17,7 +22,7 @@ class eeRSCF_Class {
 		'to' => '',
 		'cc' => '',
 		'bcc' => '',
-		'first-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'First Name'), 
+		'fields' => array('first-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'First Name'), 
 		'last-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Last Name'), 
 		'biz-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Business Name'), 
 		'address1' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Address'), 
@@ -30,31 +35,10 @@ class eeRSCF_Class {
 		'other' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Other'), 
 		'subject' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Subject'), 
 		'files' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Attachments')
-	);
+	));
 	
 	
-	
-	// fields=first-name^SHOW^First Name^REQ|last-name^SHOW^Last Name^REQ|business^SHOW^Business^REQ|address^SHOW^Address^REQ|address-2^SHOW^Address 2^REQ|city^SHOW^City^REQ|state^SHOW^State^REQ|zip^SHOW^Zip^REQ|phone^SHOW^Phone^REQ|website^SHOW^Website^REQ|other^SHOW^Other^REQ|subject^SHOW^Subject^REQ
-	// ][
-	// fileAllowUploads=Yes
-	// ][
-	// uploadMaxFilesize=10
-	// ][
-	// formats=.gif, .jpg, .jpeg, .bmp, .png, .tif, .tiff, .txt, .eps, .psd, .ai, .pdf, .doc, .xls, .ppt, .docx, .xlsx, .pptx, .odt, .ods, .odp, .odg, .wav, .wmv, .wma, .flv, .3gp, .avi, .mov, .mp4, .m4v, .mp3, .webm, .zip
-	// ][
-	// spamBlock=Yes
-	// ][
-	// spamWords=I am a web, websites, website design, web design, web designer, web developer, web development, more leads, more sales, leads and sales, first page of google, seo, search engine, more profitable
-	// ][
-	// FROM:admin@elementengage.net
-	// ][
-	// DEPT:N/A^TO:admin@elementengage.net^^)
-	// ][
-	// version=1.2
-
-	
-	// Our Default Settings
-	public $default_formFields = 'first-name^SHOW^First Name^REQ|last-name^SHOW^Last Name^REQ|business^SHOW^Business^REQ|address^SHOW^Address^REQ|address-2^SHOW^Address 2^REQ|city^SHOW^City^REQ|state^SHOW^State^REQ|zip^SHOW^Zip^REQ|phone^SHOW^Phone^REQ|website^SHOW^Website^REQ|other^SHOW^Other^REQ|subject^SHOW^Subject^REQ';
+/*
 	public $default_fileAllowUploads = 'YES';
 	public $default_fileMaxSize = 8;
 	public $default_fileFormats = '.gif, .jpg, .jpeg, .bmp, .png, .tif, .tiff, .txt, .eps, .psd, .ai, .pdf, .doc, .xls, .ppt, .docx, .xlsx, .pptx, .odt, .ods, .odp, .odg, .wav, .wmv, .wma, .flv, .3gp, .avi, .mov, .mp4, .m4v, .mp3, .webm, .zip';
@@ -62,9 +46,12 @@ class eeRSCF_Class {
 	public $default_spamWords = 'I am a web, websites, website design, web design, web designer, web developer, web development, more leads, more sales, leads and sales, first page of google, seo, search engine, more profitable';
 	public $default_departments = 'Main^support@elementengage.com^mitch@elementengage.com';
 	public $default_departmentName = 'Main';
+*/
+	
+	
 	
 	// Our Form Settings
-	public $formFields;
+	// public $formFields;
 	public $fileAllowUploads;
 	public $fileMaxSize;
 	public $fileFormats;
@@ -144,12 +131,17 @@ class eeRSCF_Class {
 		
 		
 		
-		// Get Database Settings
+		// Get First Form Array
+		$this->eeRSCF_1 = unserialize( get_option('eeRSCF_1') );
+		$this->log['settings']['eeRSCF_1'] = $this->eeRSCF_1;
 		
-		// FORM FIELDS
-		$fields = get_option('eeRSCF_formFields');
-		$this->log['settings'][] = $fields;
-		$this->formFields = explode('|', $fields);
+		// Look for more forms...
+		
+		// echo '<pre>'; print_r($this->eeRSCF_1); echo '</pre>'; exit;
+		
+		
+		
+		
 		
 		
 		
@@ -216,20 +208,6 @@ class eeRSCF_Class {
 		}
 		
 		
-		
-		// DEPARTMENTS
-		$departments = get_option('eeRSCF_departments');
-		$this->log['settings'][] = $departments;
-		if(!$departments) {
-			$departments = $this->default_departments;
-		}
-		
-		
-		if(strpos($departments, '|')) {
-			$this->departments = explode('|', $departments);
-		} else {
-			$this->departments = array($departments);
-		}
 		
 		
 		
@@ -986,45 +964,89 @@ class eeRSCF_Class {
 			
 			// Form Fields
 			if(@$_POST['eeRSCF_formSettings'] == 'TRUE') {
+			
+				// echo '<pre>'; print_r($_POST); echo '</pre>'; exit;
 				
-				// Email Form Fields
-				// Storage format: default-name-slug^show^default-name-or-custom-label
-				$fields = '';
 				
-				foreach($this->formFields as $thisField) {
+				
+				$eeArray = array();
+			
+				// ID
+				$eeRSCF_ID = filter_var(@$_POST['eeRSCF_formID'], FILTER_SANITIZE_NUMBER_INT);
+				
+				// Name
+				$formName = filter_var(@$_POST['eeRSCF_formName'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+				if($formName) { $eeArray['name'] = $formName; }
+	
+				// Email Addresses
+				if(@$_POST['eeRSCF_formTO']) {
+				
+					$delivery = array('to', 'cc', 'bcc');
 					
-					// $this->log[] = 'Looping through form fields...';
+					foreach($delivery as $to) {
 					
-					$fieldArray = explode('^', $thisField);
-					$fieldSlug = $fieldArray[0];
-					
-					// Add the default
-					$fields .= $fieldSlug;
-					
-					if(@$_POST['show_' . $fieldSlug]) {
+						$eeSet = ''; // String of comma deliniated email addds
 						
-						// Do we show it and what is the label?
-						$fields .= '^SHOW';
+						$eeString = filter_var(@$_POST['eeRSCF_form' . strtoupper($to) ], FILTER_SANITIZE_STRING);
 						
-						if(@$_POST['label_' . $fieldSlug]) {
-							$customLabel = filter_var($_POST['label_' . $fieldSlug], FILTER_SANITIZE_STRING);
+						if(strpos($eeString, ',')) { // More than one address
+						
+							$this->log[] = 'Multiple address for ' . $to . ' field.';
+							
+							$emails = explode(',', $eeString); // Make array
+							
+							foreach($emails as $email) { // Loop through them
+								
+								$email = trim($email); // Trim spaces
+								
+								if(filter_var($email, FILTER_VALIDATE_EMAIL)) { // Validate address
+									$eeSet .= $email . ','; // Assemble addresses for storage
+								} else {
+									$this->errors[] = 'Bad ' . $to . ' Address: ' . $email;
+								}
+							}
+							
+							$eeSet = substr($eeSet, 0, -1); // Clip the last comma
+														
+						} elseif($eeString) { // Just one address
+							
+							if(filter_var($eeString, FILTER_VALIDATE_EMAIL)) {
+								$this->log[] = 'Single address for ' . $to . ' field.';
+								$eeSet .= $eeString;
+							} else {
+								$this->errors[] = 'Bad ' . $to . ' Address: ' . $_POST['eeAdmin' . $to . $i];
+							}
 						}
 						
-						$fields .= '^' . $customLabel;
-						
-						if(@$_POST['req_' . $fieldSlug]) {
-							$fields .= '^REQ';
-						}	
+						$eeSet;
+					
+						if($eeSet) { $eeArray[$to] = $eeSet; }
 					}
-					$fields .= '|'; // Seperator for fields
+
+				} else {
+					$this->errors[] = 'Need at Least One Email Address';
+					
+				}
+			
+			
+			
+			
+				$fieldsArray = $_POST['eeRSCF_fields'];
+				
+				if( is_array($fieldsArray) ) {
+				
+					foreach($fieldsArray as $thisName => $thisFieldArray) {
+						
+						$eeArray['fields'][$thisName] = array('show' => @$thisFieldArray['show'], 'req' => @$thisFieldArray['req'], 'label' => @$thisFieldArray['label']);
+						
+					}
 				}
 				
-				$fields = substr($fields, 0, -1); // Drop the last pipe.
+				// echo '<pre>'; print_r($eeArray); echo '</pre>'; exit;
 				
-				$this->log[] = 'Form Fields: ' . $fields;
+				$eeArrayString = serialize($eeArray);
+				update_option('eeRSCF_' . $eeRSCF_ID, $eeArrayString); // Update the database
 				
-				update_option('eeRSCF_formFields', $fields); // Update the database
-
 			}
 			
 			
@@ -1214,13 +1236,13 @@ class eeRSCF_Class {
 				for($i = 1; $i <= $num; $i++) {
 					
 					// The department
-					if(@$_POST['eeAdminDepartment' . $i]) {
-						$department = filter_var($_POST['eeAdminDepartment' . $i], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+					if(@$_POST['eeRSCF_formName' . $i]) {
+						$department = filter_var($_POST['eeRSCF_formName' . $i], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
 					
 					} else { // Account for a depertment in the middle removed (if more than one removed, others will be truncated)
 						$i++;
-						if(@$_POST['eeAdminDepartment' . $i]) {
-							$department = filter_var($_POST['eeAdminDepartment' . $i], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+						if(@$_POST['eeRSCF_formName' . $i]) {
+							$department = filter_var($_POST['eeRSCF_formName' . $i], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
 						}
 					}
 					
@@ -1228,60 +1250,7 @@ class eeRSCF_Class {
 						
 						$department = ucwords($department); // Make all lowercase look gooder
 					
-						// Email addresses.	
-						if(@$_POST['eeAdminTO' . $i]) {
 						
-							$departmentSet = $department . '^';
-							
-							$delivery = array('TO', 'CC', 'BCC');
-							
-							foreach($delivery as $to) { 
-								
-								// $this->log[] = 'Looping through ' . $to . ' addresses.' ;
-								
-								// $departmentSet .= $to . ':';
-								
-								if(strpos(@$_POST['eeAdmin' . $to . $i], ',')) { // More than one address
-								
-									$this->log[] = 'Multiple address for ' . $to . ' field.';
-									
-									$emails = explode(',', $_POST['eeAdmin' . $to . $i]); // Make array
-									
-									foreach($emails as $email) { // Loop through them
-										
-										$email = trim($email); // Trim spaces
-										
-										if(filter_var($email, FILTER_VALIDATE_EMAIL)) { // Validate address
-											$departmentSet .= $email . ','; // Assemble addresses for storage
-										} else {
-											$this->errors[] = 'Bad ' . $to . ' Address: ' . $email;
-										}
-									}
-									$departmentSet = substr($departmentSet, 0, -1); // Clip the last comma
-									
-								} elseif(@$_POST['eeAdmin' . $to . $i]) { // Just one address
-									
-									$this->log[] = 'Single address for ' . $to . ' field.';
-									
-									if(filter_var($_POST['eeAdmin' . $to . $i], FILTER_VALIDATE_EMAIL)) {
-										$departmentSet .= $_POST['eeAdmin' . $to . $i]; // Assemble addresses for storage
-									} else {
-										$this->errors[] = 'Bad ' . $to . ' Address: ' . $_POST['eeAdmin' . $to . $i];
-									}
-								}
-								
-								$departmentSet .= '^'; // Seperate address fields				
-							}
-							
-							if($i < $num) {
-								$departmentSet .= '|'; // Seperate departments
-							}
-							
-										
-						} else {
-							$this->errors[] = 'Need at Least One Email Address';
-							
-						}
 					}
 				
 					// Add to the settings string

@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 define('eeRSCF_PluginName', 'Rock Solid Contact Form');
 define('eeRSCF_WebsiteLink', 'https://elementengage.com');
-define('eeRSCF_version', '1.1.1');
+define('eeRSCF_version', '1.1.2');
 
 $eeRSCF = ''; // Our Main class
 $eeRSCFU = ''; // Our Upload class
@@ -206,35 +206,6 @@ add_action( 'admin_menu', 'eeRSCF_plugin_menu' );
 
 
 
-function eeRSCF_SMTP( $phpmailer ) {
-	
-	if ( !is_object( $phpmailer ) ) {
-		$phpmailer = (object) $phpmailer;
-	}
-	
-	$phpmailer->Mailer     = 'smtp';
-	// $phpmailer->isSMTP();
-	
-	$phpmailer->From       = $eeRSCF->email;
-	$phpmailer->FromName   = $eeRSCF->emailName;
-	$phpmailer->Host       = $eeRSCF->emailServer;
-	$phpmailer->Username   = $eeRSCF->emailUsername;
-	$phpmailer->Password   = $eeRSCF->emailPassword;
-	$phpmailer->SMTPSecure = $eeRSCF->emailSecure;
-	$phpmailer->Port       = $eeRSCF->emailPort;
-	$phpmailer->SMTPAuth   = $eeRSCF->emailAuth;
-	
-	if($eeRSCF->emailFormat == 'HTML') {
-		$phpmailer->isHTML(TRUE);
-		// $phpmailer->msgHTML = $body;
-		// $phpmailer->Body = nl2br($body);
-	}
-	
-}
-// add_action( 'phpmailer_init', 'eeRSCF_SMTP' );
-
-
-
 
 // Log Failed Emails
 function eeRSCF_Failed($wp_error) {
@@ -261,7 +232,11 @@ function eeRSCF_UpdatePlugin() {
 	
 	$eeContactForm = get_option('eeContactForm'); // Check for old version
 	
-	if($eeInstalled AND eeRSCF_version < $eeInstalled) { // If this is a newer version
+	if($eeInstalled AND eeRSCF_version > $eeInstalled) { // If this is a newer version
+		
+		// Forms
+		$eeString = serialize($eeRSCF->eeRSCF_1);
+		update_option('eeRSCF_1', $eeString);
 	
 		$eeRSCF_Log[] = 'New Version: ' . eeRSCF_version;
 		
@@ -270,7 +245,7 @@ function eeRSCF_UpdatePlugin() {
 		
 	} elseif($eeContactForm) { // Upgrade to New
 		
-		
+		// TO DO - Make array from old text string
 		
 		
 		
@@ -294,7 +269,7 @@ function eeRSCF_UpdatePlugin() {
 		update_option('eeRSCF_spamBlock', $eeRSCF->default_spamBlock);
 		update_option('eeRSCF_spamWords', $eeRSCF->default_spamWords);
 		
-		// Get current user info
+		// Email
 		$current_user = wp_get_current_user();
 		$userEmail = (string) $current_user->user_email;
 		update_option('eeRSCF_email' , $userEmail);
@@ -304,14 +279,12 @@ function eeRSCF_UpdatePlugin() {
 		update_option('eeRSCF_emailUsername' , ' ');
 		update_option('eeRSCF_emailPassword' , ' ');
 		update_option('eeRSCF_emailServer' , 'mail.' . $_SERVER['HTTP_HOST']);
-		update_option('eeRSCF_emailSecure' , 'NO');
-		update_option('eeRSCF_emailPort' , '25');
+		update_option('eeRSCF_emailSecure' , 'YES');
+		update_option('eeRSCF_emailPort' , '465');
 		update_option('eeRSCF_emailAuth' , 'NO');
 		update_option('eeRSCF_emailDebug' , 1); // 1 for No, 2 for Yes
 		
-		
-		// update_option('eeRSCF_departments' , 'MAIN^' . $userEmail);
-		
+		// Meta
 		update_option('eeRSCF_version', eeRSCF_version);	
 		
 	} else {

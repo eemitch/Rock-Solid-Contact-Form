@@ -358,7 +358,7 @@ function eeRSCF_Settings() {
 		
 			
 			
-		} elseif($active_subtab == 'dept_settings') {
+		} elseif($active_subtab == '__dept_settings') {
 		
 			$eeOutput .= '
 					
@@ -383,33 +383,33 @@ function eeRSCF_Settings() {
 						
 					$eeOutput .= '<fieldset id="eeDepartmentSet' . $num . '">';
 					
-					$eeOutput .= '<label for="eeAdminDepartment' . $num . '">Department:</label>
-						<input type="text" name="eeAdminDepartment' . $num . '" value="';
+					$eeOutput .= '<label for="eeRSCF_formName' . $num . '">Department:</label>
+						<input type="text" name="eeRSCF_formName' . $num . '" value="';
 						
 					if(@$dept[0]) { $eeOutput .= $dept[0]; }
 					
-					$eeOutput .= '" class="adminInput" id="eeAdminDepartment' . $num . '" size="64" />
+					$eeOutput .= '" class="adminInput" id="eeRSCF_formName' . $num . '" size="64" />
 						
-						<label for="eeAdminTO' . $num . '">TO:</label>
-						<input type="text" name="eeAdminTO' . $num . '" value="';
+						<label for="eeRSCF_formTo' . $num . '">TO:</label>
+						<input type="text" name="eeRSCF_formTo' . $num . '" value="';
 						
 					if(@$dept[1]) { $eeOutput .= $dept[1]; } elseif($num == 1) { $eeOutput .= get_option('admin_email'); }
 					
-					$eeOutput .= '" class="adminInput" id="eeAdminTO' . $num . '" size="64" />
+					$eeOutput .= '" class="adminInput" id="eeRSCF_formTo' . $num . '" size="64" />
 							
-						<label for="eeAdminCC' . $num . '">CC:</label>
-						<input type="text" name="eeAdminCC' . $num . '" value="';
+						<label for="eeRSCF_formCC' . $num . '">CC:</label>
+						<input type="text" name="eeRSCF_formCC' . $num . '" value="';
 						
 					if(@$dept[2]) { $eeOutput .= $dept[2]; }
 					
-					$eeOutput .= '" class="adminInput" id="eeAdminCC' . $num . '" size="64" />
+					$eeOutput .= '" class="adminInput" id="eeRSCF_formCC' . $num . '" size="64" />
 						
-						<label for="eeAdminBCC' . $num . '">BCC:</label>
-						<input type="text" name="eeAdminBCC' . $num . '" value="';
+						<label for="eeRSCF_formBCC' . $num . '">BCC:</label>
+						<input type="text" name="eeRSCF_formBCC' . $num . '" value="';
 						
 					if(@$dept[3]) { $eeOutput .= $dept[3]; }
 					
-					$eeOutput .= '" class="adminInput" id="eeAdminBCC' . $num . '" size="64" />	
+					$eeOutput .= '" class="adminInput" id="eeRSCF_formBCC' . $num . '" size="64" />	
 						
 						<br class="eeClearFix" />';
 					
@@ -522,71 +522,117 @@ function eeRSCF_Settings() {
 			
 		} else { // Form Settings
 			
+			// echo '<pre>'; print_r($eeRSCF->eeRSCF_1); echo '</pre>'; exit;
+			
+			$eeRSCF_formID = 1;
+			
 			$eeOutput .= '
-				
-			<h2>Form Fields</h2>
+
+			<h2>Contact Forms</h2>
 			
 			<input type="hidden" name="eeRSCF_formSettings" value="TRUE" />
+			<input type="hidden" name="eeRSCF_formID" value="' . $eeRSCF_formID . '" />
 				<input type="hidden" name="subtab" value="form_settings" />
 			
-			<fieldset>
+			<fieldset id="eeRSCF_formSettings">			
+			
+			<button id="eeRSCF_createNewForm" class="eeRemoveSet" type="button" onclick="eeRemoveSet()">Create a New Form</button>
 			
 			<p>Select the contact form fields to display. Also select if the field should be required. Change the text for each label as required. A text input box for the message will be provided automatically.</p>
 			
-			<table class="eeRSCF_formSettings">
+			';
+					
+			$eeOutput .= '<label for="eeRSCF_formName">Name</label>
+				<input type="text" name="eeRSCF_formName" value="';
+				
+			if($eeRSCF->eeRSCF_1['name']) { $eeOutput .= $eeRSCF->eeRSCF_1['name']; }
+			
+			$eeOutput .= '" class="adminInput" id="eeRSCF_formName" size="64" />
+			
+			<fieldset>
+			
+				<h3>Delivery</h3>
+						
+						<label for="eeRSCF_formTO">TO</label>
+						<input type="text" name="eeRSCF_formTO" value="';
+						
+					if($eeRSCF->eeRSCF_1['to']) { $eeOutput .= $eeRSCF->eeRSCF_1['to']; } else { $eeOutput .= get_option('admin_email'); }
+					
+					$eeOutput .= '" class="adminInput" id="eeRSCF_formTO" size="64" />
+							
+						<label for="eeRSCF_formCC">CC</label>
+						<input type="text" name="eeRSCF_formCC" value="';
+						
+					if(@$eeRSCF->eeRSCF_1['cc']) { $eeOutput .= $eeRSCF->eeRSCF_1['cc']; }
+					
+					$eeOutput .= '" class="adminInput" id="eeRSCF_formCC" size="64" />
+						
+						<label for="eeRSCF_formBCC">BCC</label>
+						<input type="text" name="eeRSCF_formBCC" value="';
+						
+					if(@$eeRSCF->eeRSCF_1['bcc']) { $eeOutput .= $eeRSCF->eeRSCF_1['bcc']; }
+					
+					$eeOutput .= '" class="adminInput" id="eeRSCF_formBCC" size="64" />	
+					
+						<p class="eeNote">You can add more than one address per field by separating them using a comma.</p>
+						
+						<br class="eeClearFix" />';
+					
+					$eeOutput .= '</fieldset>
+					
+			<fieldset>
+			
+				<h3>Form Fields</h3>
+			
+			
+			<table class="eeRSCF_formFields">
 				<tr>
 					<th>Show</th>
 					<th>Require</th>
 					<th>Label</th>
 				</tr>';
 			
-			// Get our fields
 			
-			// first-name^SHOW^First Name^REQ|last-name^SHOW^Last Name^REQ|business^SHOW^Business^REQ|address^SHOW^Address^REQ|address-2^SHOW^Address 2^REQ|city^SHOW^City^REQ|state^SHOW^State^REQ|zip^SHOW^Zip^REQ|phone^SHOW^Phone^REQ|website^SHOW^Website^REQ|other^SHOW^Other^REQ|subject^SHOW^Subject^REQ
+			$eeFields = $eeRSCF->eeRSCF_1['fields'];
 			
-			$eeFields = $eeRSCF->formFields;
-			$eeFieldsDefaults = explode('|', $eeRSCF->default_formFields);
-			
-			if(!is_array($eeFields)) { $eeFields = $eeFieldsDefaults; } // Default to the defaults
-			
-			$i = 0; // Synch loop with defaults
+			// echo '<pre>'; print_r($eeFields); echo '</pre>'; exit;
 			
 			// Loop-de-doop
-			foreach($eeFields as $field) {
+			foreach($eeFields as $eeFieldName => $fieldArray) {  // Field name and settings array
 				
-				$field = explode('^', $field); // slug-name^SHOW^Slug Name^REQ
-					
-				$eeOutput .= '<tr>
-						
-						<td><input type="checkbox" name="show_' . $field[0] . '"'; // SHOW
-						
-				if(@$field[1] == 'SHOW') { $eeOutput .= ' checked="checked"'; }
-					
-				$eeOutput .= ' /></td>
-						
-						<td><input type="checkbox" name="req_' . $field[0] . '" '; // REQUIRED
-						
-				if(@$field[3] == 'REQ') { $eeOutput .= ' checked="checked"'; }
+				$eeOutput .= '<tr>';
 				
-				$eeThisFieldDefault = explode('^', $eeFieldsDefaults[$i]);
-				
-				$eeOutput .= ' /></td>
-						
-						<!-- <td>' . $eeThisFieldDefault[2] . '</td> -->
-						
-						<td><input type="text" name="label_' . $field[0] . '" value="';
-						
-				if(@$field[1] AND @$field[2]) { $eeOutput .= $field[2]; } else { $eeOutput .= $eeRSCF->eeRSCF_UnSlug($field[0]); }
-				
-				$eeOutput .= '" size="24" maxsize="64" /></td>
+				foreach($fieldArray as $field => $value){ // Checkboxes
 					
-					</tr>';
+					if($field == 'label') { // Text Input
+						
+						$eeOutput .= '
+						
+						<td><input type="text" name="eeRSCF_fields[' . $eeFieldName . '][' . $field . ']" value="';
+						
+						if($value) { $eeOutput .= $value; } else { $eeOutput .= $eeRSCF->eeRSCF_UnSlug($field); }
+				
+						$eeOutput .= '" size="24" maxsize="64" /></td>';
 					
-				$i++;
-			
+					} else {
+						
+						$eeOutput .= '
+						
+						<td><input type="checkbox" name="eeRSCF_fields[' . $eeFieldName . '][' . $field . ']"';	
+				
+						if($value == 'on') { $eeOutput .= ' checked="checked"'; }
+					
+						$eeOutput .= ' /></td>';
+					}
+				}
+				
+				$eeOutput .= '</tr>';
+				
 			}
-				
+			
 			$eeOutput .= '</table>
+			
+			</fieldset>
 			
 			<br class="eeClearFix" />
 			
