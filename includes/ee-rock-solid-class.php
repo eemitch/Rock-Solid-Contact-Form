@@ -1,9 +1,11 @@
-<?php // EE Contact Form MAin Class
+<?php // EE Contact Form Main Class
 	
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeAwesomeness' )) exit('That is Noncense!'); // Exit if nonce fails
 
 // NOTES -------
 
+// Select all relevant database options
 // SELECT * FROM `wp_options` WHERE option_name LIKE 'eeRSCF_%' ORDER BY option_name
 
 	
@@ -11,17 +13,17 @@ class eeRSCF_Class {
 	
 	public $pluginName = "Rock Solid Contact Form";
 	
-	// private $pluginAuthorEmail = 'admin@elementengage.net'; // Set an email address to get bounce notices.
-	// private $eeRemoteSpamWordsURL = ''; // Master words list. https://elementengage.com/eeCF/index.php?eePIN=ee0606
+	public $spamAdminNoticeEmail = 'rscf.spam@elementengage.net'; // If allowed by the user, send a copy of the spam report to Mitch
 	
 	public $dbFieldName = "eeRSCF"; // The name of the options field in the database
 	
-	public $eeRSCF_1 = array(
+	public $eeRSCF_0 = array(
 		
-		'name' => 'Main',
+		'name' => 'New Form',
 		'to' => '',
 		'cc' => '',
 		'bcc' => '',
+		'confirm' => '',
 		'fields' => array('first-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'First Name'), 
 		'last-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Last Name'), 
 		'biz-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Business Name'), 
@@ -34,30 +36,53 @@ class eeRSCF_Class {
 		'website' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Website'), 
 		'other' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Other'), 
 		'subject' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Subject'), 
-		'files' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Attachments')
+		'attachments' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Attachments')
 	));
 	
+	public $eeFormsArray = array();
+	public $eeFormArray = array();
 	
-/*
-	public $default_fileAllowUploads = 'YES';
-	public $default_fileMaxSize = 8;
+	
+	// Files Allowed
 	public $default_fileFormats = '.gif, .jpg, .jpeg, .bmp, .png, .tif, .tiff, .txt, .eps, .psd, .ai, .pdf, .doc, .xls, .ppt, .docx, .xlsx, .pptx, .odt, .ods, .odp, .odg, .wav, .wmv, .wma, .flv, .3gp, .avi, .mov, .mp4, .m4v, .mp3, .webm, .zip';
-	public $default_spamBlock = 'Yes';
-	public $default_spamWords = 'I am a web, websites, website design, web design, web designer, web developer, web development, more leads, more sales, leads and sales, first page of google, seo, search engine, more profitable';
-	public $default_departments = 'Main^support@elementengage.com^mitch@elementengage.com';
-	public $default_departmentName = 'Main';
-*/
+	
+	
+	// Spam
+	public $default_spamBlock = 'NO';
+	public $default_spamBlockBots = 'NO';
+	public $default_spamHoneypot = 'link';
+	public $default_spamEnglishOnly = 'NO';
+	public $default_spamBlockFishy = 'NO';
+	
+	public $default_spamBlockWords = 'NO';
+	public $default_spamBlockedWords = 'annoying words, annoying phrases';
+	public $default_spamBlockCommonWords = 'NO';	
+	public $default_spamSendAttackNotice = 'NO'; 
+	public $default_spamSendAttackNoticeToDeveloper = 'NO';
 	
 	
 	
 	// Our Form Settings
+	
 	// public $formFields;
 	public $fileAllowUploads;
 	public $fileMaxSize;
 	public $fileFormats;
-	public $spamBlock;
-	public $spamWords;
-	public $departments;
+	
+	
+	// Spam
+	public $spamBlock; // Filter spam or not.
+	public $spamBlockBots; // Block bots with a honeypot.
+	public $spamHoneypot = 'link'; // The honeypot.
+	public $spamEnglishOnly; // Block non-english chars.
+	public $spamBlockFishy; // Block messages with duplicated fields and other fishy business.
+	public $spamBlockWords; // To block words or not
+	public $spamBlockCommonWords; // To use the built-in list of common words
+	public $spamBlockedCommonWords; // These words and phrases are commonly found in contct form spam.
+	public $spamBlockedWords; // In addition, these words and phrases are not allowed by the website owner.
+	public $spamSendAttackNotice; // Send an email with a summary of the spam that was blocked. // Sends to ...
+	public $spamNoticeEmail; // The users email address the notice gets sent to
+	public $spamSendAttackNoticeToDeveloper; // Send an email with a summary of the spam that was blocked to Mitch.
 	
 	
 	
@@ -93,8 +118,6 @@ class eeRSCF_Class {
 	private $cc;
 	private $bcc;
 	public $adminTo;
-	public $department;		
-	// private $deptArray = array();
 	
 	// Messaging
 	public $errors = array();
@@ -129,26 +152,7 @@ class eeRSCF_Class {
 		$this->log['settings'][] = $this->permalink;
 		
 		
-		
-		
-		// Get First Form Array
-		$this->eeRSCF_1 = unserialize( get_option('eeRSCF_1') );
-		$this->log['settings']['eeRSCF_1'] = $this->eeRSCF_1;
-		
-		// Look for more forms...
-		
-		// echo '<pre>'; print_r($this->eeRSCF_1); echo '</pre>'; exit;
-		
-		
-		
-		
-		
-		
-		
 		// FILES
-		$this->fileAllowUploads = get_option('eeRSCF_fileAllowUploads');
-		$this->log['settings'][] = $this->fileAllowUploads;
-		
 		
 		$this->fileMaxSize = get_option('eeRSCF_fileMaxSize');
 		$this->log['settings'][] = $this->fileMaxSize;
@@ -163,9 +167,38 @@ class eeRSCF_Class {
 		$this->spamBlock = get_option('eeRSCF_spamBlock');
 		$this->log['settings'][] = $this->spamBlock;
 		
-		$this->spamWords = get_option('eeRSCF_spamWords');
-		$this->log['settings'][] = $this->spamWords;
+		$this->spamBlockBots = get_option('eeRSCF_spamBlockBots');
+		$this->log['settings'][] = $this->spamBlockBots;
 		
+		$this->spamHoneypot = get_option('eeRSCF_spamHoneypot');
+		$this->log['settings'][] = $this->spamHoneypot;
+		
+		$this->spamEnglishOnly = get_option('eeRSCF_spamEnglishOnly');
+		$this->log['settings'][] = $this->spamEnglishOnly;
+		
+		$this->spamBlockFishy = get_option('eeRSCF_spamBlockFishy');
+		$this->log['settings'][] = $this->spamBlockFishy;
+		
+		$this->spamBlockWords = get_option('eeRSCF_spamBlockWords');
+		$this->log['settings'][] = $this->spamBlockWords;
+		
+		$this->spamBlockedWords = get_option('eeRSCF_spamBlockedWords');
+		$this->log['settings'][] = $this->spamBlockedWords;
+		
+		$this->spamBlockCommonWords = get_option('eeRSCF_spamBlockCommonWords');
+		$this->log['settings'][] = $this->spamBlockCommonWords;
+		
+		$this->spamBlockedCommonWords = get_option('eeRSCF_spamBlockedCommonWords');
+		$this->log['settings'][] = $this->spamBlockedCommonWords;
+		
+		$this->spamSendAttackNotice = get_option('eeRSCF_spamSendAttackNotice');
+		$this->log['settings'][] = $this->spamSendAttackNotice;
+		
+		$this->spamNoticeEmail = get_option('eeRSCF_spamNoticeEmail');
+		$this->log['settings'][] = $this->spamNoticeEmail;
+		
+		$this->spamSendAttackNoticeToDeveloper = get_option('eeRSCF_spamSendAttackNoticeToDeveloper ');
+		$this->log['settings'][] = $this->spamSendAttackNoticeToDeveloper ;
 		
 		
 		// EMAIL
@@ -207,11 +240,6 @@ class eeRSCF_Class {
 		
 		}
 		
-		
-		
-		
-		
-		
 	}
 	
 	// Are we in the admin area?
@@ -232,23 +260,46 @@ class eeRSCF_Class {
 	   $string = ucwords($string);
 	   return $string;
 	}
+	
+	
+	
+	
+	
+	// Get Forms Info
+	public function eeRSCF_GetForms() {
+		
+		for($i = 1; $i <= 99; $i++) {
+		
+			$eeThisFormArray = get_option('eeRSCF_' . $i);
+			
+			if( is_array($eeThisFormArray) ) {
+				
+				$this->eeFormsArray[$i] = $eeThisFormArray['name'];
+				
+				$this->log[] = 'Form Found: eeRSCF_' . $i;
+			}
+		}
+	}
+	
+	
+	
 
 	
 	private function eeRSCF_PostProcess($post) {
 	     
-	     echo '<pre> eeRSCF_PostProcess '; print_r($post); echo '</pre>'; exit;
+	     // echo '<pre> eeRSCF_PostProcess '; print_r($post); echo '</pre>'; exit;
 	     
 	     $this->log[] = 'Processing the post...';
 	     
-	     $ignore = array('eeRSCF', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER');
+	     $ignore = array('eeRSCF', 'eeRSCF_ID', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER');
 	     
 	     foreach ($post as $key => $value){
 	        
 	        if(!in_array($key, $ignore) AND $value) {
 					
-				$value = filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_ENCODE_HIGH);
+				$value = filter_var($value, FILTER_SANITIZE_STRING);
 				
-				if($key != 'message') { $value = ucwords($value); } else { $value = striptags($value); }
+				$value = strip_tags($value);
 				
 				if(strpos($key, 'mail')) { 
 					if(!preg_match('/^[[:alnum:]][a-z0-9_\.\-]*@[a-z0-9\.\-]+\.[a-z]{2,4}$/', $value)) {
@@ -286,180 +337,212 @@ class eeRSCF_Class {
 	        
 	    $this->log[] = $this->thePost;
 	    
+	    return $this->thePost;
+	    
 	    
 	    
 	}
 	
-	function eeRSCF_formTamperCheck() {
+	function eeRSCF_formSpamCheck() {
 		
-		$this->log[] = 'Form Tamper Check...';
+		$this->log[] = 'Form Spam Check...';
 		
-		$tamper = FALSE; $entries = array();
+		$tamper = FALSE;
+		$entries = array();
 		
-		$array = array_filter($_POST); // Get rid of empty fields
-		$count = count($array); // How many filled in fields?
-		$newArray = array_unique($array); // Get rid of duplicates
-		$newCount = count($newArray);
+		$eeArray = array_filter($_POST); // Get rid of empty fields
+		$eeCount = count($eeArray); // How many filled in fields?
 		
-		// Get our field entries
-		foreach($_POST as $key => $value) { 
+		// Spam Bots
+		if($this->spamBlockBots == 'YES') {
 			
-			if($value) {
-				$entries[] = $value;
-				
-				// If you can't read it, block it.
-				// TO DO --------------------------- <<<------Add language options to admin panel
-				
-				if(preg_match('/[А-Яа-яЁё]/u', $value) OR preg_match('/\p{Han}+/u', $value)) {
-					$this->errors[] = "Foreign language detected";
-					break;
-				}
+			if($this->spamBlock AND $_POST[$this->spamHoneypot]) { // Honeypot. This field should never be completed.
+				$this->errors[] = 'Spambot Catch: Honeypot Field Completed.';
 			}
 		}
 		
-		// Check for duplicated info in fields (spam)
-		$counts = array_count_values($entries);
-		foreach($counts as $value) {
-			if($value > 2) { 
-				$this->errors[] = "Multiple same field entries";
-			}
-		}
-		
-		// This line prevents values being entered in a URL
-		if ($_SERVER['REQUEST_METHOD'] != "POST") {
-			$this->errors[] = "Not a POST submission";
-		} 
-	
-		// Check referrer is from same site.
-		if(! wp_verify_nonce($_REQUEST['ee-rock-solid-nonce'], 'ee-rock-solid')) {
-			$this->errors[] =  "Submission is not from this website";
-		}
-		
-		if($this->spamBlock AND $_POST['eeRSCF_Link']) { // Spambot catcher. This field should never be completed.
-			$this->errors[] = 'Spambot catch. Hidden field completed: ' . $_POST['eeRSCF_Link'];
-		}
-		
-		if($this->spamBlock AND $this->spamWords) {
-			
-			// Local Words
-			$spamWords = explode(',', $this->spamWords);
-			
-			// Check remote list of words
-			$spamWordsRemote = $this->eeGetWebPage($this->eeRemoteSpamWordsURL);
-			
-			if($spamWordsRemote) {
+		// English Only
+		if($this->spamEnglishOnly == 'YES') {
+
+			foreach($eeArray as $eeKey => $eeValue) { 
 				
-				// Make array
-				$spamWordsRemote = explode(PHP_EOL, $spamWordsRemote); // Split by End of Line
-				
-				// Combine with the local words
-				$spamWords = array_merge($spamWords, $spamWordsRemote);
-				
-				// Remove Duplicates
-				$spamWords = array_unique($spamWords);
-			}
-		
-			// Loop through post to look for blocked words
-			foreach($_POST as $key => $value){
-				
-				$value = strtolower($value);
-				
-				foreach($spamWords as $spamWord){
+				if($eeValue) {
+					$entries[] = $eeValue;
 					
-					$spamWord = trim($spamWord);
+					// If you can't read it, block it.
+					// TO DO --------------------------- <<<------Add language options to admin panel
 					
-					if(strlen($value) AND strpos($value, ' ' . $spamWord . ' ')) {
-						// Use of spaces around the word prevents parts of larger words tripping the catch.
-						
-						$this->errors[] = 'Spam word catch: ' . $spamWord;
+					if(preg_match('/[А-Яа-яЁё]/u', $eeValue) OR preg_match('/\p{Han}+/u', $eeValue)) {
+						$this->errors[] = "Foreign Language Detected";
+						break;
 					}
 				}
 			}
 		}
 		
-		if(count($this->errors) >= 1) {
+		// Block Fishyness
+		if($this->spamBlockFishy == 'YES') {
+			
+			// Check for duplicated info in fields (spam)
+			$eeValues = array_count_values($eeArray);
+			foreach($eeValues as $eeValue) {
+				if($eeValue > 2) { 
+					$this->errors[] = "3x Duplicated Same Field Entries";
+				}
+			}
+			
+			foreach( $eeArray as $eeKey => $eeValue){
+				
+				if(strpos($eeValue, '&#') OR strpos($eeValue, '&#') === 0) {
+					$this->errors[] = "Malicious Submission";
+				}
+				
+				if(strpos($eeValue, '[url]') OR strpos($eeValue, '[url]') === 0) {
+					$this->errors[] = "Form Tampering";
+				}
+				
+				if(strlen(strip_tags($eeValue)) != strlen($eeValue) ) {
+					$this->errors[] = "HTML Tags Found";
+				}
+			}
+		}
+		
+		
+		// Block Words
+		if($this->spamBlockWords == 'YES') {
+			
+			// User Words
+			$spamWords = explode(',', $this->spamBlockedWords);
+			
+			if($this->spamBlockCommonWords == 'YES') {
+				
+				// Common list of words
+				$spamCommonWords = $this->spamBlockedCommonWords;
+				$spamCommonWords = explode(',', $spamCommonWords); // Split by comma
+				$spamCommonWords = array_map('trim', $spamCommonWords); // Trim values
+				$spamCommonWords = array_map('strtolower', $spamCommonWords); // Ensure lower case
+				$spamWords = array_merge($spamWords, $spamCommonWords); // Combine with the local words
+				$spamWords = array_unique($spamWords); // Remove Duplicates
+			}
+		
+			// Loop through post to look for blocked words
+			foreach($eeArray as $eeKey => $eeValue){
+				
+				$eeValue = strtolower($eeValue);
+				
+				foreach($spamWords as $spamWord) {
+					
+					$spamWord = trim($spamWord);
+					
+					if(strlen($eeValue)) {
+						
+						// Use of spaces around the word prevents parts of larger words tripping the catch.
+						if(strpos($eeValue, ' ' . $spamWord . ' ') OR strpos($eeValue, $spamWord . ' ') === 0) {
+							
+							$this->errors[] = 'Spam Word Catch: ' . $spamWord;	
+						}
+					}
+				}
+			}
+		}
+		
+		if(count($this->errors) >= 1 AND ($this->spamSendAttackNotice == 'YES' OR $this->spamSendAttackNoticeToDeveloper == 'YES') ) {
 			
 			$eeAttackLog = array(); // An array we will fill, serialize and encode, and then send to an EE server.
 			
 			// We do this to halp make the World a better place.
 			
 			// Website Info
-			$eeAttackLog[] = 'CONTACT FORM SPAM: ' . $_SERVER['HTTP_HOST'];
-			$eeAttackLog['Attack'] = $this->errors;
-			$eeAttackLog[] = 'Victim Website: http://' . $_SERVER['HTTP_HOST'];
+			$eeAttackLog[] = 'Contact Form Spam Catch';
+			$eeAttackLog[] = '-----------------------------------';
+			$eeAttackLog[] = array_map('strtoupper', $this->errors);
+			$eeAttackLog[] = ' ';
+			$eeAttackLog[] = 'Attacker';
+			$eeAttackLog[] = '-----------------------------------';
+			$eeAttackLog[] = 'User Agent: ' . @$_SERVER['HTTP_USER_AGENT'];
+			$eeAttackLog[] = 'User IP: ' . @$_SERVER['REMOTE_ADDR'];
+			$eeAttackLog[] = 'Came From: ' . @$_POST['SCRIPT_REFERER'] . @$_SERVER['QUERY_STRING'];
+			$eeAttackLog[] = 'Camera Image: (You Wish)';
+			$eeAttackLog[] = ' ';
+			$eeAttackLog[] = "Attacker Message";
+			$eeAttackLog[] = '-----------------------------------';
+			$eeAttackLog[] = $this->eeRSCF_PostProcess($_POST);
 			
-			// Attacker Info
-			$eeAttackLog[] = 'Attacker User Agent: ' . @$_SERVER['HTTP_USER_AGENT'];
-			$eeAttackLog[] = 'Attacker IP: ' . @$_SERVER['REMOTE_ADDR'];
-			$eeAttackLog[] = 'Attacker Came From: ' . @$_POST['SCRIPT_REFERER'] . @$_SERVER['QUERY_STRING'];
-			$eeAttackLog[] = "Attacker Message:";
-			$eeAttackLog[] = $_POST;
+			$eeTo = $this->spamNoticeEmail;
+			$eeBody = '';
+			$eeHeaders = "From: " . $this->email;
+			$eeSubject = "Spam Block Notice";
 			
-			// Serialize and Encode for Transfer
-			$eeAttackLog = serialize($eeAttackLog);
-			$eeAttackLog = urlencode($eeAttackLog);
+			if(is_array($eeAttackLog)) {
+				foreach ($eeAttackLog as $eeValue) {
+					if(is_array($eeValue)) {
+						foreach ($eeValue as $eeValue2) {
+							$eeBody .= $eeValue2 . "\n\n";
+						}
+					} else {
+						$eeBody .= $eeValue . "\n\n";
+					}
+				}
+			}
 			
-			// Send the attack log to the EE server 
-			$eeResult = $this->eeGetWebPage('https://elementengage.com/eeCF/log_attack.php?eePIN=ee0606&eeAttackLog=' . $eeAttackLog);
+			$eeBody .= "\n\r-----------------------------------\n\rVia Rock Solid Contact Form at http://" . $_SERVER['HTTP_HOST'] . "\n\r\n\r";
 			
 			
-			$this->log[] = 'Spam Check FAIL!';
-			$this->log[] = $eeAttackLog;
+			// Send Notice Email
+			if($this->spamSendAttackNotice == 'YES') {
+				
+				if(!wp_mail($eeTo, $eeSubject, $eeBody, $eeHeaders)) { // Email the message or error report
+					$this->errors[] = 'Notice Email Failed to Send';
+				}
+			}
 			
-			return TRUE; // Bad spammer !!!
+			
+			// Optional Admin Notice
+			if($this->spamSendAttackNoticeToDeveloper == 'YES') {
+				
+				$eeTo = $this->spamAdminNoticeEmail;
+				
+				if(!wp_mail($eeTo, $eeSubject, $eeBody, $eeHeaders)) { // Email the message or error report
+					$this->errors[] = 'Admin Notice Email Failed to Send';
+				}
+			}
 		}
 		
-		$this->log[] = 'Spam Check Okay';
 		
-		return FALSE;
+		if(count($this->errors) >= 1) {
+			
+			$this->log[] = 'Spam Check FAIL!';
+			return FALSE;
+		
+		} else {
+		
+			$this->log[] = 'Spam Check OKAY!';
+			return 'OK';
+			
+		}
 	}
 	
 	
+	// [fields=first-name^SHOW^First Name^REQ|last-name|business|address|address-2|city|state|zip|phone|website|other|subject^SHOW^Subject]
+	// [allowUploads=No]
+	// [maxFileSize=10]
+	// [formats=.gif,.jpg,.jpeg,.bmp,.png,.tif,.tiff,.txt,.eps,.psd,.ai,.pdf,.doc,.xls,.ppt,.docx,.xlsx,.pptx,.odt,.ods,.odp,.odg,.wav,.wmv,.wma,.flv,.3gp,.avi,.mov,.mp4,.m4v,.mp3,.webm,.zip]
+	// [spamBlock=Yes]
+	// [spamTestMode=Yes]
+	// [spamWords=I am a web, websites, website design, web design, web designer, web developer, web development, more leads, more sales, leads and sales, first page of google, seo, search engine, more profitableI am a web, more profitable, I am a web]
+	// [FROM:admin@elementengage.net]
+	// [DEPT:N/A^TO:admin@elementengage.net^CC:^BCC:^)]
+	// [version=
 	
-	
-	private function eeRSCF_GetWebPage($eeURL) {
-        
-        $user_agent = 'EE Contact Form 1.3';
-
-        $options = array(
-
-            CURLOPT_CUSTOMREQUEST  => "GET",        // set request type post or get
-            CURLOPT_POST           => FALSE,        // set to GET
-            CURLOPT_USERAGENT      => $user_agent,  // set user agent
-            // CURLOPT_COOKIEFILE     =>"cookie.txt", //set cookie file
-            // CURLOPT_COOKIEJAR      =>"cookie.txt", //set cookie jar
-            CURLOPT_RETURNTRANSFER => TRUE,     // return web page
-            CURLOPT_HEADER         => FALSE,    // don't return headers
-            CURLOPT_FOLLOWLOCATION => FALSE,     // follow redirects
-            // CURLOPT_ENCODING       => "",       // handle all encodings
-            // CURLOPT_AUTOREFERER    => TRUE,     // set referer on redirect
-            CURLOPT_CONNECTTIMEOUT => 30,      // timeout on connect
-            CURLOPT_TIMEOUT        => 30,      // timeout on response
-            // CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
-        );
-
-        $ch = curl_init( $eeURL );
-        curl_setopt_array( $ch, $options );
-        $content = curl_exec( $ch );
-        $err = curl_errno( $ch );
-        $errmsg = curl_error( $ch );
-        $header = curl_getinfo( $ch );
-        curl_close( $ch );
-
-        $header['errno']   = $err;
-        $header['errmsg']  = $errmsg;
-        $header['content'] = $content;
-        
-        // $this->log[] = $header;
-        
-        return $header['content'];
-    }
-	
-	
-	// fields=first-name^SHOW^First Name^REQ|last-name^SHOW^Last Name^REQ|business^SHOW^Business^REQ|address^SHOW^Address^REQ|address-2^SHOW^Address 2^REQ|city^SHOW^City^REQ|state^SHOW^State^REQ|zip^SHOW^Zip^REQ|phone^SHOW^Phone^REQ|website^SHOW^Website^REQ|other^SHOW^Other^REQ|subject^SHOW^Subject^REQ][fileAllowUploads=Yes][uploadMaxFilesize=10][formats=.gif, .jpg, .jpeg, .bmp, .png, .tif, .tiff, .txt, .eps, .psd, .ai, .pdf, .doc, .xls, .ppt, .docx, .xlsx, .pptx, .odt, .ods, .odp, .odg, .wav, .wmv, .wma, .flv, .3gp, .avi, .mov, .mp4, .m4v, .mp3, .webm, .zip][spamBlock=Yes][spamWords=I am a web, websites, website design, web design, web designer, web developer, web development, more leads, more sales, leads and sales, first page of google, seo, search engine, more profitable][FROM:admin@elementengage.net][DEPT:N/A^TO:admin@elementengage.net^^)][version=1.2
 	
 		
-	private function eeRSCF_UpgradeFromEE($eeString) {
+	public function eeRSCF_UpgradeFromEE($eeString) {
+		
+		if(strpos($eeString, 'spamTestMode')) {
+			return; // Don't update that version
+		}
+		
+		add_option('eeRSCF_eeContactFormOld', $eeString); // Save it for posterity
 		
 		$this->deptArray = array();
 		
@@ -469,42 +552,134 @@ class eeRSCF_Class {
 			
 			$settings = explode('][', $eeString);
 			
-			// Process the Settings Array
-			$fieldsArray = explode('=', $settings[0]);
-			$eeArray[ 'eeRSCF_' . $fieldsArray[0] ] = $fieldsArray[1];
+			// echo '<pre>'; print_r($settings); echo '</pre>'; exit;
 			
-			$fileAllowUploads = explode('=', $settings[1]);
-			$eeArray[ 'eeRSCF_' . $fileAllowUploads[0] ] = $fileAllowUploads[1];
+			// TO DO - Convert fields and departments into forms ---------------------------------------------------
 			
-			$fileMaxSize = explode('=', $settings[2]);
-			$eeArray[ 'eeRSCF_' . $fileMaxSize[0] ] = $fileMaxSize[1];
+			// Fields
+			$fields = str_replace('fields=', '', $settings[0]);
+			$fieldsArray = explode('|', $fields); // Use this further below
 			
-			$formats = explode('=', $settings[3]);
-			$eeArray[ 'eeRSCF_' . $formats[0] ] = $formats[1];
+			$eeArray = explode('=', $settings[1]);
+			$fileAllowUploads = strtoupper($eeArray[1]);
 			
-			$spamBlock = explode('=', $settings[4]);
-			$eeArray[ 'eeRSCF_' . $spamBlock[0] ] = $spamBlock[1];
+			$eeArray = explode('=', $settings[2]);
+			update_option('eeRSCF_fileMaxSize', $eeArray[1]);
+			
+			$eeArray = explode('=', $settings[3]);
+			update_option('eeRSCF_fileFormats', $eeArray[1]);
+			
+			
+			$eeArray = explode('=', $settings[4]);
+			$eeArray = array_map('strtoupper', $eeArray);
+			update_option('eeRSCF_spamBlock', $eeArray[1]);
 			
 			$spamWords = explode('=', $settings[5]);
-			$eeArray[ 'eeRSCF_' . $spamWords[0] ] = $spamWords[1];
+			$spamWords = $spamWords[1];
 			
-			$eeArray[ 'eeRSCF_from'] = substr($settings[6], 5);
+			// Merge with pre-loaded list
+			$spamWords2 = get_option('eeRSCF_spamBlockedCommonWords');
+			$spamWords .= $spamWords2; // Combine
+			$eeArray = explode(',', $spamWords); // Split by comma
+			$eeArray = array_map('trim', $eeArray); // Trim values
+			$eeArray = array_map('strtolower', $eeArray); // Ensure lower case
+			$eeArray = array_unique($eeArray); // Remove Duplicates
+			$spamWords = implode(',', $eeArray); // Make into a string
+			update_option('eeRSCF_spamBlockedCommonWords', $spamWords);
 			
+			// Form email address
+			update_option('eeRSCF_email' , substr($settings[6], 5) ); // Strip "FROM:"
+			
+			// Departments
+			$eeDepartment = array();
+			
+			// Add the Form Name and the email addresses
 			$eeString = $settings[7];
-			$eeString = str_replace('DEPT:', '', $eeString);
-			$eeArray[ 'eeRSCF_departments'] = str_replace(')', '', $eeString);
+			$eeArray = explode(')', $eeString);
+			
+			foreach( $eeArray as $eeKey => $eeValue) {
+				
+				$deptArray = explode('^', $eeValue);
+				$deptArray = array_filter($deptArray); // Remove empty
+				
+				foreach( $deptArray as $eeKey2 => $eeValue2){
+					
+					$deptPart = explode(':', $eeValue2);
+					
+					$deptName = strtolower($deptPart[0]);
+					
+					if($deptName == 'dept') { $deptName = 'name'; }
+					
+					if($deptPart[1] == 'N/A') {
+						$deptPart[1] = 'Main';
+					}
+					
+					if(@$deptPart[1]) {
+						$eeDepartment[ $deptName ] = $deptPart[1];
+					} else {
+						$eeDepartment[ $deptName ] = ' ';
+					}
+					
+					
+				}
+			}
+			
+			$eeDepartment['confirm'] = '/'; 
+			
+			
 			
 			$this->log['Old Settings'] = $eeArray; // Our old settings
 			
-			// Insert the New Options
-			foreach( $eeArray as $eeKey => $eeValue){
+			
+			
+			
+			foreach( $fieldsArray as $eeKey => $eeValue){
 				
-				if( str_replace('^TO:', '', $eeValue) ) {}
+				if(strpos($eeValue, '^')) {
+					
+					$eeArray = explode('^', $eeValue);
+					
+					if(@$eeArray[3] == 'REQ') {
+						$eeReq = 'YES';
+					} else {
+						$eeReq = 'NO';
+					}
+					
+					$eeDepartment['fields'][$eeArray[0]] = array('show' => 'YES', 'req' => $eeReq, 'label' => $eeArray[2]);
+					
+					
+					
+				} else {
+					
+					$niceName = $this->eeRSCF_UnSlug($eeValue);
+					$eeDepartment['fields'][$eeValue] = array('show' => 'NO', 'req' => 'NO', 'label' => $niceName);
+				}
 				
-				update_option($eeKey, $eeValue);
+				
 			}
 			
-			// delete_option('eeContactForm');
+			$eeDepartment['fields']['attachments'] = array('show' => $fileAllowUploads, 'req' => 'NO', 'label' => 'Attachments');
+			
+			
+			// echo '<pre>'; print_r($eeDepartment); echo '</pre>'; exit;
+			
+			update_option('eeRSCF_1' , $eeDepartment );
+			
+			// Check for SMTP constants
+			if(SMTP_USER) {
+				
+				update_option('eeRSCF_Mode', 'SMTP');
+				update_option('eeRSCF_emailUsername' , SMTP_USER);
+				update_option('eeRSCF_emailPassword' , SMTP_PASS);
+				update_option('eeRSCF_emailServer' , SMTP_HOST);
+				update_option('eeRSCF_emailSecure' , SMTP_SECURE);
+				update_option('eeRSCF_emailPort' , SMTP_PORT);
+				update_option('eeRSCF_emailAuth' , SMTP_AUTH);
+			}
+			
+			$this->log[] = 'Plugin Updated from eeContactForm';
+			
+			delete_option('eeContactForm');
 			
 			return;
 					
@@ -515,60 +690,14 @@ class eeRSCF_Class {
 	}
 	
 	
-	public function eeRSCF_GetDepartments() {
-		
-			$departments = get_option('eeRSCF_departments');
-			
-			$departments = explode('|', $departments);
-			
-			if(count($departments)) {
-				
-				foreach($departments as $dept) {
-					
-					if(!empty($dept)) {
-						$array = explode('^', $dept);
-						
-						$department = @substr($array[0], 5) . '^' . @substr($array[1], 3) . '^' . @substr($array[2], 3) . '^' . @substr($array[3], 4); // Chop of the labeling; i.e. TO:
-						$this->deptArray[] = $department;
-						
-						// These will be set to last array's values (helpful if only one, otherwise overwritten)
-						$this->department = @substr($array[0], 5);
-						$this->to = @substr($array[1], 3);
-						$this->cc = @substr($array[2], 3);
-						$this->bcc = @substr($array[3], 4);
-					}
-				}
-				
-				$this->deptArray = array_unique($this->deptArray);
-			}
-		
-		
-	}
 	
 	
-	public function eeRSCF_formDisplay() {
+	
+	public function eeRSCF_formDisplay($eeRSCF_ID) {
 		
 		$this->log[] = 'Displaying the Form...';
 		
-		global $eeRSCF_DevMode;
-		
-		self::eeRSCF_Setup(TRUE);
-		
-		// $eeMessageDisplay = new eeRSCF_MessageDisplay(); // Initialize the display messaging class
-		
-		if($this->confirmation) {
-			
-			$this->theForm .= '<div class="eeRSCF_Confirm">
-				<h2>Thank You</h2>
-				<p>' . $this->confirmation . '</p>
-				</div>';
-				
-			// Log Display - Dev Mode Only
-			if($eeRSCF_DevMode) { $this->eeRSCF_MessageDisplay($this->log); }
-			
-			return $this->theForm;
-			
-		} elseif($this->errors) {
+		if($this->errors) {
 		
 			$this->theForm .= '<div class="eeRSCF_Confirm">
 				<h2 class="eeError">Opps, we have a problem.</h2>';
@@ -577,135 +706,124 @@ class eeRSCF_Class {
 			
 		}
 		
-		$this->theForm = '<div id="eeRSCF">
+		$this->theForm .= '<div id="eeRSCF">
 			<form action="';
 			
 		$this->theForm .= $this->permalink;
 		
 		$this->theForm .= '" method="post" enctype="multipart/form-data" id="eeRSCF_form">
 				<input type="hidden" name="eeRSCF" value="TRUE" />
+				<input type="hidden" name="eeRSCF_ID" value="' . $eeRSCF_ID  . '" />
 				<input type="hidden" name="SCRIPT_REFERER" value="';
 				
 		$this->theForm .= @$_SERVER['HTTP_REFERER'];
 		
 		$this->theForm .= '" />';
 				
-		$this->theForm .= wp_nonce_field( 'ee-rock-solid', 'ee-rock-solid-nonce' );
+		$this->theForm .= wp_nonce_field( 'ee-rock-solid', 'ee-rock-solid-nonce', TRUE, FALSE );
 		
 		$this->theForm .= '
 		
 		<fieldset>';
 		
-		// Is there more than one department?
-		$num = count($this->departments);
+		$eeArray = get_option('eeRSCF_' . $eeRSCF_ID);
 		
-		if($num > 1) {
-			
-			$this->theForm .= '<div class="eeRSCF_Row">
-							<label for="department">Department</label><select name="department" id="department" required>
-								<option value="">Please Choose</option>';
-			
-			foreach($this->departments as $department){
-				$array = explode('^', $department);
-				$this->theForm .= '<option value="' . $array[0] . '">' . $array[0] . '</option>';
-			}
-			
-			$this->theForm .= '</select></div>';
-		
-		} else {
-			
-			// $this->theForm .= '<input type="hidden" name="department" value="' . $this->departments[0] . '" />';
-			
-		}
-		
-		if(is_array($this->formFields)) {
+		if( is_array($eeArray['fields']) ) {
 					
-			foreach($this->formFields as $field) {
+			foreach($eeArray['fields'] as $field => $value) {
 							
-				$field = explode('^', $field);
-							
-				if(@$field[1] == 'SHOW') {
+				if(@$value['show'] == 'YES') {
 						
+					if($field == 'attachments') { continue; }
+					
 					$this->theForm .= '
 					<div class="eeRSCF_Row">
 					<label for="';
 							
-					$this->theForm .= $field[0];
+					$this->theForm .= $value['show'];
 					
 					$this->theForm .=  '">';
 					
 					// Chech for custom label
-					if($field[2]) { $this->theForm .= $field[2]; } else { $this->theForm .= self::eeRSCF_UnSlug($field[0]); }
+					if($value['label']) { $this->theForm .= $value['label']; } else { $this->theForm .= self::eeRSCF_UnSlug($field); }
 					
 					$this->theForm .= '</label>';
 					
 					$this->theForm .= '
 					<input ';
-					if(@$field[3] == 'REQ') { $this->theForm .= 'required '; }
+					
+					if($value['req'] == 'YES') { $this->theForm .= 'required '; }
+					
 					$this->theForm .= 'name="';
+					
 					// Chech for custom label
-					if($field[2]) { $this->theForm .= self::eeRSCF_MakeSlug($field[2]); } else { $this->theForm .= self::eeRSCF_UnSlug($field[0]); }
+					if($value['label']) {
+						$this->theForm .= self::eeRSCF_MakeSlug($value['label']);
+					} else {
+						
+						$this->theForm .= $field;
+					}
+					
 					$this->theForm .= '"';
 					
 					$this->theForm .= ' id="';
-					$this->theForm .= $field[0] . '"';
+					$this->theForm .= $field . '"';
 					
 					$this->theForm .= ' type="';
-					if(@$field[0] == 'email') { $this->theForm .=  'email'; } 
-						elseif(@$field[0] == 'phone') { $this->theForm .=  'tel'; } 
+					
+					if($field == 'website') { $this->theForm .=  'url'; } 
+						elseif($field == 'phone' OR strpos($field,'phone')) { $this->theForm .=  'tel'; } 
 							else { $this->theForm .= 'text'; }
-					$this->theForm .= '" size="30" value="' . @$_POST[$field[0]] . '" />';
+					$this->theForm .= '" size="30" value="" />';
 					
-					if(@$field[3] == 'REQ') { $this->theForm .=  '
-						<span class="eeRequired">*</span>'; }
+					if(@$value['req'] == 'YES') { $this->theForm .=  '
+						<span class="eeRSCF_Required">*</span>'; } 
 					
-					$this->theForm .=  '
+					$this->theForm .=  ' 
 					</div>';	
 				}
 
 			}
 		} else {
-			$this->theForm .= 'No Fields';
+			$this->theForm .= 'ERROR - No Form Found';
 		}
 		
 		$this->theForm .= '<div class="eeRSCF_Row">
-			<label for="message">Your Email</label>
-			<input type="email" name="email" id="email" value="' . @$_POST['email'] . '" required /><span class="eeRequired">*</span>
+			<label for="eeRSCF_email">Your Email</label>
+			<input type="email" name="email" id="eeRSCF_email" value="' . @$_POST['email'] . '" required /><span class="eeRSCF_Required">*</span>
 			</div>';
 					
 					
-		if($this->fileAllowUploads == 'YES') {
+		if($eeArray['fields']['attachments']['show'] == 'YES') {
 		
 		$this->theForm .= '<div class="eeRSCF_Row">
-			<label for="file">Attachment</label>
-			<input type="file" name="file" id="file" accept="';
+			<label for="eeRSCF_files">Attachment</label>
+			<input type="file" name="file" id="eeRSCF_files" accept="';
 			
 			$this->theForm .= $this->fileFormats . '" />';
 			
 			$this->theForm .= '
 			
-			<!-- <span class="eeNote">Files up to ' . $this->fileMaxSize . ' MB allowed.</span> -->
-			
 			</div>';
 			
 		}
 		
 		$this->theForm .= '<div class="eeRSCF_Row">
-			<label for="message">Message</label>
-			<textarea required name="message" id="message" cols="60" rows="6">';
+			<label for="eeRSCF_message">Message</label>
+			<textarea required name="message" id="eeRSCF_message" cols="60" rows="6">';
 			
 		$this->theForm .= @$_POST['message'];
 		
 		$this->theForm .= '</textarea>
 		
-		<span class="eeRequired">*</span>
+		<span class="eeRSCF_Required">*</span>
 		
 		</div>
 		
 		<br class="eeClearFix" />
 		
 		<div class="eeRSCF_Roww">
-			<label for="eeRSCF_Link">Link:</label><input type="text" name="eeRSCF_Link" value="" id="eeRSCF_Link">
+			<label for="eeRSCF_' . $this->spamHoneypot . '">Link:</label><input type="text" name="' . $this->spamHoneypot . '" value="" id="eeRSCF_' . $this->spamHoneypot . '">
 		</div>
 		
 		<span id="eeRSCF_SubmitMessage"><img src="' . $this->pluginURL . 'images/sending.gif" width="32" height="32" alt="Sending Icon" /> Sending Your Message</span>
@@ -723,7 +841,13 @@ class eeRSCF_Class {
 		</div>';
 	
 		// Log Display - Dev Mode Only
-		if($eeRSCF_DevMode) { $this->eeMessageDisplay($this->log); }
+		if(eeRSCF_DevMode) {
+		
+			$this->theForm .= '<pre>' . print_r($this->log, TRUE) . '</pre>';
+			
+			// eeRSCF_WriteLogFile($eeRSCF_Log);
+			
+		}
 		
 		return $this->theForm;
 			
@@ -733,14 +857,25 @@ class eeRSCF_Class {
 	public function eeRSCF_SendEmail($post) {
 		
 		global $eeRSCFU; $subject = FALSE;
-				
-		$this->log[] = 'Getting User Settings...';
-		self::eeRSCF_Setup(TRUE);
 		
-		if($this->spamBlock == 'Yes') {
-			if(self::eeRSCF_formTamperCheck()) {
+		$eeRSCF_ID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
+		
+		if($this->spamBlock == 'YES') {
+			if( self::eeRSCF_formSpamCheck() !== 'OK' ) {
 				return FALSE;
 			}
+		}
+		
+		// This line prevents values being entered in a URL
+		if ($_SERVER['REQUEST_METHOD'] != "POST") {
+			$this->errors[] = "Not a POST submission";
+			return;
+		} 
+	
+		// Check referrer is from same site.
+		if(!wp_verify_nonce($_REQUEST['ee-rock-solid-nonce'], 'ee-rock-solid')) {
+			$this->errors[] =  "Submission is not from this website";
+			return;
 		}
 		
 		$this->log[] = 'Sending the Email...';
@@ -760,33 +895,27 @@ class eeRSCF_Class {
 				
 			$this->log[] = 'Preparing the Email...';
 			
-			if(count($this->departments) > 1) {
-				
-				$string = $this->thePost[0]; // Department is first one in post
-				$field = explode(':', $string);
-				$this->department = trim($field[1]);
-				
-				foreach($this->departments as $dept) {
-						
-					$array = explode('^', $dept);
-					
-					if($array[0] == $this->department) {
-					
-						$this->to = $array[1];
-						$this->cc = @$array[2];
-						$this->bcc = @$array[3];
-						break;
-					}
-				}
-				
+			// echo '<pre>'; print_r($this->eeRSCF_1); echo '</pre>'; exit;
+			
+			$eeThisFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
+			
+			
+			
+			if($eeThisFormArray['to']) {
+				$this->to = $eeThisFormArray['to'];
 			} else {
-				
-				$eeArray = explode('^', $this->departments[0]);
-				
-				$this->to = $eeArray[1];
-				$this->cc = @$eeArray[2];
-				$this->bcc = @$eeArray[3];
+				$this->errors[] = 'No TO Address Configured';
+				return FALSE;
 			}
+			
+			if(@$eeThisFormArray['cc']) {
+				$this->cc = $eeThisFormArray['cc'];
+			}
+			
+			if(@$eeThisFormArray['bcc']) {
+				$this->bcc = $eeThisFormArray['bcc'];
+			}
+
 			
 			// Loop through and see if we have a Subject field
 			foreach($this->thePost as $value){
@@ -816,6 +945,13 @@ class eeRSCF_Class {
 			
 			$eeBody = stripslashes($eeBody);
 			$eeBody = strip_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
+				
+				
+			if(@$eeThisFormArray['confirm']) {
+				$url = $eeThisFormArray['confirm'];
+			} else {
+				$url = '/';
+			}
 			
 			
 			if($this->emailMode == 'SMTP') {
@@ -840,15 +976,18 @@ class eeRSCF_Class {
 				$phpmailer->Port       = $this->emailPort;
 				$phpmailer->SMTPAuth   = $this->emailAuth;
 				
+				// Coming Soon
 				if($this->emailFormat == 'HTML') {
 					// $phpmailer->isHTML(TRUE);
 					// $phpmailer->msgHTML = $body;
 					// $phpmailer->Body = nl2br($body);
 				}
 				
+				
+				
 				if( wp_mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ----------------Send the message via Authenticated SMTP.
 					
-					$this->confirmation = 'Your message was sent successfully.';
+					header('Location: ' . $url);
 					
 				} else {
 					$this->errors[] = 'SMTP Message Failed to Send.';
@@ -858,7 +997,7 @@ class eeRSCF_Class {
 				
 				if(mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ---------------- OR send the message the basic way.
 					
-					$this->confirmation = 'Your message was sent successfully.';
+					header('Location: ' . $url);
 					
 				} else {
 					$this->errors[] = 'PHP Message Failed to Send.';
@@ -962,17 +1101,19 @@ class eeRSCF_Class {
 			
 			global $wpdb, $eeRSCFU;
 			
+			
+			
+			
+			
+			
 			// Form Fields
 			if(@$_POST['eeRSCF_formSettings'] == 'TRUE') {
 			
 				// echo '<pre>'; print_r($_POST); echo '</pre>'; exit;
-				
-				
-				
 				$eeArray = array();
 			
 				// ID
-				$eeRSCF_ID = filter_var(@$_POST['eeRSCF_formID'], FILTER_SANITIZE_NUMBER_INT);
+				$eeRSCF_ID = filter_var(@$_POST['eeRSCF_ID'], FILTER_SANITIZE_NUMBER_INT);
 				
 				// Name
 				$formName = filter_var(@$_POST['eeRSCF_formName'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
@@ -1037,15 +1178,34 @@ class eeRSCF_Class {
 				
 					foreach($fieldsArray as $thisName => $thisFieldArray) {
 						
-						$eeArray['fields'][$thisName] = array('show' => @$thisFieldArray['show'], 'req' => @$thisFieldArray['req'], 'label' => @$thisFieldArray['label']);
+						if(@$thisFieldArray['show']) {
+							$eeArray['fields'][$thisName]['show'] = 'YES';
+						} else {
+							$eeArray['fields'][$thisName]['show'] = 'NO';
+						}
 						
+						if(@$thisFieldArray['req']) {
+							$eeArray['fields'][$thisName]['req'] = 'YES';
+						} else {
+							$eeArray['fields'][$thisName]['req'] = 'NO';
+						}
+						
+						$eeArray['fields'][$thisName]['label'] = @$thisFieldArray['label'];
 					}
 				}
 				
+				
+				if(@$_POST['eeRSCF_confirm']) {
+					
+					$eeArray['confirm'] = filter_var($_POST['eeRSCF_confirm'], FILTER_VALIDATE_URL);
+				} else {
+					$eeArray['confirm'] = '/';
+				}
+				
+				
 				// echo '<pre>'; print_r($eeArray); echo '</pre>'; exit;
 				
-				$eeArrayString = serialize($eeArray);
-				update_option('eeRSCF_' . $eeRSCF_ID, $eeArrayString); // Update the database
+				update_option('eeRSCF_' . $eeRSCF_ID, $eeArray); // Update the database
 				
 			}
 			
@@ -1054,10 +1214,9 @@ class eeRSCF_Class {
 			
 			
 			
+			
+			
 			if(@$_POST['eeRSCF_FileSettings'] == 'TRUE') {
-							
-				// Only accept Yes as the answer string. Gotta stay positive!
-				if($_POST['eeAllowUploads'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
 				
 				// This must be a number
 				$uploadMaxSize = (int) $_POST['eeMaxFileSize'];
@@ -1077,6 +1236,9 @@ class eeRSCF_Class {
 			
 			
 			
+			
+			
+			
 			if(@$_POST['eeRSCF_SpamSettings'] == 'TRUE') {
 			
 				// Spam Prevention
@@ -1084,13 +1246,62 @@ class eeRSCF_Class {
 				$eeRSCF->log[] = 'Spam Protection On: ' . $settings;
 				update_option('eeRSCF_spamBlock', $settings); // Update the database
 				
-				// Words Not Allowed
-				$settings = filter_var($_POST['spamWords'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
-				$eeRSCF->log[] = 'Spam Words: ' . $settings;
-				update_option('eeRSCF_spamWords', $settings); // Update the database
-			
+				// Block Spam Bots
+				if($_POST['spamBlockBots'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
+				$eeRSCF->log[] = 'Spam Block Bots: ' . $settings;
+				update_option('eeRSCF_spamBlockBots', $settings); // Update the database
+				
+				// Honeypot
+				$settings = filter_var($_POST['spamHoneypot'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+				$settings = $this->eeRSCF_MakeSlug($settings);
+				$eeRSCF->log[] = 'Spam Honeypot: ' . $settings;
+				update_option('eeRSCF_spamHoneypot', $settings); // Update the database
+				
+				// English Only
+				if($_POST['spamEnglishOnly'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
+				$eeRSCF->log[] = 'Spam English Only: ' . $settings;
+				update_option('eeRSCF_spamEnglishOnly', $settings); // Update the database
+				
+				// Block Fishy
+				if($_POST['spamBlockFishy'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
+				$eeRSCF->log[] = 'Spam Block Fishy: ' . $settings;
+				update_option('eeRSCF_spamBlockFishy', $settings); // Update the database
+				
+				// Block Words
+				if($_POST['spamBlockWords'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
+				$eeRSCF->log[] = 'Spam Block Words: ' . $settings;
+				update_option('eeRSCF_spamBlockWords', $settings); // Update the database
+
+				// Blocked Words
+				$settings = filter_var($_POST['spamBlockedWords'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+				$eeRSCF->log[] = 'Spam Blocked Words: ' . $settings;
+				update_option('eeRSCF_spamBlockedWords', $settings); // Update the database
+				
+				// Block Common Words
+				if($_POST['spamBlockCommonWords'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
+				$eeRSCF->log[] = 'Spam Block CommonWords: ' . $settings;
+				update_option('eeRSCF_spamBlockCommonWords', $settings); // Update the database
+
+				// Blocked Common Words
+				$settings = filter_var($_POST['spamBlockedCommonWords'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+				$eeRSCF->log[] = 'Spam Blocked CommonWords: ' . $settings;
+				update_option('eeRSCF_spamBlockedCommonWords', $settings); // Update the database
+				
+				// Send Notice
+				if($_POST['spamSendAttackNotice'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
+				$eeRSCF->log[] = 'Spam Attack Notice: ' . $settings;
+				update_option('eeRSCF_spamSendAttackNotice', $settings); // Update the database
+				
+				// Notice Email
+				$settings = filter_var($_POST['spamNoticeEmail'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+				$eeRSCF->log[] = 'Spam Notice Email: ' . $settings;
+				update_option('eeRSCF_spamNoticeEmail', $settings); // Update the database
+				
+				// Send Admin Notice
+				if($_POST['spamSendAttackNoticeToDeveloper'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
+				$eeRSCF->log[] = 'Spam Attack Developer Notice: ' . $settings;
+				update_option('eeRSCF_spamSendAttackNoticeToDeveloper', $settings); // Update the database
 			}
-			
 			
 			
 			
@@ -1219,51 +1430,6 @@ class eeRSCF_Class {
 				
 			}
 			
-			
-			
-			
-			
-			
-			if(@$_POST['eeRSCF_DepartmentSettings'] == 'TRUE') {
-
-				$departments = '';
-				$departmentSet = '';
-				
-				$num = filter_var($_POST['eeRSCF_Departments'], FILTER_SANITIZE_NUMBER_INT); // How many departments?
-				
-				$this->log[] = $num . ' departments';
-				
-				for($i = 1; $i <= $num; $i++) {
-					
-					// The department
-					if(@$_POST['eeRSCF_formName' . $i]) {
-						$department = filter_var($_POST['eeRSCF_formName' . $i], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
-					
-					} else { // Account for a depertment in the middle removed (if more than one removed, others will be truncated)
-						$i++;
-						if(@$_POST['eeRSCF_formName' . $i]) {
-							$department = filter_var($_POST['eeRSCF_formName' . $i], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
-						}
-					}
-					
-					if($department) {
-						
-						$department = ucwords($department); // Make all lowercase look gooder
-					
-						
-					}
-				
-					// Add to the settings string
-					$departments .= $departmentSet;
-					
-				} // End for loop
-				
-				$this->log[] = 'Departments: ' . $departments;
-				
-				update_option('eeRSCF_departments', $departments); // Update the database
-				
-			
-			}
 			
 			// Re-Get our settings
 			self::eeRSCF_Setup(TRUE);

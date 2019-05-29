@@ -1,11 +1,14 @@
 <?php // eeRSCF File Uploading Classes - mitchellbennis@gmail.com
 	
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeAwesomeness' )) exit('That is Noncense!'); // Exit if nonce fails
 	
+
+
 class eeRSCFU_FileUpload {
 
 	// Properties ------------------------------------
-	public $uploadFolderName = 'eeRSCF_Files';
+	public $uploadFolderName = 'rscf'; // Folder will be created in the WP uploads folder
 	public $fileUploaded = FALSE;
 	public $maxUploadLimit;
 	public $uploadDir;
@@ -36,8 +39,13 @@ class eeRSCFU_FileUpload {
 		}
 	}
 
+	
+
+	
+	
+	
 	// Detect max upload size.
-	private function eeRSCFU_DetectUploadLimit() {
+	public function eeRSCFU_DetectUploadLimit() {
 		
 		$upload_max_filesize = substr(ini_get('upload_max_filesize'), 0, -1); // Strip off the "M".
 		$post_max_size = substr(ini_get('post_max_size'), 0, -1); // Strip off the "M".
@@ -48,33 +56,87 @@ class eeRSCFU_FileUpload {
 		}
 		
 		$eeRSCF->log[] = 'Upload Limit: ' . $this->maxUploadLimit;
+		
+		return $this->maxUploadLimit;
 	}
+	
+	
+	
+	
+	
 	
 	// Create the upload folder if required.
 	private function eeRSCFU_CreateUploadDir() {
 	
-		$eeRSCF->log[] = 'Creating the upload directory.';
+		global $eeRSCF_Log;
 		
-		if(!@is_writable($this->uploadDir)) {
-			$eeRSCF->log[] = 'No Upload Directory Found.';
-			$eeRSCF->log[] = 'Creating Upload Directory ...';
+		$upload_dir = wp_upload_dir();
+		$eeRSCF_UploadDir = $upload_dir['basedir'] . '/' . $this->uploadFolderName;
+		
+		$eeRSCF_Log[] = 'Checking Folder...';
+		$eeRSCF_Log[] = $eeRSCF_UploadDir;
+		
+		if(strlen($eeRSCF_UploadDir)) {
 			
-			if(!@mkdir($this->uploadDir, 0755)) {
-				$eeRSCF->errors = 'Could not create the upload directory: ' . $this->uploadDir;
-				return FALSE;
-			
-			} else {
+			if(!@is_writable($eeRSCF_UploadDir)) {
 				
-				if(!@is_writable($this->uploadDir)) {
-					$eeRSCF->errors = 'Upload directory not writable: ' . $this->uploadDir;
+				$eeRSCF_Log[] = 'No Directory Found.';
+				$eeRSCF_Log[] = 'Creating Upload Directory ...';
+				
+				// Environment Detection
+				if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+				    $eeRSCF_Log[] = 'Windows detected.';
+				    mkdir($eeRSCF_UploadDir); // Windows
 				} else {
-					return TRUE;
+				    $eeRSCF_Log[] = 'Linux detected.';
+				    if(!mkdir($eeRSCF_UploadDir, 0755)) { // Linux - Need to set permissions
+					    $eeRSCF_Log['errors'][] = 'Cannot Create: ' . $eeRSCF_UploadDir;
+					}
+				}
+				
+				if(!@is_writable($eeRSCF_UploadDir)) {
+					$eeRSCF_Log['errors'][] = 'ERROR: I could not create the upload directory: ' . $eeRSCF_UploadDir;
+					
+					return FALSE;
+				
+				} else {
+					
+					$eeRSCF_Log[] = 'Looks Good';
+				}
+			} else {
+				$eeRSCF_Log[] = 'Looks Good';
+			}
+			
+			// Check index.html, create if needed.
+					
+			$eeFile = $eeRSCF_UploadDir . '/index.html'; // Disallow direct file indexing.
+			
+			if($handle = @fopen($eeFile, "a+")) {
+				
+				if(!@is_readable($eeFile)) {
+				    
+					$eeRSCF_Log['errors'][] = 'ERROR: Could not write index.html';
+					
+					return FALSE;
+					
+				} else {
+					
+					fclose($handle);
+					
+					// $eeRSCF_Log[] = 'index.html is in place.';
 				}
 			}
+			
 		} else {
-			$eeRSCF->log[] = 'Upload Folder: ' . $this->uploadDir;
-			return TRUE;
+			$eeRSCF_Log['errors'] = 'No upload directory defined';
+					
+			return FALSE;
 		}
+		
+		$this->uploadDir = $eeRSCF_UploadDir;
+		
+		return TRUE;
+		
 	}
 
 	

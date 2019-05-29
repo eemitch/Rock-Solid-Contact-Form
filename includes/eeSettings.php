@@ -86,17 +86,12 @@ function eeRSCF_Settings() {
 		$eeOutput .= '<a href="?page=' . $eeRSCF_Page . '&subtab=form_settings" class="nav-tab ';  
 		if($active_subtab == 'form_settings') {$eeOutput .= '  eeActiveTab ';}    
 	    $active_subtab == 'form_settings' ? 'nav-tab-active' : '';    
-	    $eeOutput .= $active_subtab . '">' . __('Contact Form', 'rock-solid-contact-form') . '</a>';
-	    
-		$eeOutput .= '<a href="?page=' . $eeRSCF_Page . '&subtab=dept_settings" class="nav-tab ';  
-		if($active_subtab == 'dept_settings') {$eeOutput .= '  eeActiveTab ';}    
-	    $active_subtab == 'dept_settings' ? 'nav-tab-active' : '';    
-	    $eeOutput .= $active_subtab . '">' . __('Departments', 'rock-solid-contact-form') . '</a>';
+	    $eeOutput .= $active_subtab . '">' . __('Contact Forms', 'rock-solid-contact-form') . '</a>';
 	    
 		$eeOutput .= '<a href="?page=' . $eeRSCF_Page . '&subtab=file_settings" class="nav-tab ';  
 		if($active_subtab == 'file_settings') {$eeOutput .= '  eeActiveTab ';}    
 	    $active_subtab == 'file_settings' ? 'nav-tab-active' : '';    
-	    $eeOutput .= $active_subtab . '">' . __('File Attachements', 'rock-solid-contact-form') . '</a>';
+	    $eeOutput .= $active_subtab . '">' . __('Attachments', 'rock-solid-contact-form') . '</a>';
 	    
 		$eeOutput .= '<a href="?page=' . $eeRSCF_Page . '&subtab=spam_settings" class="nav-tab ';  
 		if($active_subtab == 'spam_settings') {$eeOutput .= '  eeActiveTab ';}    
@@ -110,14 +105,84 @@ function eeRSCF_Settings() {
 	    
 	    $eeOutput .= '</h3>'; // END Tabs
 	    
+	    if($active_subtab == 'form_settings') {
+	    
+		    $eeOutput .= '
+		    
+		    <h2 class="eeLeft">Contact Form Settings</h2>
+		    
+		    <div id="eeRSCF_Nav" class="eeClearing">';
+		    
+		    // Forms Navigation 
+			$eeRSCF->eeRSCF_GetForms(); // Fill $eeRSCF->eeFormsArray
+			
+			
+			// Set Current Form
+			if(@$_POST['eeRSCF_ID']) {
+				$eeRSCF_ID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
+			} else {
+				$eeRSCF_ID = 1; // One is the lonliest number that there ever was ;-(
+			}
+			
+			
+			// Get Chosen Form
+			if(@$_POST['eeRSCF_forms']) {
+				
+				$eeRSCF_ID = filter_var($_POST['eeRSCF_forms'], FILTER_VALIDATE_INT);
+				$eeRSCF->eeFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
+			}
+			
+			
+			
+			// Add a new form
+			if(@$_GET['eeRSCF_createForm'] == 1) {
+				
+				$count = count($eeRSCF->eeFormsArray);
+				$eeRSCF_ID = $count+1;
+				add_option('eeRSCF_' . $eeRSCF_ID, $eeRSCF->eeRSCF_0);
+			}
+			
+			
+			// Get this form's settings
+			$eeRSCF->eeFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
+			
+			
+			// Choose your form
+			
+			if(count($eeRSCF->eeFormsArray) > 1) {
+			
+				$eeOutput .= '
+				
+				<form' . $_SERVER['PHP_SELF'] . '?page=rock-solid-contact-form' . '" method="POST">
+				<input type="hidden" name="subtab" value="form_settings" />
+				
+				<select name="eeRSCF_forms" id="eeRSCF_forms">
+				
+				<option value="">Your Forms</option>';
+					
+				foreach( $eeRSCF->eeFormsArray as $eeID => $eeValue) {
+					$eeOutput .= '<option value="' . $eeID . '">' . $eeValue . ' </option>';
+				}
+				$eeOutput .= '</select><button id="eeRSCF_chooseForm">Go</button></form>';
+				
+			}
+			
+			$eeOutput .= '
+			
+			<button type="button" id="eeRSCF_createForm">New Form</button>
+			
+			</div>';
+	    
+	    }
+	    
 	    
 	    // Settings Form
 	    
 	    $eeOutput .= '
 	    
-	    <form action="' . $_SERVER['PHP_SELF'] . '?page=rock-solid-contact-form' . '" method="post" id="eeRSCF_Settings">
+	    <form action="' . $_SERVER['PHP_SELF'] . '?page=rock-solid-contact-form' . '" method="POST" id="eeRSCF_Settings">
 			<input type="hidden" name="eeRSCF_Settings" value="TRUE" />
-																				<input type="submit" value="SAVE" />';
+		';
 				
 		$eeOutput .= wp_nonce_field( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce', TRUE, FALSE ) . "\n\n";
 		
@@ -135,20 +200,10 @@ function eeRSCF_Settings() {
 			<fieldset>
 			
 			<p>The Contact Form sends an email message to you when someone submits the form. 
-			Therefore, the Form needs to have an email address to send from. 
-			It can be any working address, but to improve deliverability you should use an 
-			address that is working on this domain, such as mail@' . $_SERVER['HTTP_HOST'] . '</p>
-			
-			<p>To improve email appearance, options 
-			and to protect your domain from blacklisting, it is recommended to configure an 
-			actual email account for the contact form and use SMTP to send messages rather than
-			relying on the built-in Wordpress(PHP) mailer.</p>
-			
-			<p>When you get a message, simply reply and it will go to the email address of the person who sent the message.</p>
+			Therefore, a rock solid contact form needs to have an email address to send from.</p>
 			
 			
-			
-			<label for="eeRSCF_email">Form Address</label>
+			<label for="eeRSCF_email">The Form\'s Email</label>
 				<input type="email" name="eeRSCF_email" value="';
 				
 			if($eeRSCF->email) { $eeOutput .= $eeRSCF->email; } else { echo get_option('eeRSCF_email'); }
@@ -159,12 +214,25 @@ function eeRSCF_Settings() {
 			
 				$eeOutput .= '
 				
-				<p class="eeNote">To improve deliverability, the form\'s email address should be a working address on this web server.</p>';
+				<p class="eeNote">To improve deliverability, the form\'s email address should be a working address on this web server, such as <strong><em>mail@' . $_SERVER['HTTP_HOST'] . '</em></strong>.</p>';
 			}
 			
 			
 			
-			$eeOutput .= '<label for="eeRSCF_emailMode">SMTP Mailer</label>
+			$eeOutput .= '
+			<br class="eeClearFix" />
+			
+			<p><strong>NOTE: </strong> When you get a message, simply reply. It will go to the email address of the person who submitted the contact form.</p>
+			
+			
+			<h3>SMTP <small>(Optional)</small></h3>
+			
+			<p>To improve email appearance, options 
+			and to protect your domain from blacklisting, it is recommended to configure an 
+			actual email account for the contact form and use SMTP to send messages rather than
+			relying on the built-in Wordpress(PHP) mailer.</p>
+			
+			<label for="eeRSCF_emailMode">SMTP Mailer</label>
 			
 			<select name="eeRSCF_emailMode" id="eeRSCF_emailMode" class="">
 					<option value="PHP"';
@@ -178,6 +246,8 @@ function eeRSCF_Settings() {
 					
 			$eeOutput .= '>ON - Using SMTP (Recommended)</option>
 				</select>
+				
+				<p><strong>NOTE: </strong> You may need to contact your host to get the settings required.</p>
 				
 			</fieldset>	
 			
@@ -223,7 +293,7 @@ function eeRSCF_Settings() {
 			
 			$eeOutput .= '" class="adminInput" id="eeRSCF_emailName" size="64" />
 			
-				<p class="eeNote">This is the name that will appear for the Form\'s Address</p>
+				<p class="eeNote">This is the name for the form that will appear in your email. It is associated with your email address.</p>
 			
 			
 			
@@ -294,7 +364,7 @@ function eeRSCF_Settings() {
 			
 			
 			
-			<label for="eeRSCF_emailAuth">Message Format</label>
+			<label for="eeRSCF_emailAuth">Authentication</label>
 			
 			<select name="eeRSCF_emailAuth" id="eeRSCF_emailAuth" class="">
 					<option value="YES"';
@@ -358,105 +428,20 @@ function eeRSCF_Settings() {
 		
 			
 			
-		} elseif($active_subtab == '__dept_settings') {
-		
-			$eeOutput .= '
-					
-				<h2>Message Delivery</h2>
-				
-				<input type="hidden" name="eeRSCF_DepartmentSettings" value="TRUE" />
-				<input type="hidden" name="subtab" value="dept_settings" />
-			
-			<fieldset>
-				
-				<p>Create departments and send form messages to them.</p>
-					
-				<input type="hidden" name="eeRSCF_Departments" id="eeRSCF_Departments" value="' . count($eeRSCF->departments) . '" />
-				
-				';
-					
-				foreach($eeRSCF->departments as $num => $string) { 
-						
-					$num = $num + 1; // Don't wanna start with a zero
-					
-					$dept = explode('^', $string);
-						
-					$eeOutput .= '<fieldset id="eeDepartmentSet' . $num . '">';
-					
-					$eeOutput .= '<label for="eeRSCF_formName' . $num . '">Department:</label>
-						<input type="text" name="eeRSCF_formName' . $num . '" value="';
-						
-					if(@$dept[0]) { $eeOutput .= $dept[0]; }
-					
-					$eeOutput .= '" class="adminInput" id="eeRSCF_formName' . $num . '" size="64" />
-						
-						<label for="eeRSCF_formTo' . $num . '">TO:</label>
-						<input type="text" name="eeRSCF_formTo' . $num . '" value="';
-						
-					if(@$dept[1]) { $eeOutput .= $dept[1]; } elseif($num == 1) { $eeOutput .= get_option('admin_email'); }
-					
-					$eeOutput .= '" class="adminInput" id="eeRSCF_formTo' . $num . '" size="64" />
-							
-						<label for="eeRSCF_formCC' . $num . '">CC:</label>
-						<input type="text" name="eeRSCF_formCC' . $num . '" value="';
-						
-					if(@$dept[2]) { $eeOutput .= $dept[2]; }
-					
-					$eeOutput .= '" class="adminInput" id="eeRSCF_formCC' . $num . '" size="64" />
-						
-						<label for="eeRSCF_formBCC' . $num . '">BCC:</label>
-						<input type="text" name="eeRSCF_formBCC' . $num . '" value="';
-						
-					if(@$dept[3]) { $eeOutput .= $dept[3]; }
-					
-					$eeOutput .= '" class="adminInput" id="eeRSCF_formBCC' . $num . '" size="64" />	
-						
-						<br class="eeClearFix" />';
-					
-					if($num > 1) { $eeOutput .= '<button class="eeRemoveSet" type="button" onclick="eeRemoveSet(' . $num . ')">Remove</button>'; }
-					
-					$eeOutput .= '</fieldset>';
-						
-					}
-					
-					$eeOutput .= '<button type="button" id="eeAddDepartment">Add New Department</button>
-					
-					<p>You can add more than one address per field by separating them using a comma.</p>
-					
-				</fieldset>';
-			
-			
-			
-			
-			
-			
-			
-			
 		} elseif($active_subtab == 'file_settings') {
 		
 			$eeOutput .= '
 					
-				<h2>File Uploads</h2>
+				<h2>File Attachments</h2>
 				
 				<input type="hidden" name="eeRSCF_FileSettings" value="TRUE" />
 				<input type="hidden" name="subtab" value="file_settings" />
 			
 			<fieldset>
-				<p>Files are uploaded to the web server, then a link to the file is included within the email delivered.</p>
+				<p>Files are uploaded to the web server rather than attached directly to messages. 
+				A link to the file is then included within the message.</p>
 				
-				<span>Allow File Uploads?</span><label for="eeUploadYes" class="eeRadioLabel">Yes</label><input type="radio" name="eeAllowUploads" value="YES" id="eeUploadYes"';
-				
-				if($eeRSCF->fileAllowUploads == 'YES') { $eeOutput .= 'checked'; }
-				
-				$eeOutput .= ' />
-					<label for="eeUploadNo" class="eeRadioLabel">No</label>
-					<input type="radio" name="eeAllowUploads" value="NO" id="eeUploadNo"';
-					
-				if($eeRSCF->fileAllowUploads != 'YES') { $eeOutput .= 'checked'; }
-				
-				$eeOutput .= ' />
-						<br class="eeClearFix" />
-						<p class="eeNote">Files will be uploaded to: <a href="' . $eeRSCFU->uploadUrl . '">' . $eeRSCFU->uploadUrl . '</a></p>
+				<p>Files will be uploaded to: <em>' . $eeRSCFU->uploadUrl . '</em></p>
 				
 				<br class="eeClearFix" />
 				
@@ -490,11 +475,13 @@ function eeRSCF_Settings() {
 				<input type="hidden" name="eeRSCF_SpamSettings" value="TRUE" />
 				<input type="hidden" name="subtab" value="spam_settings" />
 			
-			<fieldset>
+			<fieldset id="eeRSCF_spamSettings">
 				
-				<p>Block those nasty spambots. You can also filter messages as spam if they contain certain words or phrases defined here. Separate phrases with a comma.</p>
+				<p>Rock Solid Contact Form gives you powerful spam blocking features.</p>
 				
-				<span>Block Spambots</span><label for="spamBlockYes" class="eeRadioLabel">Yes</label>
+				
+				
+				<span>Block Spam</span><label for="spamBlockYes" class="eeRadioLabel">Yes</label>
 				<input type="radio" name="spamBlock" value="YES" id="spamBlockYes"';
 				
 				if($eeRSCF->spamBlock == 'YES') { $eeOutput .= 'checked'; }
@@ -507,11 +494,187 @@ function eeRSCF_Settings() {
 				
 				$eeOutput .= ' />
 				
-				<br class="eeClearFix" />
+					<p class="eeNote">Leave this OFF unless your contact form spam is unacceptable.</p>
 				
-				<label for="spamWords">Blocked Words:</label>
-				<textarea rows="4" cols="64" name="spamWords" id="spamWords" />' . $eeRSCF->spamWords . '</textarea>
+				
+				
+				
+				
+				
+				<span>Block Spambots</span><label for="spamBlockBotsYes" class="eeRadioLabel">Yes</label>
+				<input type="radio" name="spamBlockBots" value="YES" id="spamBlockBotsYes"';
+				
+				if($eeRSCF->spamBlockBots == 'YES') { $eeOutput .= 'checked'; }
+				
+				$eeOutput .= ' />
+					<label for="spamBlockBotsNo" class="eeRadioLabel">No</label>
+					<input type="radio" name="spamBlockBots" value="NO" id="spamBlockBotsNo"';
 					
+				if($eeRSCF->spamBlockBots != 'YES') { $eeOutput .= 'checked'; }
+				
+				$eeOutput .= ' />
+				
+					<p class="eeNote">Spambots are not people. 
+					They are automated scripts that search the Internet for contact forms to exploit. 
+					Many websites use CAPTCHA to stop spambots, but Rock Solid Contact Form uses smarter 
+					methods to spot spambots instead.</p>
+				
+				
+				
+				<label for="eeRSCF_spamHoneypot">Honeypot</label>
+				<input type="text" name="spamHoneypot" value="';
+				
+				if($eeRSCF->spamHoneypot) { $eeOutput .= $eeRSCF->spamHoneypot; } else { $eeOutput .= $eeRSCF->default_spamHoneypot; }
+				
+				$eeOutput .= '" class="adminInput" id="eeRSCF_spamHoneypot" size="64" />
+				
+					<p class="eeNote">A honeypot is a used to trick spambots. The honeypot is hidden to people, but spambots see this field in the page code and will complete it. 
+						Spambots are smart, so they might guess your honeypot and not complete it. Change it if you are getting too many spambot messages.</p>
+					
+				
+				
+				
+				
+				<span>English Only</span><label for="spamEnglishOnlyYes" class="eeRadioLabel">Yes</label>
+				<input type="radio" name="spamEnglishOnly" value="YES" id="spamEnglishOnlyYes"';
+				
+				if($eeRSCF->spamEnglishOnly == 'YES') { $eeOutput .= 'checked'; }
+				
+				$eeOutput .= ' />
+					<label for="spamEnglishOnlyNo" class="eeRadioLabel">No</label>
+					<input type="radio" name="spamEnglishOnly" value="NO" id="spamEnglishOnlyNo"';
+					
+				if($eeRSCF->spamEnglishOnly != 'YES') { $eeOutput .= 'checked'; }
+				
+				$eeOutput .= ' />
+				
+					<p class="eeNote">Block messages with strange and indecipherable characters found within.</p>
+				
+				
+				
+				
+				
+				<span>Block Fishy</span><label for="spamBlockFishyYes" class="eeRadioLabel">Yes</label>
+				<input type="radio" name="spamBlockFishy" value="YES" id="spamBlockFishyYes"';
+				
+				if($eeRSCF->spamBlockFishy == 'YES') { $eeOutput .= 'checked'; }
+				
+				$eeOutput .= ' />
+					<label for="spamBlockFishyNo" class="eeRadioLabel">No</label>
+					<input type="radio" name="spamBlockFishy" value="NO" id="spamBlockFishyNo"';
+					
+				if($eeRSCF->spamBlockFishy != 'YES') { $eeOutput .= 'checked'; }
+				
+				
+				
+				$eeOutput .= ' />
+				
+					<p class="eeNote">Block messages with duplicated fields and other nonsense.</p>
+				
+				
+				<h3>Word Blocking</h3>
+				
+				<span>Block Words</span><label for="spamBlockWordsYes" class="eeRadioLabel">Yes</label>
+				<input type="radio" name="spamBlockWords" value="YES" id="spamBlockWordsYes"';
+				
+				if($eeRSCF->spamBlockWords == 'YES') { $eeOutput .= 'checked'; }
+				
+				$eeOutput .= ' />
+					<label for="spamBlockWordsNo" class="eeRadioLabel">No</label>
+					<input type="radio" name="spamBlockWords" value="NO" id="spamBlockWordsNo"';
+					
+				if($eeRSCF->spamBlockWords != 'YES') { $eeOutput .= 'checked'; }
+				
+				$eeOutput .= ' />
+				
+					<p class="eeNote">Block messages containing any words or phrases defined below. Separate phrases with a comma.</p>
+					
+					
+				<label for="eeRSCF_spamBlockedWords">Blocked Words</label>
+				<textarea name="spamBlockedWords" id="eeRSCF_spamBlockedWords" >';
+				
+				if($eeRSCF->spamBlockedWords) { $eeOutput .= $eeRSCF->spamBlockedWords; }
+				
+				$eeOutput .= '</textarea>
+				
+					<p class="eeNote">Add words and phrases here that show up in spam messages</p>	
+				
+				
+				<span>Block Common Words</span><label for="spamBlockCommonWordsYes" class="eeRadioLabel">Yes</label>
+				<input type="radio" name="spamBlockCommonWords" value="YES" id="spamBlockCommonWordsYes"';
+				
+				if($eeRSCF->spamBlockCommonWords == 'YES') { $eeOutput .= 'checked'; }
+				
+				$eeOutput .= ' />
+					<label for="spamBlockCommonWordsNo" class="eeRadioLabel">No</label>
+					<input type="radio" name="spamBlockCommonWords" value="NO" id="spamBlockCommonWordsNo"';
+					
+				if($eeRSCF->spamBlockCommonWords != 'YES') { $eeOutput .= 'checked'; }
+				
+				$eeOutput .= ' />
+				
+					<p class="eeNote">Use the built-in list of words and phrases commonly found in contact form spam messages.</p>
+					
+					
+					
+					
+				<textarea name="spamBlockedCommonWords" id="eeRSCF_spamBlockedCommonWords" >';
+				
+				if($eeRSCF->spamBlockedCommonWords) { $eeOutput .= $eeRSCF->spamBlockedCommonWords; }
+				
+				$eeOutput .= '</textarea>
+				
+					<p class="eeNote">This word list is updated automatically when you update the plugin.</p>
+				
+				
+				
+				<h3>Notifications</h3>
+				
+				<span>Send Spam Notice</span><label for="spamSendAttackNoticeYes" class="eeRadioLabel">Yes</label>
+				<input type="radio" name="spamSendAttackNotice" value="YES" id="spamSendAttackNoticeYes"';
+				
+				if($eeRSCF->spamSendAttackNotice == 'YES') { $eeOutput .= 'checked'; }
+				
+				$eeOutput .= ' />
+					<label for="spamSendAttackNoticeNo" class="eeRadioLabel">No</label>
+					<input type="radio" name="spamSendAttackNotice" value="NO" id="spamSendAttackNoticeNo"';
+					
+				if($eeRSCF->spamSendAttackNotice != 'YES') { $eeOutput .= 'checked'; }
+				
+				
+				
+				$eeOutput .= ' />
+				
+					<p class="eeNote">Send an email notice showing details about the spam message. This is helpful for fine tuning your spam configuration.</p>
+				
+				
+				<label for="eeRSCF_spamNoticeEmail">Notice Email</label>
+				<input type="text" name="spamNoticeEmail" value="';
+				
+				if($eeRSCF->spamNoticeEmail) { $eeOutput .= $eeRSCF->spamNoticeEmail; }
+				
+				$eeOutput .= '" class="adminInput" id="eeRSCF_spamNoticeEmail" size="64" />
+				
+					<p class="eeNote">The email you wish the notices to be sent to.</p>
+					
+				<span>Developer Notice</span><label for="spamSendAttackNoticeToDeveloperYes" class="eeRadioLabel">Yes</label>
+				<input type="radio" name="spamSendAttackNoticeToDeveloper" value="YES" id="spamSendAttackNoticeToDeveloperYes"';
+				
+				if($eeRSCF->spamSendAttackNoticeToDeveloper == 'YES') { $eeOutput .= 'checked'; }
+				
+				$eeOutput .= ' />
+					<label for="spamSendAttackNoticeToDeveloperNo" class="eeRadioLabel">No</label>
+					<input type="radio" name="spamSendAttackNoticeToDeveloper" value="NO" id="spamSendAttackNoticeToDeveloperNo"';
+					
+				if($eeRSCF->spamSendAttackNoticeToDeveloper != 'YES') { $eeOutput .= 'checked'; }
+				
+				
+				
+				$eeOutput .= ' />
+				
+					<p class="eeNote">Send a spam notice message to the developer at <em>' . $eeRSCF->spamAdminNoticeEmail . '</em>
+					This will help to improve spam prevention in Rock Solid Contact Form.</p>
+				
 				<br class="eeClearFix" />
 				
 
@@ -522,55 +685,56 @@ function eeRSCF_Settings() {
 			
 		} else { // Form Settings
 			
-			// echo '<pre>'; print_r($eeRSCF->eeRSCF_1); echo '</pre>'; exit;
-			
-			$eeRSCF_formID = 1;
 			
 			$eeOutput .= '
-
-			<h2>Contact Forms</h2>
 			
 			<input type="hidden" name="eeRSCF_formSettings" value="TRUE" />
-			<input type="hidden" name="eeRSCF_formID" value="' . $eeRSCF_formID . '" />
+			<input type="hidden" name="eeRSCF_ID" value="' . $eeRSCF_ID . '" />
 				<input type="hidden" name="subtab" value="form_settings" />
 			
-			<fieldset id="eeRSCF_formSettings">			
+			<fieldset id="eeRSCF_formSettings">
 			
-			<button id="eeRSCF_createNewForm" class="eeRemoveSet" type="button" onclick="eeRemoveSet()">Create a New Form</button>
-			
-			<p>Select the contact form fields to display. Also select if the field should be required. Change the text for each label as required. A text input box for the message will be provided automatically.</p>
+			<!-- <p>Select the contact form fields to display. Also select if the field should be required. Change the text for each label as required. A text input box for the message will be provided automatically.</p> -->
 			
 			';
 					
 			$eeOutput .= '<label for="eeRSCF_formName">Name</label>
 				<input type="text" name="eeRSCF_formName" value="';
 				
-			if($eeRSCF->eeRSCF_1['name']) { $eeOutput .= $eeRSCF->eeRSCF_1['name']; }
+			if($eeRSCF->eeFormArray['name']) { $eeOutput .= $eeRSCF->eeFormArray['name']; }
 			
 			$eeOutput .= '" class="adminInput" id="eeRSCF_formName" size="64" />
 			
-			<fieldset>
+			<label>Shortcode</label><input id="eeRSCF_shortCode" type="text" name="eeRSCF_shortCode" value="[rock-solid-contact id=' . $eeRSCF_ID . ']" />
+			
+			<br class="eeClearFix" />
+			
+			<p class="button eeRSCF_createPost" title="post">Create Form Post</p>
+			<p class="button eeRSCF_createPost" title="page">Create Form Page</p>
+			<p class="button eeRSCF_copyToClipboard">Copy Shortcode</p>
+			
+			<fieldset id="eeRSCF_delivery">
 			
 				<h3>Delivery</h3>
 						
 						<label for="eeRSCF_formTO">TO</label>
 						<input type="text" name="eeRSCF_formTO" value="';
 						
-					if($eeRSCF->eeRSCF_1['to']) { $eeOutput .= $eeRSCF->eeRSCF_1['to']; } else { $eeOutput .= get_option('admin_email'); }
+					if($eeRSCF->eeFormArray['to']) { $eeOutput .= $eeRSCF->eeFormArray['to']; } else { $eeOutput .= get_option('admin_email'); }
 					
 					$eeOutput .= '" class="adminInput" id="eeRSCF_formTO" size="64" />
 							
 						<label for="eeRSCF_formCC">CC</label>
 						<input type="text" name="eeRSCF_formCC" value="';
 						
-					if(@$eeRSCF->eeRSCF_1['cc']) { $eeOutput .= $eeRSCF->eeRSCF_1['cc']; }
+					if(@$eeRSCF->eeFormArray['cc']) { $eeOutput .= $eeRSCF->eeFormArray['cc']; }
 					
 					$eeOutput .= '" class="adminInput" id="eeRSCF_formCC" size="64" />
 						
 						<label for="eeRSCF_formBCC">BCC</label>
 						<input type="text" name="eeRSCF_formBCC" value="';
 						
-					if(@$eeRSCF->eeRSCF_1['bcc']) { $eeOutput .= $eeRSCF->eeRSCF_1['bcc']; }
+					if(@$eeRSCF->eeFormArray['bcc']) { $eeOutput .= $eeRSCF->eeFormArray['bcc']; }
 					
 					$eeOutput .= '" class="adminInput" id="eeRSCF_formBCC" size="64" />	
 					
@@ -593,7 +757,7 @@ function eeRSCF_Settings() {
 				</tr>';
 			
 			
-			$eeFields = $eeRSCF->eeRSCF_1['fields'];
+			$eeFields = $eeRSCF->eeFormArray['fields'];
 			
 			// echo '<pre>'; print_r($eeFields); echo '</pre>'; exit;
 			
@@ -612,7 +776,7 @@ function eeRSCF_Settings() {
 						
 						if($value) { $eeOutput .= $value; } else { $eeOutput .= $eeRSCF->eeRSCF_UnSlug($field); }
 				
-						$eeOutput .= '" size="24" maxsize="64" /></td>';
+						$eeOutput .= '" size="32" maxsize="256" /></td>';
 					
 					} else {
 						
@@ -620,7 +784,7 @@ function eeRSCF_Settings() {
 						
 						<td><input type="checkbox" name="eeRSCF_fields[' . $eeFieldName . '][' . $field . ']"';	
 				
-						if($value == 'on') { $eeOutput .= ' checked="checked"'; }
+						if($value == 'YES') { $eeOutput .= ' checked="checked"'; }
 					
 						$eeOutput .= ' /></td>';
 					}
@@ -634,9 +798,28 @@ function eeRSCF_Settings() {
 			
 			</fieldset>
 			
+			<fieldset>
+			
+				<h3>Confirmation Page</h3>
+			
+				<p>This is the page that will load after the form has been submitted. If no page is defined, the contact form page will be loaded again.</p>
+				
+				<input class="eeFullWidth" type="url" name="eeRSCF_confirm" value="';
+						
+					if(@$eeRSCF->eeFormArray['confirm'] != '/') { $eeOutput .= $eeRSCF->eeFormArray['confirm']; }
+				
+						$eeOutput .= '" size="128" maxsize="256" />
+			
+			
+			</fieldset>
+			
 			<br class="eeClearFix" />
 			
-		</fieldset>';
+		</fieldset>
+			
+		<a id="eeRSCF_deleteForm" href="admin.php?page=rock-solid-contact-form&subtab=form_settings&eeRSCF_deleteForm=' . $eeRSCF_ID . '">Delete This Form</a>
+		
+		';
 			
 		}
 		
@@ -691,8 +874,6 @@ function eeRSCF_Settings() {
 		<p><a href="' . eeRSCF_WebsiteLink . '">' . 
 			eeRSCF_PluginName . ' &rarr; ' . __('Version', 'rock-solid-contact-form') . ' ' . eeRSCF_version . '</a></p>	
 	</div>
-	
-	
 	
 	
 	

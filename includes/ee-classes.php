@@ -62,7 +62,7 @@ class eeRSCF_NoticeEmail {
 			
 			$body .= 'Via: ' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
 		
-			if(!mail($to,$subject,$body,$headers)) { // Email the message or error report
+			if(!wp_mail($to,$subject,$body,$headers)) { // Email the message or error report
 				?><script>alert('EMAIL SEND FAILED');</script><?php
 			}
 		

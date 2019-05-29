@@ -29,6 +29,7 @@
 
 #eeRSCF input[type="text"], 
 #eeRSCF input[type="email"], 
+#eeRSCF input[type="url"], 
 #eeRSCF input[type="tel"],
 #eeRSCF input[type="file"],
 #eeRSCF select,    
@@ -50,7 +51,7 @@
 #eeRSCF .uploadMax {
 	font-size: 80%;
 }
-#eeRSCF span.eeRequired {
+#eeRSCF span.eeRSCF_Required {
 	float: left;
 	color: #CCC;
 	padding-left: .5em;

@@ -8,7 +8,7 @@ Plugin Name: Rock Solid Contact Form
 Plugin URI: http://elementengage.com
 Description: A rock solid contact form that focuses on security and deiverability
 Author: Mitchell Bennis - Element Engage, LLC
-Version: 1.1.1
+Version: 1.1.2
 Author URI: http://elementengage.com
 License: Proprietary - Copyright Mitchell Bennis
 Text Domain: rock-solid-contact-form
@@ -31,34 +31,11 @@ $eeRSCF_Log = array();
 //	['errors'][] = 'Error condition'
 
 
-define('eeRSCF_DevMode', TRUE); // Enables extended reporting
-/*  --> When TRUE, the log file is written in the plugin's logs folder.
+define('eeRSCF_DevMode', FALSE); // Enables extended reporting
+//  --> When TRUE, the log file is written onto the page.
 
-** Activation and errors are always written to the log file.
-
-Log Files...
-   /wp-content/plugins/rock-solid-contact-form/logs/eeLog.txt
-   /wp-content/plugins/rock-solid-contact-form/logs/ee-email-error.log
-   /wp-content/plugins/rock-solid-contact-form/logs/ee-upload-error.log
-
-*/
-
-// $eeRSCF_Config = array(); // We store DB return values here
-
-// Wordpress User Level
+// Wordpress User Level to See Menu
 $eeRSCFUserAccess = 'edit_posts'; 
-
-// Admin Titling
-$eeRSCFSettingsTitle = 'Contact Form Settings';
-$eeRSCFMenuLabel = 'Contact Form';
-	
-// Admin Message Display
-$eeBackLink = 'http://elementengage.com';
-$eeBackLinkTitle = 'Plugin by Element Engage';
-$eeDisclaimer = 'IMPORTANT - Allowing the public to send you computer files comes with risk. 
-	Please double-check that you only use the file types you absolutely need and open each file submitted to you with great caution and intestinal fortitude.';
-	
-
 
 
 
@@ -92,15 +69,15 @@ function eeRSCF_Setup() {
 	include_once(plugin_dir_path(__FILE__) . 'includes/eeFunctions.php'); // General Functions
 
 	// Initiate the Class
-	include_once('includes/ee-rock-solid-class.php');
+	include_once(plugin_dir_path(__FILE__) . 'includes/ee-rock-solid-class.php');
 	$eeRSCF = new eeRSCF_Class();
 	$eeRSCF->eeRSCF_Setup(TRUE); // Run the setup
 	
+	
 	// Get the Uploader class
-	include_once('includes/ee-rock-solid-upload-class.php');
+	include_once(plugin_dir_path(__FILE__) . 'includes/ee-rock-solid-upload-class.php');
 	$eeRSCFU = new eeRSCFU_FileUpload();
 	$eeRSCFU->eeRSCFU_Setup(TRUE); // Run the setup
-
 }
 
 add_action('init', 'eeRSCF_Setup');
@@ -124,6 +101,7 @@ function eeRSCF_AdminHead($eeHook) {
         if(in_array($eeHook, $eeHooks)) {
             wp_enqueue_style( 'rock-solid-contact-form-admin-style', plugins_url( 'css/adminStyle.css', __FILE__ ) );
 			wp_enqueue_script('rock-solid-contact-form-admin-js', plugins_url('js/adminScripts.js', __FILE__) );
+			wp_enqueue_script('rock-solid-contact-form-admin-js-footer', plugins_url('js/adminScriptsFooter.js', __FILE__), '', '1', TRUE );
         }
         
 
@@ -138,8 +116,8 @@ add_action( 'admin_enqueue_scripts', 'eeRSCF_AdminHead' );
 function eeRSCF_Enqueue() {
 	
 	// Register the style like this for a theme:
-    wp_register_style( 'ee-plugin-css', plugin_dir_url(__FILE__) . 'css/style.css');
-	wp_enqueue_style('ee-plugin-css');
+    wp_register_style( 'ee-rock-solid-contact-form-css', plugin_dir_url(__FILE__) . 'css/style.css');
+	wp_enqueue_style('ee-rock-solid-contact-form-css');
     
     // Javascript
     $deps = array('jquery');
@@ -148,6 +126,75 @@ function eeRSCF_Enqueue() {
 
 add_action( 'wp_enqueue_scripts', 'eeRSCF_Enqueue' );
 
+
+
+
+
+// Createing a New Post with Shortcode
+function eeRSCF_CreatePostwithShortcode() { 
+	
+	global $eeRSCF_Log;
+	
+	$eeShortcode = FALSE;
+	$eeCreatePostName = FALSE;
+	$eeCreatePostType = FALSE;
+
+	$eeCreatePost = filter_var(@$_GET['eeRSCF_createPost'], FILTER_SANITIZE_STRING);
+	
+	if(strpos($eeCreatePost, '|')) {
+		$eeArray = explode('|', $eeCreatePost);  // Comes in type|name|shortcode
+	}
+	
+	// echo '<pre>'; print_r($eeArray); echo '</pre>'; exit;
+	
+	$eeType= filter_var($eeArray[0], FILTER_SANITIZE_STRING);
+	$eeName = filter_var(urldecode($eeArray[1]), FILTER_SANITIZE_STRING);
+	$eeShortcode = filter_var(urldecode($eeArray[2]), FILTER_SANITIZE_STRING);
+		
+	if(($eeType == "post" OR $eeType == "page") AND $eeShortcode) {
+		
+		// Create Post Object
+		$eeNewPost = array(
+			'post_type'		=> $eeType,
+			'post_title'    => $eeName . ' ' . ucwords($eeType),
+			'post_content'  => '<p><em>Note that this ' . $eeType . ' is in draft status</em></p><div>' . $eeShortcode . '</div>',
+			'post_status'   => 'draft'
+		);
+ 
+		// Create Post
+		$eeNewPostID = wp_insert_post( $eeNewPost );
+		
+		if($eeNewPostID) {
+			
+			$eeRSCF_Log['p=' . $eeNewPostID][] = 'Creating new ' . $eeType . ' with shortcode...';
+			$eeRSCF_Log['p=' . $eeNewPostID][] = $eeShortcode;
+			
+			header('Location: /?p=' . $eeNewPostID);
+		}
+		
+		return TRUE;
+	}
+	
+}
+if(@$_GET['eeRSCF_createPost']) {
+	add_action( 'wp_loaded', 'eeRSCF_CreatePostwithShortcode' );
+}
+
+
+
+function eeRSCF_deleteForm() {
+	
+	$eeID = filter_var($_GET['eeRSCF_deleteForm'], FILTER_VALIDATE_INT);
+	if($eeID) {
+		delete_option('eeRSCF_' . $eeID);
+	}
+	
+}
+
+
+if(@$_GET['eeRSCF_deleteForm']) {
+	add_action( 'wp_loaded', 'eeRSCF_deleteForm' );
+}
 
 
 
@@ -161,20 +208,20 @@ add_action( 'wp_enqueue_scripts', 'eeRSCF_Enqueue' );
 function eeRSCF_Shortcode($atts, $content = null) {
     
     global $eeRSCF;
+    $id = 1;
     
-     // Over-Riding Shortcode Attributes
-	if($atts) {
+    if($atts) {
 		
 		// Use lowercase att names only
-		$atts = shortcode_atts( array( 'department' => ''), $atts );
+		$atts = shortcode_atts( array( 'id' => 1), $atts );
 		
 		extract($atts);
-    
-		
-    
     }
-		
-	return $eeRSCF->eeRSCF_formDisplay(); // Usage: [rock-solid-contact]
+    
+    if( is_numeric($id) AND $id < 100 ) {
+	    
+	    return $eeRSCF->eeRSCF_formDisplay($id); // Usage: [rock-solid-contact id=2]
+    }
 }
 add_shortcode( 'rock-solid-contact', 'eeRSCF_Shortcode' );
 
@@ -219,9 +266,16 @@ add_action('wp_mail_failed', 'eeRSCF_Failed', 10, 1);
 function eeRSCF_UpdatePlugin() {
 	
 	global $eeRSCF_Log;
+	$eeInstalled = FALSE;
+	$eeContactForm = FALSE;
+	
+	$eeRSCF_Nonce = wp_create_nonce('eeAwesomeness'); // Security
 	
 	include_once('includes/ee-rock-solid-class.php');
 	$eeRSCF = new eeRSCF_Class();
+	
+	include_once('includes/ee-rock-solid-upload-class.php');
+	$eeRSCFU = new eeRSCFU_FileUpload();
 	
 	if(!is_object($eeRSCF)) {
 		$eeRSCF_Log['errors'] = 'No eeRSCF Object';
@@ -230,62 +284,89 @@ function eeRSCF_UpdatePlugin() {
 	
 	$eeInstalled = get_option('eeRSCF_version');
 	
-	$eeContactForm = get_option('eeContactForm'); // Check for old version
-	
 	if($eeInstalled AND eeRSCF_version > $eeInstalled) { // If this is a newer version
 		
-		// Forms
-		$eeString = serialize($eeRSCF->eeRSCF_1);
-		update_option('eeRSCF_1', $eeString);
-	
+		// Get the contents of the text file
+		$spamBlockedCommonWords = file_get_contents(plugin_dir_url( __FILE__ ) . 'common-spam-words.txt'); 
+		if($spamBlockedCommonWords) {
+			
+			// Convert newline to comma seperated list
+			$spamBlockedCommonWords = preg_replace("/(\n)/", ",", $spamBlockedCommonWords);
+			$spamBlockedCommonWords = str_replace(',,', ',',  $spamBlockedCommonWords);
+			$spamBlockedCommonWords = strtolower($spamBlockedCommonWords);
+			
+			// TO DO - Compare word lists so we don't overwrite user changes
+			update_option('eeRSCF_spamBlockedCommonWords', $spamBlockedCommonWords);
+		}
+		
 		$eeRSCF_Log[] = 'New Version: ' . eeRSCF_version;
 		
 		update_option('eeRSCF_version' , eeRSCF_version);
 		
 		
-	} elseif($eeContactForm) { // Upgrade to New
-		
-		// TO DO - Make array from old text string
-		
-		
-		
-		$eeRSCF->eeRSCF_UpgradeFromEE( get_option('eeContactForm') ); // Update, then delete the old option
-		
-	
 	} elseif(!$eeInstalled) { // A New Installation !!!
 		
 		$eeRSCF_Log[] = 'New Install: ' . eeRSCF_version;
 		
 		// Forms
-		$eeString = serialize($eeRSCF->eeRSCF_1);
-		update_option('eeRSCF_1', $eeString);
+		add_option('eeRSCF_1', $eeRSCF->eeRSCF_0);
 		
 		// Files
-		update_option('eeRSCF_fileAllowUploads', $eeRSCF->default_fileAllowUploads);
-		update_option('eeRSCF_fileMaxSize', $eeRSCF->default_fileMaxSize);
-		update_option('eeRSCF_fileFormats', $eeRSCF->default_fileFormats);
+		add_option('eeRSCF_fileMaxSize', $eeRSCFU->eeRSCFU_DetectUploadLimit() );
+		add_option('eeRSCF_fileFormats', $eeRSCF->default_fileFormats);
 		
 		// Spam
-		update_option('eeRSCF_spamBlock', $eeRSCF->default_spamBlock);
-		update_option('eeRSCF_spamWords', $eeRSCF->default_spamWords);
+		add_option('eeRSCF_spamBlock', $eeRSCF->default_spamBlock);
+		add_option('eeRSCF_spamBlockBots', $eeRSCF->default_spamBlockBots);
+		add_option('eeRSCF_spamHoneypot', $eeRSCF->default_spamHoneypot);
+		add_option('eeRSCF_spamEnglishOnly', $eeRSCF->default_spamEnglishOnly);
+		add_option('eeRSCF_spamBlockFishy', $eeRSCF->default_spamBlockFishy);
+		add_option('eeRSCF_spamBlockWords', $eeRSCF->default_spamBlockWords);
+		add_option('eeRSCF_spamBlockedWords', $eeRSCF->default_spamBlockedWords);
+		add_option('eeRSCF_spamBlockCommonWords', $eeRSCF->default_spamBlockCommonWords);
+		
+		
+		// Get the contents of the text file
+		$spamBlockedCommonWords = file_get_contents(plugin_dir_url( __FILE__ ) . 'common-spam-words.txt'); 
+		if($spamBlockedCommonWords) {
+			
+			// Convert newline to comma seperated list
+			$spamBlockedCommonWords = preg_replace("/(\n)/", ",", $spamBlockedCommonWords);
+			$spamBlockedCommonWords = str_replace(',,', ',',  $spamBlockedCommonWords);
+			$spamBlockedCommonWords = strtolower($spamBlockedCommonWords);
+			add_option('eeRSCF_spamBlockedCommonWords', $spamBlockedCommonWords);
+		}
+
+		add_option('eeRSCF_spamSendAttackNotice', $eeRSCF->default_spamSendAttackNotice);
+		add_option('eeRSCF_spamNoticeEmail', get_bloginfo('admin_email'));
+		add_option('eeRSCF_spamSendAttackNoticeToDeveloper', $eeRSCF->default_spamSendAttackNoticeToDeveloper);
 		
 		// Email
 		$current_user = wp_get_current_user();
 		$userEmail = (string) $current_user->user_email;
-		update_option('eeRSCF_email' , $userEmail);
-		update_option('eeRSCF_emailMode' , 'PHP');
-		update_option('eeRSCF_emailFormat' , 'TEXT');
-		update_option('eeRSCF_emailName' , get_bloginfo('name') . ' Contact Form' );
-		update_option('eeRSCF_emailUsername' , ' ');
-		update_option('eeRSCF_emailPassword' , ' ');
-		update_option('eeRSCF_emailServer' , 'mail.' . $_SERVER['HTTP_HOST']);
-		update_option('eeRSCF_emailSecure' , 'YES');
-		update_option('eeRSCF_emailPort' , '465');
-		update_option('eeRSCF_emailAuth' , 'NO');
-		update_option('eeRSCF_emailDebug' , 1); // 1 for No, 2 for Yes
+		add_option('eeRSCF_email' , $userEmail);
+		add_option('eeRSCF_emailMode' , 'PHP');
+		add_option('eeRSCF_emailFormat' , 'TEXT');
+		add_option('eeRSCF_emailName' , get_bloginfo('name') . ' Contact Form' );
+		add_option('eeRSCF_emailUsername' , ' ');
+		add_option('eeRSCF_emailPassword' , ' ');
+		add_option('eeRSCF_emailServer' , 'mail.' . $_SERVER['HTTP_HOST']);
+		add_option('eeRSCF_emailSecure' , 'YES');
+		add_option('eeRSCF_emailPort' , '465');
+		add_option('eeRSCF_emailAuth' , 'NO');
+		add_option('eeRSCF_emailDebug' , 1); // 1 for No, 2 for Yes
 		
 		// Meta
-		update_option('eeRSCF_version', eeRSCF_version);	
+		add_option('eeRSCF_version', eeRSCF_version);
+		
+	
+		// Upgrade from EE Contact Form ?
+		$eeContactForm = get_option('eeContactForm');
+		
+		if($eeContactForm) {
+		
+			$eeRSCF->eeRSCF_UpgradeFromEE( $eeContactForm ); // Update to the new and improved!
+		}	
 		
 	} else {
 		

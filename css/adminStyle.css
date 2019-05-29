@@ -2,7 +2,7 @@
 
 .eeRSCF_Admin {
 	width: 80%;
-	min-width: 600px;
+	width: 700px;
 /* 	float: left; */
 	font-size: 120%;	
 }
@@ -42,12 +42,51 @@
 	background-color: #f4f4f4;
 }
 
+
+#eeRSCF_Nav {
+	width: 60%;
+	float: right;
+	margin-top: 10px;
+	text-align: right;
+	border: 1px solid #FFF;
+	margin: 0;
+	padding: 5px;
+}
+#eeRSCF_Nav form {
+	display: inline-block;
+	padding-right: 20px;
+}
+#eeRSCF_Nav select {
+	width: 200px;
+	float: none;
+	display: inline-block;
+}
+#eeRSCF_Nav button {
+	margin: 0;
+	float: none;
+	display: inline-block;
+	font-size: 110%;
+}
+
+
+#eeRSCF_formSettings p.button {
+	margin: 5px;
+}
+
+
 #eeRSCF_formSettings fieldset {
-	width: 40%;
-	float: left;
-	clear: none;
 	margin: 10px;
 	padding: 10px;
+}
+
+#eeRSCF_delivery input[type=text],
+#eeRSCF_formName {
+	width: 65%;
+	font-size: 110%;
+}
+
+table.eeRSCF_formFields {
+	
 }
 
 table.eeRSCF_formFields th,
@@ -60,10 +99,16 @@ table.eeRSCF_formFields th {
 	color: #FFF;
 }
 table.eeRSCF_formFields td input[type=text] {
-/* 	width: 300px; */
 	font-size: 110%;
+	width: auto;
 }
-table.eeRSCF_formFields td input[type=checkbox] {
+
+
+
+/* Input Scaling */
+table.eeRSCF_formFields input[type=checkbox],
+table.eeRSCF_formFields input[type=radio],
+table.eeRSCF_formFields select {
 	display: block;
 	margin: 0 auto;
 	-ms-transform: scale(1.25); /* IE */
@@ -71,15 +116,17 @@ table.eeRSCF_formFields td input[type=checkbox] {
 	-webkit-transform: scale(1.25); /* Safari and Chrome */
 	-o-transform: scale(1.25); /* Opera */
 	transform: scale(1.25);
-/* 	padding: 10px; */
 }
 
 
-
+.eeRSCF_Admin table {
+	width: 100%;
+}
 
 
 .eeRSCF_Admin fieldset p {
 	margin-bottom: 25px;
+	clear: left;
 }
 
 .eeRSCF_Admin label, .eeRSCF_Admin span {
@@ -108,9 +155,14 @@ table.eeRSCF_formFields td input[type=checkbox] {
 .eeRSCF_Admin textarea, 
 .eeRSCF_Admin span.eeValueDisplay {
 	float: left;
-	width: 100%;
+	width: 50%;
 	padding: 4px;
 }
+
+.eeRSCF_Admin #eeRSCF_delivery input[type=text] {
+	width: 60%;
+}
+
 .eeRSCF_Admin textarea {
 	height: 200px;
 	font-size: 130%;
@@ -133,6 +185,15 @@ table.eeRSCF_formFields td input[type=checkbox] {
 	margin-top: .325em;
 	margin-right: .5em;
 }
+
+#eeRSCF_spamSettings h3,
+#eeRSCF_spamSettings textarea {
+	display: block;
+	clear: both;
+	width: 100%;
+}
+
+
 .eeRSCF_Admin input[type=submit], 
 .eeRSCF_Admin button {
 	float: right;
@@ -146,11 +207,11 @@ table.eeRSCF_formFields td input[type=checkbox] {
 /* 	margin-bottom: 2em; */
 }
 
-.eeRemoveSet {
-	display: block;
-	width: 20%;
-	text-align: center;
-	margin: 5px auto;
+#eeRSCF_deleteForm {
+	float: left;
+	margin-left: 20px;
+	color: #c60000;
+	font-size: 80%;
 }
 
 
@@ -259,11 +320,28 @@ table.eeRSCF_formFields td input[type=checkbox] {
 	clear: both;
 }
 
+.eeClearing:before,
+.eeClearing:after {
+  content: "";
+  display: table;
+}
+
+.eeClearing:after {
+  clear: both;
+}
+
+
+.eeFullWidth {
+	width: 100% !important;
+}
+
+/*
 .eeBacklink {
 	display: block;
 	text-align: center;
 	font-size: 70%;
 }
+*/
 
 .eeNoClear {
 	clear: none !important;
@@ -271,8 +349,14 @@ table.eeRSCF_formFields td input[type=checkbox] {
 }
 
 .eeRight {
-	float: right;
+	float: right !important;
+	width: auto !important;
 }
+.eeLeft {
+	float: left !important;
+	width: auto !important;
+}
+
 
 .eeHide {
 	display:none;
