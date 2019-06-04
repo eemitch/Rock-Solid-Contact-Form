@@ -6,11 +6,11 @@
 /*
 Plugin Name: Rock Solid Contact Form 
 Plugin URI: http://elementengage.com
-Description: A rock solid contact form that focuses on security and deiverability
+Description: A rock solid contact form that focuses on spam, security and deliverability
 Author: Mitchell Bennis - Element Engage, LLC
-Version: 1.1.2
+Version: 1.1.4
 Author URI: http://elementengage.com
-License: Proprietary - Copyright Mitchell Bennis
+License: GPLv2 or later
 Text Domain: rock-solid-contact-form
 Domain Path: /languages
 */
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 define('eeRSCF_PluginName', 'Rock Solid Contact Form');
 define('eeRSCF_WebsiteLink', 'https://elementengage.com');
-define('eeRSCF_version', '1.1.2');
+define('eeRSCF_version', '1.1.4');
 
 $eeRSCF = ''; // Our Main class
 $eeRSCFU = ''; // Our Upload class
@@ -35,7 +35,25 @@ define('eeRSCF_DevMode', FALSE); // Enables extended reporting
 //  --> When TRUE, the log file is written onto the page.
 
 // Wordpress User Level to See Menu
-$eeRSCFUserAccess = 'edit_posts'; 
+$eeRSCFUserAccess = 'edit_posts';
+
+
+
+// Check for Update
+// https://github.com/YahnisElsts/plugin-update-checker
+// https://github.com/eemitch/ee-simple-file-list-extension
+$eeRSCF_SLUG = 'rock-solid-contact-form';
+$eeRSCF_AUTH = '53d87b9e34521480df5b5050cbbf45a9ef629fd1'; // 53d87b9e34521480df5b5050cbbf45a9ef629fd1
+
+include( plugin_dir_path(__FILE__) . '/updater/plugin-update-checker.php' );
+$eeEXT_updateChecker = Puc_v4_Factory::buildUpdateChecker(
+	'https://github.com/eemitch/' . $eeRSCF_SLUG,
+	__FILE__,
+	$eeRSCF_SLUG
+);
+$eeRSCF_updateChecker->setAuthentication($eeRSCF_AUTH);
+$eeRSCF_updateChecker->getVcsApi()->enableReleaseAssets();
+
 
 
 
@@ -286,6 +304,8 @@ function eeRSCF_UpdatePlugin() {
 	
 	if($eeInstalled AND eeRSCF_version > $eeInstalled) { // If this is a newer version
 		
+		return;
+		
 		// Get the contents of the text file
 		$spamBlockedCommonWords = file_get_contents(plugin_dir_url( __FILE__ ) . 'common-spam-words.txt'); 
 		if($spamBlockedCommonWords) {
@@ -357,16 +377,7 @@ function eeRSCF_UpdatePlugin() {
 		add_option('eeRSCF_emailDebug' , 1); // 1 for No, 2 for Yes
 		
 		// Meta
-		add_option('eeRSCF_version', eeRSCF_version);
-		
-	
-		// Upgrade from EE Contact Form ?
-		$eeContactForm = get_option('eeContactForm');
-		
-		if($eeContactForm) {
-		
-			$eeRSCF->eeRSCF_UpgradeFromEE( $eeContactForm ); // Update to the new and improved!
-		}	
+		add_option('eeRSCF_version', eeRSCF_version);	
 		
 	} else {
 		

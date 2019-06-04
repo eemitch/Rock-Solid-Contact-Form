@@ -523,171 +523,8 @@ class eeRSCF_Class {
 	}
 	
 	
-	// [fields=first-name^SHOW^First Name^REQ|last-name|business|address|address-2|city|state|zip|phone|website|other|subject^SHOW^Subject]
-	// [allowUploads=No]
-	// [maxFileSize=10]
-	// [formats=.gif,.jpg,.jpeg,.bmp,.png,.tif,.tiff,.txt,.eps,.psd,.ai,.pdf,.doc,.xls,.ppt,.docx,.xlsx,.pptx,.odt,.ods,.odp,.odg,.wav,.wmv,.wma,.flv,.3gp,.avi,.mov,.mp4,.m4v,.mp3,.webm,.zip]
-	// [spamBlock=Yes]
-	// [spamTestMode=Yes]
-	// [spamWords=I am a web, websites, website design, web design, web designer, web developer, web development, more leads, more sales, leads and sales, first page of google, seo, search engine, more profitableI am a web, more profitable, I am a web]
-	// [FROM:admin@elementengage.net]
-	// [DEPT:N/A^TO:admin@elementengage.net^CC:^BCC:^)]
-	// [version=
 	
 	
-		
-	public function eeRSCF_UpgradeFromEE($eeString) {
-		
-		if(strpos($eeString, 'spamTestMode')) {
-			return; // Don't update that version
-		}
-		
-		add_option('eeRSCF_eeContactFormOld', $eeString); // Save it for posterity
-		
-		$this->deptArray = array();
-		
-		$eeArray = array();
-		
-		if($eeString) {
-			
-			$settings = explode('][', $eeString);
-			
-			// echo '<pre>'; print_r($settings); echo '</pre>'; exit;
-			
-			// TO DO - Convert fields and departments into forms ---------------------------------------------------
-			
-			// Fields
-			$fields = str_replace('fields=', '', $settings[0]);
-			$fieldsArray = explode('|', $fields); // Use this further below
-			
-			$eeArray = explode('=', $settings[1]);
-			$fileAllowUploads = strtoupper($eeArray[1]);
-			
-			$eeArray = explode('=', $settings[2]);
-			update_option('eeRSCF_fileMaxSize', $eeArray[1]);
-			
-			$eeArray = explode('=', $settings[3]);
-			update_option('eeRSCF_fileFormats', $eeArray[1]);
-			
-			
-			$eeArray = explode('=', $settings[4]);
-			$eeArray = array_map('strtoupper', $eeArray);
-			update_option('eeRSCF_spamBlock', $eeArray[1]);
-			
-			$spamWords = explode('=', $settings[5]);
-			$spamWords = $spamWords[1];
-			
-			// Merge with pre-loaded list
-			$spamWords2 = get_option('eeRSCF_spamBlockedCommonWords');
-			$spamWords .= $spamWords2; // Combine
-			$eeArray = explode(',', $spamWords); // Split by comma
-			$eeArray = array_map('trim', $eeArray); // Trim values
-			$eeArray = array_map('strtolower', $eeArray); // Ensure lower case
-			$eeArray = array_unique($eeArray); // Remove Duplicates
-			$spamWords = implode(',', $eeArray); // Make into a string
-			update_option('eeRSCF_spamBlockedCommonWords', $spamWords);
-			
-			// Form email address
-			update_option('eeRSCF_email' , substr($settings[6], 5) ); // Strip "FROM:"
-			
-			// Departments
-			$eeDepartment = array();
-			
-			// Add the Form Name and the email addresses
-			$eeString = $settings[7];
-			$eeArray = explode(')', $eeString);
-			
-			foreach( $eeArray as $eeKey => $eeValue) {
-				
-				$deptArray = explode('^', $eeValue);
-				$deptArray = array_filter($deptArray); // Remove empty
-				
-				foreach( $deptArray as $eeKey2 => $eeValue2){
-					
-					$deptPart = explode(':', $eeValue2);
-					
-					$deptName = strtolower($deptPart[0]);
-					
-					if($deptName == 'dept') { $deptName = 'name'; }
-					
-					if($deptPart[1] == 'N/A') {
-						$deptPart[1] = 'Main';
-					}
-					
-					if(@$deptPart[1]) {
-						$eeDepartment[ $deptName ] = $deptPart[1];
-					} else {
-						$eeDepartment[ $deptName ] = ' ';
-					}
-					
-					
-				}
-			}
-			
-			$eeDepartment['confirm'] = '/'; 
-			
-			
-			
-			$this->log['Old Settings'] = $eeArray; // Our old settings
-			
-			
-			
-			
-			foreach( $fieldsArray as $eeKey => $eeValue){
-				
-				if(strpos($eeValue, '^')) {
-					
-					$eeArray = explode('^', $eeValue);
-					
-					if(@$eeArray[3] == 'REQ') {
-						$eeReq = 'YES';
-					} else {
-						$eeReq = 'NO';
-					}
-					
-					$eeDepartment['fields'][$eeArray[0]] = array('show' => 'YES', 'req' => $eeReq, 'label' => $eeArray[2]);
-					
-					
-					
-				} else {
-					
-					$niceName = $this->eeRSCF_UnSlug($eeValue);
-					$eeDepartment['fields'][$eeValue] = array('show' => 'NO', 'req' => 'NO', 'label' => $niceName);
-				}
-				
-				
-			}
-			
-			$eeDepartment['fields']['attachments'] = array('show' => $fileAllowUploads, 'req' => 'NO', 'label' => 'Attachments');
-			
-			
-			// echo '<pre>'; print_r($eeDepartment); echo '</pre>'; exit;
-			
-			update_option('eeRSCF_1' , $eeDepartment );
-			
-			// Check for SMTP constants
-			if(SMTP_USER) {
-				
-				update_option('eeRSCF_Mode', 'SMTP');
-				update_option('eeRSCF_emailUsername' , SMTP_USER);
-				update_option('eeRSCF_emailPassword' , SMTP_PASS);
-				update_option('eeRSCF_emailServer' , SMTP_HOST);
-				update_option('eeRSCF_emailSecure' , SMTP_SECURE);
-				update_option('eeRSCF_emailPort' , SMTP_PORT);
-				update_option('eeRSCF_emailAuth' , SMTP_AUTH);
-			}
-			
-			$this->log[] = 'Plugin Updated from eeContactForm';
-			
-			delete_option('eeContactForm');
-			
-			return;
-					
-		} else {
-			
-			$this->log[] = 'No Settings to Process?';
-		}
-	}
 	
 	
 	
@@ -727,6 +564,8 @@ class eeRSCF_Class {
 		<fieldset>';
 		
 		$eeArray = get_option('eeRSCF_' . $eeRSCF_ID);
+		
+		// echo '<pre>'; print_r($eeArray); echo '</pre>'; exit;
 		
 		if( is_array($eeArray['fields']) ) {
 					
@@ -855,6 +694,10 @@ class eeRSCF_Class {
 	
 	
 	public function eeRSCF_SendEmail($post) {
+		
+		// echo '<pre>'; print_r($post); echo '</pre>'; exit;
+		
+		if(strlen($post['message']) < 2) { return; } // Move to spam check? Detect HTML required fields that are blank
 		
 		global $eeRSCFU; $subject = FALSE;
 		
