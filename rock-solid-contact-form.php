@@ -46,7 +46,7 @@ $eeRSCF_SLUG = 'rock-solid-contact-form';
 $eeRSCF_AUTH = '53d87b9e34521480df5b5050cbbf45a9ef629fd1'; // 53d87b9e34521480df5b5050cbbf45a9ef629fd1
 
 include( plugin_dir_path(__FILE__) . '/updater/plugin-update-checker.php' );
-$eeEXT_updateChecker = Puc_v4_Factory::buildUpdateChecker(
+$eeRSCF_updateChecker = Puc_v4_Factory::buildUpdateChecker(
 	'https://github.com/eemitch/' . $eeRSCF_SLUG,
 	__FILE__,
 	$eeRSCF_SLUG
@@ -70,11 +70,61 @@ function eeRSCF_ContactProcess() {
 	
 } // Add this Form Processor to the WP Flow
 if(@$_POST['eeRSCF'] == 'TRUE') {
+	
+	
+	if( get_option('eeRSCF_emailMode') == 'SMTP' ) {
+		// add_action( 'phpmailer_init', 'eeRSCF_SMTP' );
+	}
+	
 	add_action('wp_loaded', 'eeRSCF_ContactProcess'); // Process a form submission (front or back)
 }
 
 
 
+
+function eeRSCF_SMTP() {
+	
+	$eeEmail = get_option('eeRSCF_email');
+	
+	if(filter_var($eeEmail, FILTER_VALIDATE_EMAIL)) {
+		
+		// Define SMTP Settings
+		global $phpmailer;
+		
+		if ( !is_object( $phpmailer ) ) {
+			$phpmailer = (object) $phpmailer;
+		}
+		
+		// $phpmailer->Mailer     = 'smtp';
+		// $phpmailer->isHTML(FALSE);
+		
+		$phpmailer->isSMTP();
+		
+		$phpmailer->From       = $eeEmail;
+		$phpmailer->FromName   = get_option('eeRSCF_emailName');
+		$phpmailer->Host       = get_option('eeRSCF_emailServer');
+		$phpmailer->Username   = get_option('eeRSCF_emailUsername');
+		$phpmailer->Password   = get_option('eeRSCF_emailPassword');
+		$phpmailer->Sender     = get_option('eeRSCF_emailUsername');
+		$phpmailer->ReturnPath = get_option('eeRSCF_emailUsername');
+		$phpmailer->SMTPSecure = get_option('eeRSCF_emailSecure');
+		$phpmailer->Port       = get_option('eeRSCF_emailPort');
+		$phpmailer->SMTPAuth   = TRUE; // get_option('eeRSCF_emailAuth');
+		$phpmailer->SMTPDebug  = 3;
+		
+		// Coming Soon
+		if(get_option('emailFormat') == 'HTML') {
+			// $phpmailer->isHTML(TRUE);
+			// $phpmailer->msgHTML = $body;
+			// $phpmailer->Body = nl2br($body);
+		}
+		
+		
+		
+		// echo '<pre>'; print_r($phpmailer); echo '</pre>'; exit;
+	
+	}
+}
 
 
 // Plugin Setup

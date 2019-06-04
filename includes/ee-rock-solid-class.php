@@ -48,17 +48,17 @@ class eeRSCF_Class {
 	
 	
 	// Spam
-	public $default_spamBlock = 'NO';
-	public $default_spamBlockBots = 'NO';
+	public $default_spamBlock = 'YES';
+	public $default_spamBlockBots = 'YES';
 	public $default_spamHoneypot = 'link';
-	public $default_spamEnglishOnly = 'NO';
-	public $default_spamBlockFishy = 'NO';
+	public $default_spamEnglishOnly = 'YES';
+	public $default_spamBlockFishy = 'YES';
 	
-	public $default_spamBlockWords = 'NO';
-	public $default_spamBlockedWords = 'annoying words, annoying phrases';
-	public $default_spamBlockCommonWords = 'NO';	
+	public $default_spamBlockWords = 'YES';
+	public $default_spamBlockedWords = '';
+	public $default_spamBlockCommonWords = 'YES';	
 	public $default_spamSendAttackNotice = 'NO'; 
-	public $default_spamSendAttackNoticeToDeveloper = 'NO';
+	public $default_spamSendAttackNoticeToDeveloper = 'YES';
 	
 	
 	
@@ -148,8 +148,8 @@ class eeRSCF_Class {
 		$this->log['settings'][] = $this->adminTo;
 		
 		
-		$this->permalink = get_permalink();
-		$this->log['settings'][] = $this->permalink;
+		// $this->permalink = get_permalink();
+		// $this->log['settings'][] = $this->permalink;
 		
 		
 		// FILES
@@ -512,6 +512,8 @@ class eeRSCF_Class {
 		if(count($this->errors) >= 1) {
 			
 			$this->log[] = 'Spam Check FAIL!';
+			$this->log[] = $this->errors;
+			$this->errors = array();
 			return FALSE;
 		
 		} else {
@@ -674,8 +676,7 @@ class eeRSCF_Class {
 		</form>
 		
 		
-		<br class="eeClearFix" />Mode: ' . $this->emailMode . '
-		
+		<br class="eeClearFix" />
 		
 		</div>';
 	
@@ -796,39 +797,14 @@ class eeRSCF_Class {
 				$url = '/';
 			}
 			
+			$this->emailMode = 'PHP'; // Force PHP until we fix SMTP :-(
+			
 			
 			if($this->emailMode == 'SMTP') {
 				
-				// Define SMTP Settings
-				global $phpmailer;
-				
-				if ( !is_object( $phpmailer ) ) {
-					$phpmailer = (object) $phpmailer;
-				}
-				
-				$phpmailer->Mailer     = 'smtp';
-				// $phpmailer->isHTML(FALSE);
-				// $phpmailer->isSMTP();
-				
-				$phpmailer->From       = $this->email;
-				$phpmailer->FromName   = $this->emailName;
-				$phpmailer->Host       = $this->emailServer;
-				$phpmailer->Username   = $this->emailUsername;
-				$phpmailer->Password   = $this->emailPassword;
-				$phpmailer->SMTPSecure = $this->emailSecure;
-				$phpmailer->Port       = $this->emailPort;
-				$phpmailer->SMTPAuth   = $this->emailAuth;
-				
-				// Coming Soon
-				if($this->emailFormat == 'HTML') {
-					// $phpmailer->isHTML(TRUE);
-					// $phpmailer->msgHTML = $body;
-					// $phpmailer->Body = nl2br($body);
-				}
-				
-				
-				
 				if( wp_mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ----------------Send the message via Authenticated SMTP.
+					
+					$this->log[] = 'SMTP Mail Sent';
 					
 					header('Location: ' . $url);
 					
@@ -839,6 +815,8 @@ class eeRSCF_Class {
 			} else {
 				
 				if(mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ---------------- OR send the message the basic way.
+					
+					$this->log[] = 'PHP Mail Sent';
 					
 					header('Location: ' . $url);
 					
