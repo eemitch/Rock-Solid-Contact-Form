@@ -808,7 +808,7 @@ function eeRSCF_Settings() {
 						
 					if(@$eeRSCF->eeFormArray['confirm'] != '/') { $eeOutput .= $eeRSCF->eeFormArray['confirm']; }
 				
-						$eeOutput .= '" size="128" maxsize="256" />
+						$eeOutput .= '" size="128" maxlen="256" />
 			
 			
 			</fieldset>

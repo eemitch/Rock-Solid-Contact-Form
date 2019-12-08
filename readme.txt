@@ -48,6 +48,10 @@ na
  
 == Changelog ==
 
+= 1.1.5 =
+* Fixed issue where the post-send confirmation page was not found.
+
+
 = 1.1.4 =
 * Added GitHub auto-updating
  

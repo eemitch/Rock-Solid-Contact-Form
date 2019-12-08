@@ -148,8 +148,8 @@ class eeRSCF_Class {
 		$this->log['settings'][] = $this->adminTo;
 		
 		
-		// $this->permalink = get_permalink();
-		// $this->log['settings'][] = $this->permalink;
+		$this->permalink = get_permalink();
+		$this->log['settings'][] = $this->permalink;
 		
 		
 		// FILES
@@ -548,7 +548,7 @@ class eeRSCF_Class {
 		$this->theForm .= '<div id="eeRSCF">
 			<form action="';
 			
-		$this->theForm .= $this->permalink;
+		$this->theForm .= '/';
 		
 		$this->theForm .= '" method="post" enctype="multipart/form-data" id="eeRSCF_form">
 				<input type="hidden" name="eeRSCF" value="TRUE" />
@@ -739,9 +739,9 @@ class eeRSCF_Class {
 				
 			$this->log[] = 'Preparing the Email...';
 			
-			// echo '<pre>'; print_r($this->eeRSCF_1); echo '</pre>'; exit;
-			
 			$eeThisFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
+			
+			// echo '<pre>'; print_r($eeThisFormArray); echo '</pre>'; exit;
 			
 			
 			
@@ -791,10 +791,14 @@ class eeRSCF_Class {
 			$eeBody = strip_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
 				
 				
-			if(@$eeThisFormArray['confirm']) {
+			if(@filter_var($eeThisFormArray['confirm'], FILTER_VALIDATE_URL)) {
+				
 				$url = $eeThisFormArray['confirm'];
+			
 			} else {
-				$url = '/';
+				
+				// Reload this page
+				$url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			}
 			
 			$this->emailMode = 'PHP'; // Force PHP until we fix SMTP :-(
@@ -806,7 +810,7 @@ class eeRSCF_Class {
 					
 					$this->log[] = 'SMTP Mail Sent';
 					
-					header('Location: ' . $url);
+					wp_redirect($url); exit;
 					
 				} else {
 					$this->errors[] = 'SMTP Message Failed to Send.';
@@ -818,9 +822,14 @@ class eeRSCF_Class {
 					
 					$this->log[] = 'PHP Mail Sent';
 					
-					header('Location: ' . $url);
+					// wp_die('Going to: ' . $url);
+					
+					wp_redirect($url); exit;
 					
 				} else {
+					
+					
+					
 					$this->errors[] = 'PHP Message Failed to Send.';
 					$this->errors[] = 'To: ' . $this->to;
 				}
@@ -1019,8 +1028,13 @@ class eeRSCF_Class {
 				if(@$_POST['eeRSCF_confirm']) {
 					
 					$eeArray['confirm'] = filter_var($_POST['eeRSCF_confirm'], FILTER_VALIDATE_URL);
+					
+					if(strlen($eeArray['confirm']) === 0) {
+						$eeArray['confirm'] = site_url();
+					}
+					
 				} else {
-					$eeArray['confirm'] = '/';
+					$eeArray['confirm'] = site_url();
 				}
 				
 				
