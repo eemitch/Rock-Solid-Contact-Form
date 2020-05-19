@@ -48,6 +48,9 @@ na
  
 == Changelog ==
 
+= 1.1.7 =
+* Updated the updater
+
 = 1.1.6 =
 * Fixed issue where the post-send confirmation page was not found.
 
