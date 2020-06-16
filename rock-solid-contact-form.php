@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 define('eeRSCF_PluginName', 'Rock Solid Contact Form');
 define('eeRSCF_WebsiteLink', 'https://elementengage.com');
-define('eeRSCF_version', '1.1.8');
+define('eeRSCF_version', '1.1.9');
 
 $eeRSCF = ''; // Our Main class
 $eeRSCFU = ''; // Our Upload class
@@ -353,10 +353,8 @@ function eeRSCF_UpdatePlugin() {
 	
 	if($eeInstalled AND eeRSCF_version > $eeInstalled) { // If this is a newer version
 		
-		return;
-		
 		// Get the contents of the text file
-		$spamBlockedCommonWords = file_get_contents(plugin_dir_url( __FILE__ ) . 'common-spam-words.txt'); 
+		$spamBlockedCommonWords = @file_get_contents(plugin_dir_url( __FILE__ ) . 'common-spam-words.txt'); 
 		if($spamBlockedCommonWords) {
 			
 			// Convert newline to comma seperated list
@@ -423,10 +421,9 @@ function eeRSCF_UpdatePlugin() {
 		add_option('eeRSCF_emailSecure' , 'YES');
 		add_option('eeRSCF_emailPort' , '465');
 		add_option('eeRSCF_emailAuth' , 'NO');
-		add_option('eeRSCF_emailDebug' , 1); // 1 for No, 2 for Yes
+		add_option('eeRSCF_emailDebug' , 1); // 1 for No, 2 for Yes	
 		
-		// Meta
-		add_option('eeRSCF_version', eeRSCF_version);	
+		add_option('eeRSCF_version' , eeRSCF_version);
 		
 	} else {
 		
@@ -455,6 +452,7 @@ function eeRSCF_ActivateContactForm() {
 	if(!get_option('eeRSCF_AUTH')) {
 		$eeTemp = __DIR__ . '/temp.txt';
 		$eeRSCF_AUTH = trim(@file_get_contents($eeTemp));
+		$eeRSCF_AUTH = str_replace('abcdef', '', $eeRSCF_AUTH);
 		update_option('eeRSCF_AUTH', $eeRSCF_AUTH);
 		unlink($eeTemp);
 	}
