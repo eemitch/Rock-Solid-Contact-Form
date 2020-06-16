@@ -48,11 +48,8 @@ na
  
 == Changelog ==
 
-= 1.1.10 =
+= 1.1.11 =
 * Updated the update checker authorization routine.
-
-= 1.1.8 =
-* Updated the updater again
 
 = 1.1.7 =
 * Updated the updater
