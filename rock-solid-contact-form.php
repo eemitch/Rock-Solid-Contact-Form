@@ -8,7 +8,7 @@ Plugin Name: Rock Solid Contact Form
 Plugin URI: http://elementengage.com
 Description: A rock solid contact form that focuses on spam, security and deliverability
 Author: Mitchell Bennis - Element Engage, LLC
-Version: 1.1.8
+Version: 1.1.9
 Author URI: http://elementengage.com
 License: GPLv2 or later
 Text Domain: ee-rock-solid-contact-form
@@ -41,9 +41,8 @@ $eeRSCFUserAccess = 'edit_posts';
 
 // Check for Update
 // https://github.com/YahnisElsts/plugin-update-checker
-// https://github.com/eemitch/ee-simple-file-list-extension
 $eeRSCF_SLUG = 'rock-solid-contact-form';
-$eeRSCF_AUTH = '53d87b9e34521480df5b5050cbbf45a9ef629fd1'; // 53d87b9e34521480df5b5050cbbf45a9ef629fd1
+$eeRSCF_AUTH = get_option('eeRSCF_AUTH');
 
 include( plugin_dir_path(__FILE__) . '/updater/plugin-update-checker.php' );
 $eeRSCF_updateChecker = Puc_v4_Factory::buildUpdateChecker(
@@ -451,6 +450,14 @@ if( is_admin() AND (strpos($_SERVER['PHP_SELF'], 'plugins.php') OR  strpos($_SER
 
 // PLUGIN ACTIVATION
 function eeRSCF_ActivateContactForm() {
+	
+	// Check for Auth Token
+	if(!get_option('eeRSCF_AUTH')) {
+		$eeTemp = __DIR__ . '/temp.txt';
+		$eeRSCF_AUTH = trim(@file_get_contents($eeTemp));
+		update_option('eeRSCF_AUTH', $eeRSCF_AUTH);
+		unlink($eeTemp);
+	}
 	
 	return TRUE;
 }
