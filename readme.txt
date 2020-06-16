@@ -48,7 +48,7 @@ na
  
 == Changelog ==
 
-= 1.1.9 =
+= 1.1.10 =
 * Updated the update checker authorization routine.
 
 = 1.1.8 =
