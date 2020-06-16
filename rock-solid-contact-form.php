@@ -8,7 +8,7 @@ Plugin Name: Rock Solid Contact Form
 Plugin URI: http://elementengage.com
 Description: A rock solid contact form that focuses on spam, security and deliverability
 Author: Mitchell Bennis - Element Engage, LLC
-Version: 1.1.9
+Version: 1.1.10
 Author URI: http://elementengage.com
 License: GPLv2 or later
 Text Domain: ee-rock-solid-contact-form
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 define('eeRSCF_PluginName', 'Rock Solid Contact Form');
 define('eeRSCF_WebsiteLink', 'https://elementengage.com');
-define('eeRSCF_version', '1.1.9');
+define('eeRSCF_version', '1.1.10');
 
 $eeRSCF = ''; // Our Main class
 $eeRSCFU = ''; // Our Upload class
@@ -130,6 +130,15 @@ function eeRSCF_SMTP() {
 function eeRSCF_Setup() {
 	
 	global $eeRSCF, $eeRSCFU;
+	
+	// Check for Auth Token
+	if(!get_option('eeRSCF_AUTH')) {
+		$eeTemp = __DIR__ . '/temp.txt';
+		$eeRSCF_AUTH = trim(@file_get_contents($eeTemp));
+		$eeRSCF_AUTH = str_replace('abcdef', '', $eeRSCF_AUTH);
+		update_option('eeRSCF_AUTH', $eeRSCF_AUTH);
+		unlink($eeTemp);
+	}
 	
 	$eeRSCF_Nonce = wp_create_nonce('eeAwesomeness'); // Security
 	
@@ -447,15 +456,6 @@ if( is_admin() AND (strpos($_SERVER['PHP_SELF'], 'plugins.php') OR  strpos($_SER
 
 // PLUGIN ACTIVATION
 function eeRSCF_ActivateContactForm() {
-	
-	// Check for Auth Token
-	if(!get_option('eeRSCF_AUTH')) {
-		$eeTemp = __DIR__ . '/temp.txt';
-		$eeRSCF_AUTH = trim(@file_get_contents($eeTemp));
-		$eeRSCF_AUTH = str_replace('abcdef', '', $eeRSCF_AUTH);
-		update_option('eeRSCF_AUTH', $eeRSCF_AUTH);
-		unlink($eeTemp);
-	}
 	
 	return TRUE;
 }
