@@ -2,7 +2,7 @@
 Contributors: eemitch
 Tags: 
 Requires at least: 4
-Tested up to: 5.2.2
+Tested up to: 5.4.2
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -47,6 +47,12 @@ Please contact me at: mitch@elementengage.com
 na
  
 == Changelog ==
+
+= 1.1.9 =
+* Updated the update checker authorization routine.
+
+= 1.1.8 =
+* Updated the updater again
 
 = 1.1.7 =
 * Updated the updater
