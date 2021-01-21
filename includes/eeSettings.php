@@ -720,21 +720,21 @@ function eeRSCF_Settings() {
 						<label for="eeRSCF_formTO">TO</label>
 						<input type="text" name="eeRSCF_formTO" value="';
 						
-					if($eeRSCF->eeFormArray['to']) { $eeOutput .= $eeRSCF->eeFormArray['to']; } else { $eeOutput .= get_option('admin_email'); }
+					if($eeRSCF->eeFormArray['TO']) { $eeOutput .= $eeRSCF->eeFormArray['TO']; } else { $eeOutput .= get_option('admin_email'); }
 					
 					$eeOutput .= '" class="adminInput" id="eeRSCF_formTO" size="64" />
 							
 						<label for="eeRSCF_formCC">CC</label>
 						<input type="text" name="eeRSCF_formCC" value="';
 						
-					if(@$eeRSCF->eeFormArray['cc']) { $eeOutput .= $eeRSCF->eeFormArray['cc']; }
+					if(@$eeRSCF->eeFormArray['CC']) { $eeOutput .= $eeRSCF->eeFormArray['CC']; }
 					
 					$eeOutput .= '" class="adminInput" id="eeRSCF_formCC" size="64" />
 						
 						<label for="eeRSCF_formBCC">BCC</label>
 						<input type="text" name="eeRSCF_formBCC" value="';
 						
-					if(@$eeRSCF->eeFormArray['bcc']) { $eeOutput .= $eeRSCF->eeFormArray['bcc']; }
+					if(@$eeRSCF->eeFormArray['BCC']) { $eeOutput .= $eeRSCF->eeFormArray['BCC']; }
 					
 					$eeOutput .= '" class="adminInput" id="eeRSCF_formBCC" size="64" />	
 					

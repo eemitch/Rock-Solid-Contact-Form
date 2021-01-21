@@ -743,21 +743,25 @@ class eeRSCF_Class {
 			
 			// echo '<pre>'; print_r($eeThisFormArray); echo '</pre>'; exit;
 			
-			
-			
-			if($eeThisFormArray['to']) {
-				$this->to = $eeThisFormArray['to'];
+			if($eeThisFormArray['TO']) {
+				$this->to = $eeThisFormArray['TO'];
+			} elseif($eeThisFormArray['to']) {
+				$this->to = $eeThisFormArray['to']; // Legacy
 			} else {
 				$this->errors[] = 'No TO Address Configured';
 				return FALSE;
 			}
 			
-			if(@$eeThisFormArray['cc']) {
-				$this->cc = $eeThisFormArray['cc'];
+			if(@$eeThisFormArray['CC']) {
+				$this->cc = $eeThisFormArray['CC'];
+			} elseif($eeThisFormArray['cc']) {
+				$this->cc = $eeThisFormArray['bcc']; // Legacy
 			}
 			
-			if(@$eeThisFormArray['bcc']) {
-				$this->bcc = $eeThisFormArray['bcc'];
+			if(@$eeThisFormArray['BCC']) {
+				$this->bcc = $eeThisFormArray['BCC'];
+			} elseif($eeThisFormArray['bcc']) {
+				$this->bcc = $eeThisFormArray['bcc']; // Legacy
 			}
 
 			
@@ -772,7 +776,7 @@ class eeRSCF_Class {
 			if(!$subject) { $subject = 'Contact Form Message (' . $_SERVER['HTTP_HOST'] . ')'; }
 			
 			// Email assembly
-			$eeHeaders = "From: " . $this->email . "\n";
+			$eeHeaders = "From: " . get_bloginfo('name') . ' <' . $this->email . ">\n";
 			if($this->cc) { $eeHeaders .= "CC: " . $this->cc . "\n"; }
 			if($this->bcc) { $eeHeaders .= "BCC: " . $this->bcc . "\n"; }
 			$eeHeaders .= "Return-Path: " . $this->email . "\n" . "Reply-To: " . $this->sender . "\n";
@@ -803,7 +807,6 @@ class eeRSCF_Class {
 			
 			$this->emailMode = 'PHP'; // Force PHP until we fix SMTP :-(
 			
-			
 			if($this->emailMode == 'SMTP') {
 				
 				if( wp_mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ----------------Send the message via Authenticated SMTP.
@@ -818,9 +821,9 @@ class eeRSCF_Class {
 			
 			} else {
 				
-				if(mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ---------------- OR send the message the basic way.
+				if(wp_mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ---------------- OR send the message the basic way.
 					
-					$this->log[] = 'PHP Mail Sent';
+					$this->log[] = 'WP Mail Sent';
 					
 					// wp_die('Going to: ' . $url);
 					
@@ -929,7 +932,7 @@ class eeRSCF_Class {
 		
 		if($post AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 			
-			global $wpdb, $eeRSCFU;
+			global $wpdb, $eeRSCF, $eeRSCFU;
 			
 			
 			
@@ -950,47 +953,50 @@ class eeRSCF_Class {
 				if($formName) { $eeArray['name'] = $formName; }
 	
 				// Email Addresses
-				if(@$_POST['eeRSCF_formTO']) {
+				if( isset($_POST['eeRSCF_formTO']) ) {
 				
-					$delivery = array('to', 'cc', 'bcc');
+					$delivery = array('TO', 'CC', 'BCC');
 					
 					foreach($delivery as $to) {
 					
-						$eeSet = ''; // String of comma deliniated email addds
+						$eeSet = ''; // String of comma deliniated emails
 						
-						$eeString = filter_var(@$_POST['eeRSCF_form' . strtoupper($to) ], FILTER_SANITIZE_STRING);
-						
-						if(strpos($eeString, ',')) { // More than one address
-						
-							$this->log[] = 'Multiple address for ' . $to . ' field.';
-							
-							$emails = explode(',', $eeString); // Make array
-							
-							foreach($emails as $email) { // Loop through them
+						if( isset($_POST['eeRSCF_form' . $to ]) ) {
 								
-								$email = trim($email); // Trim spaces
+							$eeString = filter_var($_POST['eeRSCF_form' . $to ], FILTER_SANITIZE_STRING);
+							
+							if(strpos($eeString, ',')) { // More than one address
+							
+								$this->log[] = 'Multiple address for ' . $to . ' field.';
 								
-								if(filter_var($email, FILTER_VALIDATE_EMAIL)) { // Validate address
-									$eeSet .= $email . ','; // Assemble addresses for storage
+								$emails = explode(',', $eeString); // Make array
+								
+								foreach($emails as $email) { // Loop through them
+									
+									$email = trim($email); // Trim spaces
+									
+									if(filter_var($email, FILTER_VALIDATE_EMAIL)) { // Validate address
+										$eeSet .= $email . ','; // Assemble addresses for storage
+									} else {
+										$this->errors[] = 'Bad ' . $to . ' Address: ' . $email;
+									}
+								}
+								
+								$eeSet = substr($eeSet, 0, -1); // Clip the last comma
+															
+							} elseif($eeString) { // Just one address
+								
+								if(filter_var($eeString, FILTER_VALIDATE_EMAIL)) {
+									$this->log[] = 'Single address for ' . $to . ' field.';
+									$eeSet .= $eeString;
 								} else {
-									$this->errors[] = 'Bad ' . $to . ' Address: ' . $email;
+									$this->errors[] = 'Bad ' . $to . ' Address: ' . $_POST['eeAdmin' . $to];
 								}
 							}
-							
-							$eeSet = substr($eeSet, 0, -1); // Clip the last comma
-														
-						} elseif($eeString) { // Just one address
-							
-							if(filter_var($eeString, FILTER_VALIDATE_EMAIL)) {
-								$this->log[] = 'Single address for ' . $to . ' field.';
-								$eeSet .= $eeString;
-							} else {
-								$this->errors[] = 'Bad ' . $to . ' Address: ' . $_POST['eeAdmin' . $to . $i];
-							}
 						}
-						
+							
 						$eeSet;
-					
+						
 						if($eeSet) { $eeArray[$to] = $eeSet; }
 					}
 

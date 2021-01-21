@@ -1,9 +1,9 @@
 === Rock Solid Contact Form ===
 Contributors: eemitch
-Tags: 
 Requires at least: 4
+Requires PHP: 7.1
 Tested up to: 5.4.2
-Stable tag: trunk
+Stable tag: 1.1.12
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -47,6 +47,10 @@ Please contact me at: mitch@elementengage.com
 na
  
 == Changelog ==
+
+= 1.1.12 =
+* Bug fixes
+* Updates for PHP 7.4 compatibility
 
 = 1.1.11 =
 * Updated the update checker authorization routine.

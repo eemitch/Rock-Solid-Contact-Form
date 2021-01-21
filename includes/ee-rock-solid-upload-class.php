@@ -10,9 +10,9 @@ class eeRSCFU_FileUpload {
 	// Properties ------------------------------------
 	public $uploadFolderName = 'rscf'; // Folder will be created in the WP uploads folder
 	public $fileUploaded = FALSE;
-	public $maxUploadLimit;
-	public $uploadDir;
-	public $uploadUrl;
+	public $maxUploadLimit = 8;
+	public $uploadDir = '';
+	public $uploadUrl = '';
 	
 	// METHODS ---------------------------------
 
@@ -46,6 +46,8 @@ class eeRSCFU_FileUpload {
 	
 	// Detect max upload size.
 	public function eeRSCFU_DetectUploadLimit() {
+		
+		global $eeRSCF;
 		
 		$upload_max_filesize = substr(ini_get('upload_max_filesize'), 0, -1); // Strip off the "M".
 		$post_max_size = substr(ini_get('post_max_size'), 0, -1); // Strip off the "M".
