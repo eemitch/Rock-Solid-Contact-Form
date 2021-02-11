@@ -2,8 +2,8 @@
 Contributors: eemitch
 Requires at least: 4
 Requires PHP: 7.1
-Tested up to: 5.4.2
-Stable tag: 1.1.12
+Tested up to: 5.6.1
+Stable tag: 1.1.13
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -47,6 +47,9 @@ Please contact me at: mitch@elementengage.com
 na
  
 == Changelog ==
+
+= 1.1.13 =
+* Bug fix caused by last update: TO != to
 
 = 1.1.12 =
 * Bug fixes
