@@ -6,9 +6,9 @@
 /*
 Plugin Name: Rock Solid Contact Form 
 Plugin URI: http://elementengage.com
-Description: A rock solid contact form that focuses on spam, security and deliverability
+Description: A basic contact form that focuses on spam prevention and deliverability
 Author: Mitchell Bennis - Element Engage, LLC
-Version: 1.1.13
+Version: 1.1.14
 Author URI: http://elementengage.com
 License: GPLv2 or later
 Text Domain: ee-rock-solid-contact-form
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 define('eeRSCF_PluginName', 'Rock Solid Contact Form');
 define('eeRSCF_WebsiteLink', 'https://elementengage.com');
-define('eeRSCF_version', '1.1.13');
+define('eeRSCF_version', '1.1.14');
 
 $eeRSCF = ''; // Our Main class
 $eeRSCFU = ''; // Our Upload class
@@ -31,7 +31,7 @@ $eeRSCF_Log = array();
 //	['errors'][] = 'Error condition'
 
 
-define('eeRSCF_DevMode', FALSE); // Enables extended reporting
+define('eeRSCF_DevMode', TRUE); // Enables extended reporting
 //  --> When TRUE, the log file is written onto the page.
 
 // Wordpress User Level to See Menu
@@ -131,18 +131,7 @@ function eeRSCF_Setup() {
 	
 	global $eeRSCF, $eeRSCFU;
 	
-	// Check for Auth Token
-	$eeTemp = __DIR__ . '/temp.txt';
-	if(!get_option('eeRSCF_AUTH')) {
-		$eeRSCF_AUTH = trim(@file_get_contents($eeTemp));
-		$eeRSCF_AUTH = str_replace('abcdef', '', $eeRSCF_AUTH);
-		update_option('eeRSCF_AUTH', $eeRSCF_AUTH);
-		unlink($eeTemp);
-	} elseif( is_file($eeTemp) ) {
-		unlink($eeTemp); // For subsequent updates
-	}
-	
-	$eeRSCF_Nonce = wp_create_nonce('eeAwesomeness'); // Security
+	$eeRSCF_Nonce = wp_create_nonce('eeRSCF_Nonce'); // Security
 	
 	include_once(plugin_dir_path(__FILE__) . 'includes/eeFunctions.php'); // General Functions
 
@@ -156,10 +145,6 @@ function eeRSCF_Setup() {
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-rock-solid-upload-class.php');
 	$eeRSCFU = new eeRSCFU_FileUpload();
 	$eeRSCFU->eeRSCFU_Setup(TRUE); // Run the setup
-	
-	
-	// $eeSettings = get_option('eeRSCF_1');
-	// echo '<pre>'; print_r($eeSettings); echo '</pre>'; exit;
 	
 }
 
@@ -321,7 +306,7 @@ function eeRSCF_plugin_menu() {
 	$eeOutput = ''; // We use this to collect ALL of our browser output.
 	
 	// Create a Nonce, include the page with the needed function, then check for it there.
-	$eeRSCF_Nonce = wp_create_nonce('eeAwesomeness'); // Security
+	$eeRSCF_Nonce = wp_create_nonce('eeRSCF_Nonce'); // Security
 	include_once(plugin_dir_path(__FILE__) . 'includes/eeSettings.php'); // Admin's List Management Page
 	
 	// Top-Level Menu Addition
@@ -352,7 +337,7 @@ function eeRSCF_UpdatePlugin() {
 	$eeInstalled = FALSE;
 	$eeContactForm = FALSE;
 	
-	$eeRSCF_Nonce = wp_create_nonce('eeAwesomeness'); // Security
+	$eeRSCF_Nonce = wp_create_nonce('eeRSCF_Nonce'); // Security
 	
 	include_once('includes/ee-rock-solid-class.php');
 	$eeRSCF = new eeRSCF_Class();
@@ -410,7 +395,7 @@ function eeRSCF_UpdatePlugin() {
 		
 		
 		// Get the contents of the text file
-		$spamBlockedCommonWords = file_get_contents(plugin_dir_url( __FILE__ ) . 'common-spam-words.txt'); 
+		$spamBlockedCommonWords = FALSE; // file_get_contents(plugin_dir_url( __FILE__ ) . 'common-spam-words.txt'); 
 		if($spamBlockedCommonWords) {
 			
 			// Convert newline to comma seperated list

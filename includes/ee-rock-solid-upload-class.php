@@ -1,7 +1,7 @@
 <?php // eeRSCF File Uploading Classes - mitchellbennis@gmail.com
 	
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeAwesomeness' )) exit('That is Noncense!'); // Exit if nonce fails
+if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeRSCF_Nonce' )) exit('That is Noncense!'); // Exit if nonce fails
 	
 
 
@@ -57,7 +57,7 @@ class eeRSCFU_FileUpload {
 			$this->maxUploadLimit = $post_max_size;
 		}
 		
-		$eeRSCF->log[] = 'Upload Limit: ' . $this->maxUploadLimit;
+		// $eeRSCF->log[] = 'Upload Limit: ' . $this->maxUploadLimit;
 		
 		return $this->maxUploadLimit;
 	}
