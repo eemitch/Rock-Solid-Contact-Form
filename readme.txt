@@ -48,6 +48,12 @@ na
  
 == Changelog ==
 
+= 1.2.1 =
+* Many under-the-hood Improvements
+* Admin UI Improvements
+* Bug Fixes
+* PHP 8.1 Approved
+
 = 1.1.13 =
 * Bug fix caused by last update: TO != to
 

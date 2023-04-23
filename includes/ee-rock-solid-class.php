@@ -242,11 +242,6 @@ class eeRSCF_Class {
 		
 	}
 	
-	// Are we in the admin area?
-	private function eeRSCF_IsAdmin() {
-		if(is_admin() AND strpos($_SERVER['PHP_SELF'], 'wp-admin')) { $this->isAdmin = TRUE; }
-	}
-	
 	// Create a slug
 	public function eeRSCF_MakeSlug($string){
 	   $slug = preg_replace('/[^A-Za-z0-9-]+/', '-', $string);
@@ -285,65 +280,59 @@ class eeRSCF_Class {
 	
 
 	
-	private function eeRSCF_PostProcess($post) {
-	     
-	     // echo '<pre> eeRSCF_PostProcess '; print_r($post); echo '</pre>'; exit;
+	private function eeRSCF_PostProcess() {
 	     
 	     $this->log[] = 'Processing the post...';
 	     
-	     $ignore = array('eeRSCF', 'eeRSCF_ID', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER');
+	     $eeIgnore = array('eeRSCF', 'eeRSCF_ID', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER');
 	     
-	     foreach ($post as $key => $value){
+	     foreach ($_POST as $eeKey => $eeValue) {
 	        
-	        if(!in_array($key, $ignore) AND $value) {
+	        if(!in_array($eeKey, $eeIgnore) AND $eeValue) {
 					
-				$value = filter_var($value, FILTER_SANITIZE_STRING);
+				$eeValue = htmlspecialchars(strip_tags($eeValue));
 				
-				$value = strip_tags($value);
-				
-				if(strpos($key, 'mail')) { 
-					if(!preg_match('/^[[:alnum:]][a-z0-9_\.\-]*@[a-z0-9\.\-]+\.[a-z]{2,4}$/', $value)) {
+				if(strpos($eeKey, 'mail')) { 
+					if(!filter_var($eeValue, FILTER_VALIDATE_EMAIL )) {
 						$this->errors[] = 'Your email address in not correct.';
 					} else {
-						$value = strtolower($value);
-						$this->sender = $value;
+						$eeValue = strtolower($eeValue);
+						$this->sender = $eeValue;
 					}
 				}
 				
-				if(strpos($key, 'ebsite')) { 
+				if(strpos($eeKey, 'ebsite')) { 
 					
-					if(!strpos($value, 'ttp')) { // add the http if needed.
-						$value = 'http://' . $value;
+					if(!strpos($eeValue, 'ttp')) { // add the http if needed.
+						$eeValue = 'http://' . $eeValue;
 					}
 					
-					if(!preg_match('/\b(?:(?:https?|ftp):\/\/|www\.)[-a-z0-9+&@#\/%?=~_|!:,.;]*[-a-z0-9+&@#\/%=~_|]/i', $value)) {
+					if( !filter_var( $eeValue, FILTER_VALIDATE_URL) ) {
 						$this->errors[] = 'Your website address in not correct.';
 					} else {
-						$value = strtolower($value);
+						$eeValue = strtolower($eeValue);
 					}
 				}
 				
-				$field = self::eeRSCF_UnSlug($key);
-				$this->thePost[] = $field . ': ' . $value;
+				$eeField = $this->eeRSCF_UnSlug($eeKey);
+				$this->thePost[] = $eeField . ': ' . $eeValue;
 			}
 	        
-	        
-	        // $this->log[] = "$key => $value";
-	        
-	        if(is_array($value)) { // Is $value is an array?
-	            self::eeRSCF_PostProcess($value);
+	        if(is_array($eeValue)) { // Is $value is an array?
+	            $this->eeRSCF_PostProcess($eeValue);
 	        }
 	    } 
 	        
 	    $this->log[] = $this->thePost;
 	    
 	    return $this->thePost;
-	    
-	    
-	    
 	}
 	
-	function eeRSCF_formSpamCheck() {
+	
+	
+	
+	
+	private function eeRSCF_formSpamCheck() {
 		
 		$this->log[] = 'Form Spam Check...';
 		
@@ -586,7 +575,7 @@ class eeRSCF_Class {
 					$this->theForm .=  '">';
 					
 					// Chech for custom label
-					if($value['label']) { $this->theForm .= $value['label']; } else { $this->theForm .= self::eeRSCF_UnSlug($field); }
+					if($value['label']) { $this->theForm .= $value['label']; } else { $this->theForm .= $this->eeRSCF_UnSlug($field); }
 					
 					$this->theForm .= '</label>';
 					
@@ -599,7 +588,7 @@ class eeRSCF_Class {
 					
 					// Chech for custom label
 					if($value['label']) {
-						$this->theForm .= self::eeRSCF_MakeSlug($value['label']);
+						$this->theForm .= $this->eeRSCF_MakeSlug($value['label']);
 					} else {
 						
 						$this->theForm .= $field;
@@ -612,9 +601,8 @@ class eeRSCF_Class {
 					
 					$this->theForm .= ' type="';
 					
-					if($field == 'website') { $this->theForm .=  'url'; } 
-						elseif($field == 'phone' OR strpos($field,'phone')) { $this->theForm .=  'tel'; } 
-							else { $this->theForm .= 'text'; }
+					if($field == 'phone' OR strpos($field,'phone')) { $this->theForm .=  'tel'; } 
+						else { $this->theForm .= 'text'; }
 					$this->theForm .= '" size="30" value="" />';
 					
 					if(@$value['req'] == 'YES') { $this->theForm .=  '
@@ -694,40 +682,32 @@ class eeRSCF_Class {
 	}
 	
 	
-	public function eeRSCF_SendEmail($post) {
+	public function eeRSCF_SendEmail() {
 		
-		// echo '<pre>'; print_r($post); echo '</pre>'; exit;
-		
-		if(strlen($post['message']) < 2) { return; } // Move to spam check? Detect HTML required fields that are blank
-		
-		global $eeRSCFU; $subject = FALSE;
+		global $eeRSCFU; // Get Upload Class
 		
 		$eeRSCF_ID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
 		
 		if($this->spamBlock == 'YES') {
-			if( self::eeRSCF_formSpamCheck() !== 'OK' ) {
+			if( $this->eeRSCF_formSpamCheck() !== 'OK' ) {
 				return FALSE;
 			}
-		}
-		
-		// This line prevents values being entered in a URL
-		if ($_SERVER['REQUEST_METHOD'] != "POST") {
-			$this->errors[] = "Not a POST submission";
-			return;
 		} 
 	
 		// Check referrer is from same site.
 		if(!wp_verify_nonce($_REQUEST['ee-rock-solid-nonce'], 'ee-rock-solid')) {
 			$this->errors[] =  "Submission is not from this website";
-			return;
+			return FALSE;
 		}
 		
 		$this->log[] = 'Sending the Email...';
 			
-		self::eeRSCF_PostProcess($post);
+		$this->eeRSCF_PostProcess();
+		
+		// echo '<pre>'; print_r($this->thePost); echo '</pre>'; exit;
 		
 		// There's a file and its size is less than our defined limit
-		if(@$_FILES['file']['name']) {
+		if(isset($_FILES['file']['name'])) {
 			if($_FILES['file']['size'] <= $this->fileMaxSize*1048576) {
 				$eeRSCFU->eeRSCFU_Uploader();
 			} else {
@@ -735,45 +715,36 @@ class eeRSCF_Class {
 			}
 		}
 
-		if(!$this->errors AND count($this->thePost)) {
+		if(!$this->errors AND !empty($this->thePost)) {
 				
 			$this->log[] = 'Preparing the Email...';
 			
 			$eeThisFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
 			
-			// echo '<pre>'; print_r($eeThisFormArray); echo '</pre>'; exit;
-			
-			if($eeThisFormArray['TO']) {
+			if(isset($eeThisFormArray['TO'])) {
 				$this->to = $eeThisFormArray['TO'];
-			} elseif($eeThisFormArray['to']) {
-				$this->to = $eeThisFormArray['to']; // Legacy
 			} else {
 				$this->errors[] = 'No TO Address Configured';
 				return FALSE;
 			}
 			
-			if(@$eeThisFormArray['CC']) {
+			if(isset($eeThisFormArray['CC'])) {
 				$this->cc = $eeThisFormArray['CC'];
-			} elseif($eeThisFormArray['cc']) {
-				$this->cc = $eeThisFormArray['bcc']; // Legacy
 			}
 			
-			if(@$eeThisFormArray['BCC']) {
+			if(isset($eeThisFormArray['BCC'])) {
 				$this->bcc = $eeThisFormArray['BCC'];
-			} elseif($eeThisFormArray['bcc']) {
-				$this->bcc = $eeThisFormArray['bcc']; // Legacy
 			}
 
-			
 			// Loop through and see if we have a Subject field
-			foreach($this->thePost as $value){
-				$field = explode(':', $value);
-					if(strpos($field[0], 'ubject')) {
-						$subject = html_entity_decode($field[1], ENT_QUOTES);
-						$subject = stripslashes($subject);
+			foreach($this->thePost as $eeValue){
+				$eeField = explode(':', $eeValue);
+					if(strpos($eeField[0], 'ubject')) {
+						$eeSubject = html_entity_decode($eeField[1], ENT_QUOTES);
+						$eeSubject = stripslashes($eeSubject);
 					}
 			}
-			if(!$subject) { $subject = 'Contact Form Message (' . $_SERVER['HTTP_HOST'] . ')'; }
+			if(empty($eeSubject)) { $eeSubject = 'Contact Form Message (' . $_SERVER['HTTP_HOST'] . ')'; }
 			
 			// Email assembly
 			$eeHeaders = "From: " . get_bloginfo('name') . ' <' . $this->email . ">\n";
@@ -794,53 +765,30 @@ class eeRSCF_Class {
 			$eeBody = stripslashes($eeBody);
 			$eeBody = strip_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
 				
+			if(filter_var($eeThisFormArray['confirm'], FILTER_VALIDATE_URL)) {
 				
-			if(@filter_var($eeThisFormArray['confirm'], FILTER_VALIDATE_URL)) {
-				
-				$url = $eeThisFormArray['confirm'];
+				$eeUrl = $eeThisFormArray['confirm'];
 			
 			} else {
 				
-				// Reload this page
-				$url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+				$eeUrl = site_home();
 			}
 			
-			$this->emailMode = 'PHP'; // Force PHP until we fix SMTP :-(
-			
-			if($this->emailMode == 'SMTP') {
+			if(wp_mail($this->to, $eeSubject, $eeBody, $eeHeaders) ) { // <<< ---------------- OR send the message the basic way.
 				
-				if( wp_mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ----------------Send the message via Authenticated SMTP.
-					
-					$this->log[] = 'SMTP Mail Sent';
-					
-					wp_redirect($url); exit;
-					
-				} else {
-					$this->errors[] = 'SMTP Message Failed to Send.';
-				}
-			
+				$this->log[] = 'WP Mail Sent';
+				
+				wp_redirect($eeUrl); exit;
+				
 			} else {
 				
-				if(wp_mail($this->to, $subject, $eeBody, $eeHeaders) ) { // <<< ---------------- OR send the message the basic way.
-					
-					$this->log[] = 'WP Mail Sent';
-					
-					// wp_die('Going to: ' . $url);
-					
-					wp_redirect($url); exit;
-					
-				} else {
-					
-					
-					
-					$this->errors[] = 'PHP Message Failed to Send.';
-					$this->errors[] = 'To: ' . $this->to;
-				}
+				$this->errors[] = 'PHP Message Failed to Send.';
+				$this->errors[] = 'To: ' . $this->to;
 			}
+			
 		} else {
 			$this->errors[] = 'Message not sent. Please try again.';
-		}
-				
+		}	
 	}
 	
 	
@@ -924,20 +872,15 @@ class eeRSCF_Class {
 	
 	
 			
-	function eeRSCF_AdminSettingsProcess($post)	{
+	function eeRSCF_AdminSettingsProcess()	{
 		
 		$this->log[] = 'Processing Form Settings';
 		
-		$this->log['post'] = $post;
+		$this->log['post'] = $_POST;
 		
-		if($post AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
+		if($_POST AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 			
 			global $wpdb, $eeRSCF, $eeRSCFU;
-			
-			
-			
-			
-			
 			
 			// Form Fields
 			if(@$_POST['eeRSCF_formSettings'] == 'TRUE') {
@@ -946,11 +889,17 @@ class eeRSCF_Class {
 				$eeArray = array();
 			
 				// ID
-				$eeRSCF_ID = filter_var(@$_POST['eeRSCF_ID'], FILTER_SANITIZE_NUMBER_INT);
+				if(isset($_POST['eeRSCF_ID'])) {
+					$eeRSCF_ID = filter_var($_POST['eeRSCF_ID'], FILTER_SANITIZE_NUMBER_INT);
+				} else {
+					$eeRSCF_ID = 1;
+				}
 				
 				// Name
-				$formName = filter_var(@$_POST['eeRSCF_formName'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
-				if($formName) { $eeArray['name'] = $formName; }
+				if(isset($_POST['eeRSCF_formName'])) {
+					$formName = htmlspecialchars($_POST['eeRSCF_formName']);
+				}
+				if($formName) { $eeArray['name'] = $formName; } else { $eeArray['name'] = 'Contact Form'; }
 	
 				// Email Addresses
 				if( isset($_POST['eeRSCF_formTO']) ) {
@@ -959,11 +908,11 @@ class eeRSCF_Class {
 					
 					foreach($delivery as $to) {
 					
-						$eeSet = ''; // String of comma deliniated emails
+						$eeSet = ''; // String of comma delineated emails
 						
 						if( isset($_POST['eeRSCF_form' . $to ]) ) {
 								
-							$eeString = filter_var($_POST['eeRSCF_form' . $to ], FILTER_SANITIZE_STRING);
+							$eeString = htmlspecialchars($_POST['eeRSCF_form' . $to ]);
 							
 							if(strpos($eeString, ',')) { // More than one address
 							
@@ -1005,33 +954,33 @@ class eeRSCF_Class {
 					
 				}
 			
-			
-			
-			
 				$fieldsArray = $_POST['eeRSCF_fields'];
 				
 				if( is_array($fieldsArray) ) {
 				
 					foreach($fieldsArray as $thisName => $thisFieldArray) {
-						
-						if(@$thisFieldArray['show']) {
-							$eeArray['fields'][$thisName]['show'] = 'YES';
-						} else {
-							$eeArray['fields'][$thisName]['show'] = 'NO';
-						}
-						
-						if(@$thisFieldArray['req']) {
-							$eeArray['fields'][$thisName]['req'] = 'YES';
-						} else {
-							$eeArray['fields'][$thisName]['req'] = 'NO';
-						}
-						
-						$eeArray['fields'][$thisName]['label'] = @$thisFieldArray['label'];
+					
+					if(isset($thisFieldArray['show'])) {
+						$eeArray['fields'][$thisName]['show'] = 'YES';
+					} else {
+						$eeArray['fields'][$thisName]['show'] = 'NO';
+					}
+					
+					if(isset($thisFieldArray['req'])) {
+						$eeArray['fields'][$thisName]['req'] = 'YES';
+					} else {
+						$eeArray['fields'][$thisName]['req'] = 'NO';
+					}
+					
+					if(isset($thisFieldArray['label'])) {
+						$eeArray['fields'][$thisName]['label'] = $thisFieldArray['label'];
+					}
+					
 					}
 				}
 				
 				
-				if(@$_POST['eeRSCF_confirm']) {
+				if(isset($_POST['eeRSCF_confirm'])) {
 					
 					$eeArray['confirm'] = filter_var($_POST['eeRSCF_confirm'], FILTER_VALIDATE_URL);
 					
@@ -1093,7 +1042,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamBlockBots', $settings); // Update the database
 				
 				// Honeypot
-				$settings = filter_var($_POST['spamHoneypot'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+				$settings = htmlspecialchars($_POST['spamHoneypot']);
 				$settings = $this->eeRSCF_MakeSlug($settings);
 				$eeRSCF->log[] = 'Spam Honeypot: ' . $settings;
 				update_option('eeRSCF_spamHoneypot', $settings); // Update the database
@@ -1114,7 +1063,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamBlockWords', $settings); // Update the database
 
 				// Blocked Words
-				$settings = filter_var($_POST['spamBlockedWords'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+				$settings = htmlspecialchars($_POST['spamBlockedWords']);
 				$eeRSCF->log[] = 'Spam Blocked Words: ' . $settings;
 				update_option('eeRSCF_spamBlockedWords', $settings); // Update the database
 				
@@ -1124,7 +1073,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamBlockCommonWords', $settings); // Update the database
 
 				// Blocked Common Words
-				$settings = filter_var($_POST['spamBlockedCommonWords'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+				$settings = htmlspecialchars($_POST['spamBlockedCommonWords']);
 				$eeRSCF->log[] = 'Spam Blocked CommonWords: ' . $settings;
 				update_option('eeRSCF_spamBlockedCommonWords', $settings); // Update the database
 				
@@ -1134,7 +1083,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamSendAttackNotice', $settings); // Update the database
 				
 				// Notice Email
-				$settings = filter_var($_POST['spamNoticeEmail'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
+				$settings = filter_var($_POST['spamNoticeEmail'], FILTER_VALIDATE_EMAIL );
 				$eeRSCF->log[] = 'Spam Notice Email: ' . $settings;
 				update_option('eeRSCF_spamNoticeEmail', $settings); // Update the database
 				
@@ -1155,7 +1104,7 @@ class eeRSCF_Class {
 				
 				// Form Address
 				$setting = 'eeRSCF_email';
-				$value = filter_var(@$_POST[$setting], FILTER_VALIDATE_EMAIL);
+				$value = htmlspecialchars($_POST[$setting]);
 				if($value) {
 					$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
 					update_option($setting, $value); 
@@ -1165,7 +1114,7 @@ class eeRSCF_Class {
 				
 				// Form Mode
 				$setting = 'eeRSCF_emailMode';
-				$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+				$value = htmlspecialchars($_POST[$setting]);
 				if($value) {
 					$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
 					update_option($setting, $value); 
@@ -1178,7 +1127,7 @@ class eeRSCF_Class {
 				
 					// The Nice Name
 					$setting = 'eeRSCF_emailName';
-					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					$value = htmlspecialchars($_POST[$setting]);
 					if($value) {
 						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
 						update_option($setting, $value); 
@@ -1188,7 +1137,7 @@ class eeRSCF_Class {
 					
 					// The Message Format
 					$setting = 'eeRSCF_emailFormat';
-					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					$value = htmlspecialchars($_POST[$setting]);
 					if($value) {
 						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
 						update_option($setting, $value); 
@@ -1198,7 +1147,7 @@ class eeRSCF_Class {
 					
 					// Hostname
 					$setting = 'eeRSCF_emailServer';
-					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					$value = htmlspecialchars($_POST[$setting]);
 					if($value) {
 						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
 						update_option($setting, $value); 
@@ -1208,7 +1157,7 @@ class eeRSCF_Class {
 					
 					// Username
 					$setting = 'eeRSCF_emailUsername';
-					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					$value = htmlspecialchars($_POST[$setting]);
 					if($value) {
 						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
 						update_option($setting, $value); 
@@ -1218,7 +1167,7 @@ class eeRSCF_Class {
 					
 					// Password
 					$setting = 'eeRSCF_emailPassword';
-					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					$value = htmlspecialchars($_POST[$setting]);
 					if($value) {
 						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
 						update_option($setting, $value); 
@@ -1228,7 +1177,7 @@ class eeRSCF_Class {
 					
 					// Security
 					$setting = 'eeRSCF_emailSecure';
-					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					$value = htmlspecialchars($_POST[$setting]);
 					if($value) {
 						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
 						update_option($setting, $value); 
@@ -1238,7 +1187,7 @@ class eeRSCF_Class {
 					
 					// Security
 					$setting = 'eeRSCF_emailPort';
-					$value = filter_var(@$_POST[$setting], FILTER_VALIDATE_INT);
+					$value = htmlspecialchars($_POST[$setting]);
 					if($value) {
 						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
 						update_option($setting, $value); 
@@ -1249,7 +1198,7 @@ class eeRSCF_Class {
 					
 					// Port
 					$setting = 'eeRSCF_emailAuth';
-					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					$value = htmlspecialchars($_POST[$setting]);
 					if($value) {
 						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
 						update_option($setting, $value); 
@@ -1259,7 +1208,7 @@ class eeRSCF_Class {
 					
 					// Debug
 					$setting = 'eeRSCF_emailDebug';
-					$value = filter_var(@$_POST[$setting], FILTER_SANITIZE_STRING);
+					$value = htmlspecialchars($_POST[$setting]);
 					if($value) {
 						$eeRSCF->log[] = 'Email Config: ' . $setting . ' = ' . $value;
 						update_option($setting, $value); 
@@ -1273,7 +1222,7 @@ class eeRSCF_Class {
 			
 			
 			// Re-Get our settings
-			self::eeRSCF_Setup(TRUE);
+			$this->eeRSCF_Setup(TRUE);
 			
 		}
 	}	

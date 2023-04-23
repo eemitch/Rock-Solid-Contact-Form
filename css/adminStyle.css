@@ -1,17 +1,17 @@
 /* Administration Styles */
 
 .eeRSCF_Admin {
-	width: 80%;
-	width: 700px;
-/* 	float: left; */
-	font-size: 120%;	
+	width: 100%;
+	/* width: 700px; */
+	/* font-size: 120%;	 */
 }
 
 .eeRSCF_Admin h2,
 .eeRSCF_Admin h3 {
 	clear: left;
-	width: 75%;
+	/* width: 75%; */
 }
+
 .eeRSCF_Admin h4 {
 	width: 58%;
 	text-align: right;
@@ -43,93 +43,80 @@
 }
 
 
-#eeRSCF_Nav {
-	width: 60%;
-	float: right;
-	margin-top: 10px;
-	text-align: right;
-	border: 1px solid #FFF;
-	margin: 0;
-	padding: 5px;
-}
-#eeRSCF_Nav form {
-	display: inline-block;
-	padding-right: 20px;
-}
-#eeRSCF_Nav select {
-	width: 200px;
-	float: none;
-	display: inline-block;
-}
-#eeRSCF_Nav button {
-	margin: 0;
-	float: none;
-	display: inline-block;
-	font-size: 110%;
+/* FORM NAVIGATION */
+
+#eeRSCF_FormsNav {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 5px;
+  padding-top: 10px;
 }
 
+#eeRSCF_FormsNav form {
+  display: flex;
+  align-items: center;
+  width: 100%; /* make the form 100% wide */
+}
+
+#eeRSCF_FormsNav select {
+  flex: 1; /* make the select element fill the remaining space */
+}
+
+#eeRSCF_FormsNav input[type="submit"],
+#eeRSCF_FormsNav button {
+  margin-left: 10px;
+}
+
+
+
+
+
+
+
+
+
+/* #eeRSCF_delivery input[type=text],
+#eeRSCF_formName {
+	width: 65%;
+	font-size: 110%;
+} */
+
+/* ADMIN SETTINGS FORMS */
 
 #eeRSCF_formSettings p.button {
 	margin: 5px;
 }
-
 
 #eeRSCF_formSettings fieldset {
 	margin: 10px;
 	padding: 10px;
 }
 
-#eeRSCF_delivery input[type=text],
-#eeRSCF_formName {
-	width: 65%;
-	font-size: 110%;
-}
-
-table.eeRSCF_formFields {
-	
-}
-
-table.eeRSCF_formFields th,
-table.eeRSCF_formFields td {
+#eeRSCF_Settings table.eeRSCF_formFields th,
+#eeRSCF_Settings table.eeRSCF_formFields td {
 	padding: 10px;
 }
-table.eeRSCF_formFields th {
+#eeRSCF_Settings table.eeRSCF_formFields th {
 	text-align: left;
 	background-color: #54595F;
 	color: #FFF;
 }
-table.eeRSCF_formFields td input[type=text] {
+#eeRSCF_Settings table.eeRSCF_formFields td input[type=text] {
 	font-size: 110%;
 	width: auto;
 }
 
-
-
-/* Input Scaling */
-table.eeRSCF_formFields input[type=checkbox],
-table.eeRSCF_formFields input[type=radio],
-table.eeRSCF_formFields select {
-	display: block;
-	margin: 0 auto;
-	-ms-transform: scale(1.25); /* IE */
-	-moz-transform: scale(1.25); /* FF */
-	-webkit-transform: scale(1.25); /* Safari and Chrome */
-	-o-transform: scale(1.25); /* Opera */
-	transform: scale(1.25);
-}
-
-
-.eeRSCF_Admin table {
+#eeRSCF_Settings table {
 	width: 100%;
 }
 
-
-.eeRSCF_Admin fieldset p {
+#eeRSCF_Settings fieldset p {
 	margin-bottom: 25px;
 	clear: left;
 }
 
-.eeRSCF_Admin label, .eeRSCF_Admin span {
+#eeRSCF_Settings label, .eeRSCF_Admin span {
 	float: left;
 	clear: both;
 	width: 25%;
@@ -139,37 +126,37 @@ table.eeRSCF_formFields select {
 	margin-bottom: 1em;
 	background: #DDD;
 }
-.eeRSCF_Admin .eeRadioLabel {
+#eeRSCF_Settings .eeRadioLabel {
 	clear: none;
 	width: auto;
 	background: transparent;
 }
 
-.eeRSCF_Admin select, 
-.eeRSCF_Admin input[type=text],  
-.eeRSCF_Admin input[type=url],
-.eeRSCF_Admin input[type=number], 
-.eeRSCF_Admin input[type=password], 
-.eeRSCF_Admin input[type=tel], 
-.eeRSCF_Admin input[type=email],
-.eeRSCF_Admin textarea, 
-.eeRSCF_Admin span.eeValueDisplay {
+#eeRSCF_Settings select, 
+#eeRSCF_Settings input[type=text],  
+#eeRSCF_Settings input[type=url],
+#eeRSCF_Settings input[type=number], 
+#eeRSCF_Settings input[type=password], 
+#eeRSCF_Settings input[type=tel], 
+#eeRSCF_Settings input[type=email],
+#eeRSCF_Settings textarea, 
+#eeRSCF_Settings span.eeValueDisplay {
 	float: left;
 	width: 50%;
 	padding: 4px;
 }
 
-.eeRSCF_Admin #eeRSCF_delivery input[type=text] {
+#eeRSCF_Settings  #eeRSCF_delivery input[type=text] {
 	width: 60%;
 }
 
-.eeRSCF_Admin textarea {
+#eeRSCF_Settings  textarea {
 	height: 200px;
 	font-size: 130%;
 	margin-bottom: 10px;
 	padding: 5px;
 }
-.eeRSCF_Admin input[type=radio] {
+#eeRSCF_Settings  input[type=radio] {
 	float: left;
 	width: 1.2em;
 	height: 1.2em;
@@ -177,7 +164,7 @@ table.eeRSCF_formFields select {
 	margin-top: .325em;
 	margin-right: 2em;
 }
-#eeSFL_Settings input[type=checkbox] {
+#eeRSCF_Settings input[type=checkbox] {
 	float: left;
 	width: 1.4em;
 	height: 1.4em;
@@ -194,12 +181,14 @@ table.eeRSCF_formFields select {
 }
 
 
-.eeRSCF_Admin input[type=submit], 
-.eeRSCF_Admin button {
+#eeRSCF_Settings input[type=submit], 
+#eeRSCF_Settings button {
 	float: right;
 	font-size: 130%;
 	margin: 0 20px 10px 20px;
 }
+
+
 
 .eeRSCF_Admin p {
 	margin: 0;

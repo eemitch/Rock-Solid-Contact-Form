@@ -47,29 +47,11 @@ function eeRSCF_Settings() {
 	$active_tab == 'settings' ? 'nav-tab-active' : '';    
     $eeOutput .= $active_tab . '">' . __('Settings', 'rock-solid-contact-form') . '</a>';
     
-    // Plugin Instructions
-    $eeOutput .= '<a href="?page=' . $eeRSCF_Page . '&tab=instructions" class="nav-tab ';  
-	if($active_tab == 'instructions') {$eeOutput .= '  eeActiveTab '; }   
-    $active_tab == 'support' ? 'nav-tab-active' : ''; 
-    $eeOutput .= $active_tab . '">' . __('Instructions', 'rock-solid-contact-form') . '</a>';
-    
-    // The Help / Email Form Page
-    $eeOutput .= '<a href="?page=' . $eeRSCF_Page . '&tab=help" class="nav-tab ';   
-	if($active_tab == 'help') {$eeOutput .= '  eeActiveTab '; }  
-    $active_tab == 'help' ? 'nav-tab-active' : ''; 
-    $eeOutput .= $active_tab . '">' . __('Help', 'rock-solid-contact-form') . '</a>';
-    
     // Author
     $eeOutput .= '<a href="?page=' . $eeRSCF_Page . '&tab=author" class="nav-tab ';   
 	if($active_tab == 'author') {$eeOutput .= '  eeActiveTab '; }  
     $active_tab == 'author' ? 'nav-tab-active' : ''; 
     $eeOutput .= $active_tab . '">' . __('Author', 'rock-solid-contact-form') . '</a>';
-    
-    // Donate to Feel Great
-    $eeOutput .= '<a href="?page=' . $eeRSCF_Page . '&tab=donate" class="nav-tab ';    
-	if($active_tab == 'donate') {$eeOutput .= '  eeActiveTab '; } 
-    $active_tab == 'donate' ? 'nav-tab-active' : ''; 
-    $eeOutput .= $active_tab . '">' . __('Donate', 'rock-solid-contact-form') . '</a>';
     
     $eeOutput .= '</h2>'; // END Tabs
     
@@ -107,18 +89,12 @@ function eeRSCF_Settings() {
 	    
 	    if($active_subtab == 'form_settings') {
 	    
-		    $eeOutput .= '
-		    
-		    <h2 class="eeLeft">Contact Form Settings</h2>
-		    
-		    <div id="eeRSCF_Nav" class="eeClearing">';
-		    
 		    // Forms Navigation 
 			$eeRSCF->eeRSCF_GetForms(); // Fill $eeRSCF->eeFormsArray
 			
 			
 			// Set Current Form
-			if(@$_POST['eeRSCF_ID']) {
+			if($_POST['eeRSCF_ID']) {
 				$eeRSCF_ID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
 			} else {
 				$eeRSCF_ID = 1; // One is the lonliest number that there ever was ;-(
@@ -126,59 +102,56 @@ function eeRSCF_Settings() {
 			
 			
 			// Get Chosen Form
-			if(@$_POST['eeRSCF_forms']) {
-				
-				$eeRSCF_ID = filter_var($_POST['eeRSCF_forms'], FILTER_VALIDATE_INT);
-				$eeRSCF->eeFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
+			if(isset($_POST['eeRSCF_forms'])) {
+				if($_POST['eeRSCF_forms']) {
+					$eeRSCF_ID = filter_var($_POST['eeRSCF_forms'], FILTER_VALIDATE_INT);
+					$eeRSCF->eeFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
+				}	
 			}
-			
 			
 			
 			// Add a new form
-			if(@$_GET['eeRSCF_createForm'] == 1) {
-				
-				$count = count($eeRSCF->eeFormsArray);
-				$eeRSCF_ID = $count+1;
-				add_option('eeRSCF_' . $eeRSCF_ID, $eeRSCF->eeRSCF_0);
+			if(isset($_GET['eeRSCF_createForm'])) {
+				if($_GET['eeRSCF_createForm'] == 1) {
+					$count = count($eeRSCF->eeFormsArray);
+					$eeRSCF_ID = $count+1;
+					add_option('eeRSCF_' . $eeRSCF_ID, $eeRSCF->eeRSCF_0);
+				}
 			}
-			
 			
 			// Get this form's settings
 			$eeRSCF->eeFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
 			
 			
+			$eeOutput .= '
+			<div id="eeRSCF_FormsNav" class="eeClearing">';
+			
 			// Choose your form
-			
 			if(count($eeRSCF->eeFormsArray) > 1) {
-			
-				$eeOutput .= '
-				
-				<form' . $_SERVER['PHP_SELF'] . '?page=rock-solid-contact-form' . '" method="POST">
-				<input type="hidden" name="subtab" value="form_settings" />
-				
-				<select name="eeRSCF_forms" id="eeRSCF_forms">
-				
-				<option value="">Your Forms</option>';
-					
-				foreach( $eeRSCF->eeFormsArray as $eeID => $eeValue) {
-					$eeOutput .= '<option value="' . $eeID . '">' . $eeValue . ' </option>';
-				}
-				$eeOutput .= '</select><button id="eeRSCF_chooseForm">Go</button></form>';
-				
+			  $eeOutput .= '<form action="' . $_SERVER['PHP_SELF'] . '?page=rock-solid-contact-form' . '" method="POST">
+			  <select name="eeRSCF_forms" id="eeRSCF_forms">';
+			  
+			  foreach($eeRSCF->eeFormsArray as $eeID => $eeValue) {
+				$selected = ($eeRSCF_ID == $eeID) ? 'selected' : ''; // add selected attribute if $eeRSCF_ID == $eeID
+				$eeOutput .= '<option value="' . $eeID . '" ' . $selected . '>' . $eeValue . '</option>';
+			  }
+			  
+			  $eeOutput .= '</select>
+			  <input class="button" type="submit" name="eeRSCF_chooseForm" value="Go" id="eeRSCF_chooseForm" />
+			  </form>';
 			}
 			
 			$eeOutput .= '
-			
-			<button type="button" id="eeRSCF_createForm">New Form</button>
-			
+			<button class="button" type="button" id="eeRSCF_createForm">New Form</button>
 			</div>';
-	    
 	    }
 	    
 	    
 	    // Settings Form
 	    
 	    $eeOutput .= '
+		
+		<h2> ' . $eeRSCF->eeFormArray['name'] . ' Settings</h2>
 	    
 	    <form action="' . $_SERVER['PHP_SELF'] . '?page=rock-solid-contact-form' . '" method="POST" id="eeRSCF_Settings">
 			<input type="hidden" name="eeRSCF_Settings" value="TRUE" />
@@ -315,7 +288,9 @@ function eeRSCF_Settings() {
 			<label for="eeRSCF_emailUsername">Mail Account Username</label>
 			<input type="text" name="eeRSCF_emailUsername" value="';
 			
-			if( strlen($eeRSCF->emailUsername) > 1 ) { $eeOutput .= $eeRSCF->emailUsername; } else {  $eeOutput .= 'mail@' . basename( get_site_url() ); }
+			if($eeRSCF->emailUsername) {
+				if( strlen($eeRSCF->emailUsername) > 1 ) { $eeOutput .= $eeRSCF->emailUsername; } else {  $eeOutput .= 'mail@' . basename( get_site_url() ); }
+			}
 			
 			$eeOutput .= '" class="adminInput" id="eeRSCF_emailUsername" size="64" />
 			
@@ -709,8 +684,6 @@ function eeRSCF_Settings() {
 			
 			<br class="eeClearFix" />
 			
-			<p class="button eeRSCF_createPost" title="post">Create Form Post</p>
-			<p class="button eeRSCF_createPost" title="page">Create Form Page</p>
 			<p class="button eeRSCF_copyToClipboard">Copy Shortcode</p>
 			
 			<fieldset id="eeRSCF_delivery">
@@ -721,7 +694,6 @@ function eeRSCF_Settings() {
 						<input type="text" name="eeRSCF_formTO" value="';
 						
 					if(!empty($eeRSCF->eeFormArray['TO'])) { $eeOutput .= $eeRSCF->eeFormArray['TO']; } 
-						elseif($eeRSCF->eeFormArray['to']) { $eeOutput .= $eeRSCF->eeFormArray['to']; }
 							else { $eeOutput .= get_option('admin_email'); }
 					
 					$eeOutput .= '" class="adminInput" id="eeRSCF_formTO" size="64" />
@@ -729,16 +701,14 @@ function eeRSCF_Settings() {
 						<label for="eeRSCF_formCC">CC</label>
 						<input type="text" name="eeRSCF_formCC" value="';
 						
-					if(!empty($eeRSCF->eeFormArray['CC'])) { $eeOutput .= $eeRSCF->eeFormArray['CC']; } 
-						elseif($eeRSCF->eeFormArray['cc']) { $eeOutput .= $eeRSCF->eeFormArray['cc']; }
+					if(!empty($eeRSCF->eeFormArray['CC'])) { $eeOutput .= $eeRSCF->eeFormArray['CC']; }
 					
 					$eeOutput .= '" class="adminInput" id="eeRSCF_formCC" size="64" />
 						
 						<label for="eeRSCF_formBCC">BCC</label>
 						<input type="text" name="eeRSCF_formBCC" value="';
 						
-					if(!empty($eeRSCF->eeFormArray['BCC'])) { $eeOutput .= $eeRSCF->eeFormArray['BCC']; } 
-						elseif($eeRSCF->eeFormArray['bcc']) { $eeOutput .= $eeRSCF->eeFormArray['bcc']; }
+					if(!empty($eeRSCF->eeFormArray['BCC'])) { $eeOutput .= $eeRSCF->eeFormArray['BCC']; }
 					
 					$eeOutput .= '" class="adminInput" id="eeRSCF_formBCC" size="64" />	
 					
@@ -780,7 +750,7 @@ function eeRSCF_Settings() {
 						
 						if($value) { $eeOutput .= $value; } else { $eeOutput .= $eeRSCF->eeRSCF_UnSlug($field); }
 				
-						$eeOutput .= '" size="32" maxsize="256" /></td>';
+						$eeOutput .= '" size="32" /></td>';
 					
 					} else {
 						
@@ -812,7 +782,7 @@ function eeRSCF_Settings() {
 						
 					if(@$eeRSCF->eeFormArray['confirm'] != '/') { $eeOutput .= $eeRSCF->eeFormArray['confirm']; }
 				
-						$eeOutput .= '" size="128" maxlen="256" />
+						$eeOutput .= '" size="128" />
 			
 			
 			</fieldset>
@@ -836,57 +806,23 @@ function eeRSCF_Settings() {
 		
 		</div>'; // END SubTabs
 		
-		
-		
-		
-	} elseif($active_tab == 'instructions') { // Support Tab Display...
-		
-		$eeOutput .= '<h2>' . __('Instructions', 'rock-solid-contact-form') . '</h2>
-		
-		<p>USAGE: Place this bit of shortcode in any Post or Page that you would like the plugin to appear: <strong><em>[eeRSCF]</em></strong></p>';
-			
-		// Get the instructions page
-		include($eeRSCF_PluginPath . '../support/ee-plugin-instructions.php');
-	
-	} elseif($active_tab == 'help') { // Support Tab Display...
-		
-		$eeSF_Plugin = eeRSCF_PluginName;
-			
-		// Get the support page
-		include($eeRSCF_PluginPath . '../support/ee-plugin-support.php');
-	
-	} elseif($active_tab == 'author') { // About
+	} else { // About
 					
 		// Get the support page
-		include($eeRSCF_PluginPath . '../support/ee-plugin-author.php');
+		include($eeRSCF_PluginPath . '../includes/ee-plugin-author.php');
 		
-	} else { // Please Donate - DEFAULT TAB
-			
-		// Get the support page
-		include($eeRSCF_PluginPath . '../support/ee-donations.php');
 	}
 		
 	$eeOutput .= '
-	
-	
-	
-	
-	
-	
 	<div id="eeAdminFooter">
 		
 		<p><a href="' . eeRSCF_WebsiteLink . '">' . 
 			eeRSCF_PluginName . ' &rarr; ' . __('Version', 'rock-solid-contact-form') . ' ' . eeRSCF_version . '</a></p>	
 	</div>
 	
-	
-	
 	</div>'; // END .wrap
 	
-	
-	
-	
-	
+
 	// Closing function operations
 	
 	if(eeRSCF_DevMode) {
@@ -901,14 +837,9 @@ function eeRSCF_Settings() {
 		// eeRSCF_WriteLogFile($eeRSCF_Log);
 		
 	}
-    
-	
+
     // Dump the HTML buffer
-    echo $eeOutput;
-    
-    
+    echo $eeOutput;   
 }
 
-	
-	
 ?>

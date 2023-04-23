@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 class eeRSCF_MessageDisplay {
 	
 	// Problem Display / Error reporting
-	public function display($messages) {
+	public function eeDisplay($messages) {
 		
 		if(is_array($messages)) {
 			echo '<div class="eeMessageDisplay"><ul>'; // Loop through array
@@ -33,7 +33,7 @@ class eeRSCF_MessageDisplay {
 
 class eeRSCF_NoticeEmail {
 
-	function noticeEmail($messages, $to, $from, $name, $mode = 'standard') {
+	function eeNoticeEmail($messages, $to, $from, $name, $mode = 'standard') {
 		
 		if($to AND $from) {
 			
