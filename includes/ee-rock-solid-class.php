@@ -78,7 +78,6 @@ class eeRSCF_Class {
 	public $spamBlockFishy; // Block messages with duplicated fields and other fishy business.
 	public $spamBlockWords; // To block words or not
 	public $spamBlockCommonWords; // To use the built-in list of common words
-	public $spamBlockedCommonWords; // These words and phrases are commonly found in contct form spam.
 	public $spamBlockedWords; // In addition, these words and phrases are not allowed by the website owner.
 	public $spamSendAttackNotice; // Send an email with a summary of the spam that was blocked. // Sends to ...
 	public $spamNoticeEmail; // The users email address the notice gets sent to
@@ -187,9 +186,6 @@ class eeRSCF_Class {
 		
 		$this->spamBlockCommonWords = get_option('eeRSCF_spamBlockCommonWords');
 		$this->log['settings'][] = $this->spamBlockCommonWords;
-		
-		$this->spamBlockedCommonWords = get_option('eeRSCF_spamBlockedCommonWords');
-		$this->log['settings'][] = $this->spamBlockedCommonWords;
 		
 		$this->spamSendAttackNotice = get_option('eeRSCF_spamSendAttackNotice');
 		$this->log['settings'][] = $this->spamSendAttackNotice;
@@ -359,8 +355,6 @@ class eeRSCF_Class {
 					$entries[] = $eeValue;
 					
 					// If you can't read it, block it.
-					// TO DO --------------------------- <<<------Add language options to admin panel
-					
 					if(preg_match('/[А-Яа-яЁё]/u', $eeValue) OR preg_match('/\p{Han}+/u', $eeValue)) {
 						$this->errors[] = "Foreign Language Detected";
 						break;
@@ -369,7 +363,7 @@ class eeRSCF_Class {
 			}
 		}
 		
-		// Block Fishyness
+		// Block Fishiness
 		if($this->spamBlockFishy == 'YES') {
 			
 			// Check for duplicated info in fields (spam)
@@ -402,17 +396,6 @@ class eeRSCF_Class {
 			
 			// User Words
 			$spamWords = explode(',', $this->spamBlockedWords);
-			
-			if($this->spamBlockCommonWords == 'YES') {
-				
-				// Common list of words
-				$spamCommonWords = $this->spamBlockedCommonWords;
-				$spamCommonWords = explode(',', $spamCommonWords); // Split by comma
-				$spamCommonWords = array_map('trim', $spamCommonWords); // Trim values
-				$spamCommonWords = array_map('strtolower', $spamCommonWords); // Ensure lower case
-				$spamWords = array_merge($spamWords, $spamCommonWords); // Combine with the local words
-				$spamWords = array_unique($spamWords); // Remove Duplicates
-			}
 		
 			// Loop through post to look for blocked words
 			foreach($eeArray as $eeKey => $eeValue){
@@ -435,11 +418,11 @@ class eeRSCF_Class {
 			}
 		}
 		
-		if(count($this->errors) >= 1 AND ($this->spamSendAttackNotice == 'YES' OR $this->spamSendAttackNoticeToDeveloper == 'YES') ) {
+		if(count($this->errors) >= 1 AND $this->spamSendAttackNotice == 'YES' ) {
 			
 			$eeAttackLog = array(); // An array we will fill, serialize and encode, and then send to an EE server.
 			
-			// We do this to halp make the World a better place.
+			// We do this to help make the World a better place.
 			
 			// Website Info
 			$eeAttackLog[] = 'Contact Form Spam Catch';
@@ -482,17 +465,6 @@ class eeRSCF_Class {
 				
 				if(!wp_mail($eeTo, $eeSubject, $eeBody, $eeHeaders)) { // Email the message or error report
 					$this->errors[] = 'Notice Email Failed to Send';
-				}
-			}
-			
-			
-			// Optional Admin Notice
-			if($this->spamSendAttackNoticeToDeveloper == 'YES') {
-				
-				$eeTo = $this->spamAdminNoticeEmail;
-				
-				if(!wp_mail($eeTo, $eeSubject, $eeBody, $eeHeaders)) { // Email the message or error report
-					$this->errors[] = 'Admin Notice Email Failed to Send';
 				}
 			}
 		}
@@ -574,8 +546,8 @@ class eeRSCF_Class {
 					
 					$this->theForm .=  '">';
 					
-					// Chech for custom label
-					if($value['label']) { $this->theForm .= $value['label']; } else { $this->theForm .= $this->eeRSCF_UnSlug($field); }
+					// Check for custom label
+					if($value['label']) { $this->theForm .= stripslashes($value['label']); } else { $this->theForm .= $this->eeRSCF_UnSlug($field); }
 					
 					$this->theForm .= '</label>';
 					
@@ -586,7 +558,7 @@ class eeRSCF_Class {
 					
 					$this->theForm .= 'name="';
 					
-					// Chech for custom label
+					// Check for custom label
 					if($value['label']) {
 						$this->theForm .= $this->eeRSCF_MakeSlug($value['label']);
 					} else {
@@ -688,10 +660,30 @@ class eeRSCF_Class {
 		
 		$eeRSCF_ID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
 		
+		// Are we Blocking SPAM?
 		if($this->spamBlock == 'YES') {
-			if( $this->eeRSCF_formSpamCheck() !== 'OK' ) {
+			
+			if(get_option( 'eeRSCF_spamBlockCommonWords') == 'YES') {
+				
+				// Update the Common SPAM Words
+				// This is a new line delineated list of common phrases used in email spam
+				$eeSpamFile = file_get_contents('http://eeserver1.net/common-spam-words.txt'); // One phrase per line
+				
+				exit($eeSpamFile);
+				
+				if($eeSpamFile) { // Convert newline to comma separated list
+					$spamBlockedCommonWords = preg_replace("/(\n)/", ",", $eeSpamFile);
+					$spamBlockedCommonWords = str_replace(',,', ',',  $spamBlockedCommonWords);
+					$spamBlockedCommonWords = strtolower($spamBlockedCommonWords);
+					update_option('eeRSCF_spamBlockedCommonWords', $spamBlockedCommonWords);
+				}
+			}
+			
+			if( $this->eeRSCF_formSpamCheck() !== 'OK' ) { // This is SPAM
 				return FALSE;
 			}
+			
+			
 		} 
 	
 		// Check referrer is from same site.
@@ -720,6 +712,27 @@ class eeRSCF_Class {
 			$this->log[] = 'Preparing the Email...';
 			
 			$eeThisFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
+			
+			if(get_option('eeRSCF_spamBlockCommonWords') == 'YES') {
+				
+				// Update the Common Span Words
+				$eeSpamFile = file_get_contents('http://eeserver1.net/common-spam-words.txt');
+				if($eeSpamFile) {
+					
+					$spamBlockedCommonWords = file_get_contents($eeSpamFile); 
+					if($spamBlockedCommonWords) {
+						
+						// Convert newline to comma separated list
+						$spamBlockedCommonWords = preg_replace("/(\n)/", ",", $spamBlockedCommonWords);
+						$spamBlockedCommonWords = str_replace(',,', ',',  $spamBlockedCommonWords);
+						$spamBlockedCommonWords = strtolower($spamBlockedCommonWords);
+						update_option('eeRSCF_spamBlockedCommonWords', $spamBlockedCommonWords);
+					}
+				}
+			}
+			
+			
+			
 			
 			if(isset($eeThisFormArray['TO'])) {
 				$this->to = $eeThisFormArray['TO'];
@@ -1071,11 +1084,6 @@ class eeRSCF_Class {
 				if($_POST['spamBlockCommonWords'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
 				$eeRSCF->log[] = 'Spam Block CommonWords: ' . $settings;
 				update_option('eeRSCF_spamBlockCommonWords', $settings); // Update the database
-
-				// Blocked Common Words
-				$settings = htmlspecialchars($_POST['spamBlockedCommonWords']);
-				$eeRSCF->log[] = 'Spam Blocked CommonWords: ' . $settings;
-				update_option('eeRSCF_spamBlockedCommonWords', $settings); // Update the database
 				
 				// Send Notice
 				if($_POST['spamSendAttackNotice'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
@@ -1086,11 +1094,6 @@ class eeRSCF_Class {
 				$settings = filter_var($_POST['spamNoticeEmail'], FILTER_VALIDATE_EMAIL );
 				$eeRSCF->log[] = 'Spam Notice Email: ' . $settings;
 				update_option('eeRSCF_spamNoticeEmail', $settings); // Update the database
-				
-				// Send Admin Notice
-				if($_POST['spamSendAttackNoticeToDeveloper'] == 'YES') { $settings = 'YES'; } else { $settings = 'NO'; }
-				$eeRSCF->log[] = 'Spam Attack Developer Notice: ' . $settings;
-				update_option('eeRSCF_spamSendAttackNoticeToDeveloper', $settings); // Update the database
 			}
 			
 			

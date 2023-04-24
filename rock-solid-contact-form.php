@@ -260,25 +260,7 @@ function eeRSCF_UpdatePlugin() {
 	
 	if($eeInstalled AND eeRSCF_version > $eeInstalled) { // If this is a newer version
 		
-		// Get the contents of the text file
-		$eeSpamFile = plugin_dir_url( __FILE__ ) . 'common-spam-words.txt';
-		if(is_readable($eeSpamFile)) {
-			
-			$spamBlockedCommonWords = file_get_contents($eeSpamFile); 
-			if($spamBlockedCommonWords) {
-				
-				// Convert newline to comma separated list
-				$spamBlockedCommonWords = preg_replace("/(\n)/", ",", $spamBlockedCommonWords);
-				$spamBlockedCommonWords = str_replace(',,', ',',  $spamBlockedCommonWords);
-				$spamBlockedCommonWords = strtolower($spamBlockedCommonWords);
-				
-				// TO DO - Compare word lists so we don't overwrite user changes
-				update_option('eeRSCF_spamBlockedCommonWords', $spamBlockedCommonWords);
-			}
-		}
-		
 		$eeRSCF_Log[] = 'New Version: ' . eeRSCF_version;
-		
 		update_option('eeRSCF_version' , eeRSCF_version);
 		
 		
@@ -303,19 +285,6 @@ function eeRSCF_UpdatePlugin() {
 		add_option('eeRSCF_spamBlockWords', $eeRSCF->default_spamBlockWords);
 		add_option('eeRSCF_spamBlockedWords', $eeRSCF->default_spamBlockedWords);
 		add_option('eeRSCF_spamBlockCommonWords', $eeRSCF->default_spamBlockCommonWords);
-		
-		
-		// Get the contents of the text file
-		$spamBlockedCommonWords = FALSE; // file_get_contents(plugin_dir_url( __FILE__ ) . 'common-spam-words.txt'); 
-		if($spamBlockedCommonWords) {
-			
-			// Convert newline to comma seperated list
-			$spamBlockedCommonWords = preg_replace("/(\n)/", ",", $spamBlockedCommonWords);
-			$spamBlockedCommonWords = str_replace(',,', ',',  $spamBlockedCommonWords);
-			$spamBlockedCommonWords = strtolower($spamBlockedCommonWords);
-			add_option('eeRSCF_spamBlockedCommonWords', $spamBlockedCommonWords);
-		}
-
 		add_option('eeRSCF_spamSendAttackNotice', $eeRSCF->default_spamSendAttackNotice);
 		add_option('eeRSCF_spamNoticeEmail', get_bloginfo('admin_email'));
 		add_option('eeRSCF_spamSendAttackNoticeToDeveloper', $eeRSCF->default_spamSendAttackNoticeToDeveloper);

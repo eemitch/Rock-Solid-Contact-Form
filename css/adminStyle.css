@@ -2,8 +2,7 @@
 
 .eeRSCF_Admin {
 	width: 100%;
-	/* width: 700px; */
-	/* font-size: 120%;	 */
+	max-width: 1200px;
 }
 
 .eeRSCF_Admin h2,
@@ -210,10 +209,7 @@
 
 
 .eeRSCF_Admin p.eeNote {
-	width: 65%;
-	float: right;
-	clear: right;
-	margin: 0 20px 40px 0;
+	margin: 5px 0 40px 10px;
 }
 
 
