@@ -7,11 +7,10 @@ function eeRSCF_Settings() {
 	
 	global $eeRSCF, $eeRSCFU, $eeRSCF_Log; // Writes a log file in the plugin/logs folder.
 	
-	$eeRSCF_Log[] = 'eeRSCF_Settings() Loaded';
+	$eeRSCF->log['notices'][] = 'eeRSCF_Settings() Loaded';
 	
 	// Process if POST
-	if(@$_POST['eeRSCF_Settings'] AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
-		
+	if(isset($_POST['eeRSCF_Settings']) AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 		$eeRSCF_Log[] = 'Updating Settings...';
 		
 		$eeRSCF->eeRSCF_AdminSettingsProcess($_POST);
@@ -93,19 +92,19 @@ function eeRSCF_Settings() {
 		
 		// Set Current Form
 		// if(isset($_POST['eeRSCF_ID'])) {
-		// 	$eeRSCF_ID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
+		// 	$eeRSCF->formID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
 		// } else {
-		// 	$eeRSCF_ID = 1;
+		// 	$eeRSCF->formID = 1;
 		// }
 		
-		$eeRSCF_ID = 1;
+		$eeRSCF->formID = 1;
 		
 		
 		// Get Chosen Form
 		if(isset($_POST['eeRSCF_forms'])) {
 			if($_POST['eeRSCF_forms']) {
-				$eeRSCF_ID = filter_var($_POST['eeRSCF_forms'], FILTER_VALIDATE_INT);
-				$eeRSCF->eeFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
+				$eeRSCF->formID = filter_var($_POST['eeRSCF_forms'], FILTER_VALIDATE_INT);
+				$eeRSCF->eeFormArray = get_option('eeRSCF_' . $eeRSCF->formID);
 			}	
 		}
 		
@@ -114,13 +113,13 @@ function eeRSCF_Settings() {
 		// if(isset($_GET['eeRSCF_createForm'])) {
 		// 	if($_GET['eeRSCF_createForm'] == 1) {
 		// 		$count = count($eeRSCF->eeFormsArray);
-		// 		$eeRSCF_ID = $count+1;
-		// 		add_option('eeRSCF_' . $eeRSCF_ID, $eeRSCF->eeRSCF_0);
+		// 		$eeRSCF->formID = $count+1;
+		// 		add_option('eeRSCF_' . $eeRSCF->formID, $eeRSCF->contactFormDefault);
 		// 	}
 		// }
 		
 		// Get this form's settings
-		$eeRSCF->eeFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
+		$eeRSCF->eeFormArray = get_option('eeRSCF_Settings_' . $eeRSCF->formID);
 		
 		
 		// $eeOutput .= '
@@ -132,7 +131,7 @@ function eeRSCF_Settings() {
 		//   <select name="eeRSCF_forms" id="eeRSCF_forms">';
 		//   
 		//   foreach($eeRSCF->eeFormsArray as $eeID => $eeValue) {
-		// 	$selected = ($eeRSCF_ID == $eeID) ? 'selected' : ''; // add selected attribute if $eeRSCF_ID == $eeID
+		// 	$selected = ($eeRSCF->formID == $eeID) ? 'selected' : ''; // add selected attribute if $eeRSCF->formID == $eeID
 		// 	$eeOutput .= '<option value="' . $eeID . '" ' . $selected . '>' . $eeValue . '</option>';
 		//   }
 		//   
@@ -148,11 +147,11 @@ function eeRSCF_Settings() {
     
     
     // Settings Form
-	$eeRSCF->eeFormArray = get_option('eeRSCF_' . $eeRSCF_ID);
+	$eeRSCF->contactForm = get_option('eeRSCF_Settings_' . $eeRSCF->formID);
     
     $eeOutput .= '
 	
-	<h2> ' . $eeRSCF->eeFormArray['name'] . ' Settings</h2>
+	<h2> ' . $eeRSCF->contactForm['name'] . ' Settings</h2>
     
     <form action="' . $_SERVER['PHP_SELF'] . '?page=rock-solid-contact-form' . '" method="POST" id="eeRSCF_Settings">
 		<input type="hidden" name="eeRSCF_Settings" value="TRUE" />
@@ -180,11 +179,11 @@ function eeRSCF_Settings() {
 		<label for="eeRSCF_email">The Form\'s Email</label>
 			<input type="email" name="eeRSCF_email" value="';
 			
-		if($eeRSCF->email) { $eeOutput .= $eeRSCF->email; } else { echo get_option('eeRSCF_email'); }
+		if($eeRSCF->contactForm['email']) { $eeOutput .= $eeRSCF->contactForm['email']; } else { echo get_option('eeRSCF_email'); }
 			
 		$eeOutput .= '" class="adminInput" id="eeRSCF_email" size="64" />';
 		
-		if($eeRSCF->emailMode != 'SMTP') {
+		if($eeRSCF->contactForm['emailMode'] != 'SMTP') {
 		
 			$eeOutput .= '
 			
@@ -211,12 +210,12 @@ function eeRSCF_Settings() {
 		<select name="eeRSCF_emailMode" id="eeRSCF_emailMode" class="">
 				<option value="PHP"';
 				
-		if($eeRSCF->emailMode == 'PHP') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->contactForm['emailMode'] == 'PHP') { $eeOutput .= ' selected="selected"'; }
 				
 		$eeOutput .= '>OFF - Using Wordpress Mailer</option>
 				<option value="SMTP"';
 				
-		if($eeRSCF->emailMode == 'SMTP') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->contactForm['emailMode'] == 'SMTP') { $eeOutput .= ' selected="selected"'; }
 				
 		$eeOutput .= '>ON - Using SMTP (Recommended)</option>
 			</select>
@@ -617,7 +616,7 @@ function eeRSCF_Settings() {
 		$eeOutput .= '
 		
 		<input type="hidden" name="eeRSCF_formSettings" value="TRUE" />
-		<input type="hidden" name="eeRSCF_ID" value="' . $eeRSCF_ID . '" />
+		<input type="hidden" name="eeRSCF_ID" value="' . $eeRSCF->formID . '" />
 			<input type="hidden" name="subtab" value="form_settings" />
 		
 		<fieldset id="eeRSCF_formSettings">
@@ -633,7 +632,7 @@ function eeRSCF_Settings() {
 		
 		$eeOutput .= '" class="adminInput" id="eeRSCF_formName" size="64" />
 		
-		<label>Shortcode</label><input id="eeRSCF_shortCode" type="text" name="eeRSCF_shortCode" value="[rock-solid-contact id=' . $eeRSCF_ID . ']" />
+		<label>Shortcode</label><input id="eeRSCF_shortCode" type="text" name="eeRSCF_shortCode" value="[rock-solid-contact id=' . $eeRSCF->formID . ']" />
 		
 		<br class="eeClearFix" />
 		
@@ -744,7 +743,7 @@ function eeRSCF_Settings() {
 		
 	</fieldset>
 		
-	<a id="eeRSCF_deleteForm" href="admin.php?page=rock-solid-contact-form&subtab=form_settings&eeRSCF_deleteForm=' . $eeRSCF_ID . '">Delete This Form</a>
+	<a id="eeRSCF_deleteForm" href="admin.php?page=rock-solid-contact-form&subtab=form_settings&eeRSCF_deleteForm=' . $eeRSCF->formID . '">Delete This Form</a>
 	
 	';
 		
@@ -762,8 +761,8 @@ function eeRSCF_Settings() {
 	$eeOutput .= '
 	<div id="eeAdminFooter">
 		
-		<p><a href="' . eeRSCF_WebsiteLink . '">' . 
-			eeRSCF_PluginName . ' &rarr; ' . __('Version', 'rock-solid-contact-form') . ' ' . eeRSCF_version . '</a></p>	
+		<p><a href="' . $eeRSCF->websiteLink . '">' . 
+			$eeRSCF->pluginName . ' &rarr; ' . __('Version', 'rock-solid-contact-form') . ' ' . eeRSCF_Version . '</a></p>	
 	</div>
 	
 	</div>'; // END .wrap
@@ -772,16 +771,7 @@ function eeRSCF_Settings() {
 	// Closing function operations
 	
 	if(eeRSCF_DevMode) {
-		
-		$eeRSCF_Log[][] = $eeRSCF->log;
-		
-		if($eeRSCF_Messages) { $eeRSCF_Log[] = $eeRSCF_Messages; }
-		if($eeRSCF_Errors) { $eeRSCF_Log[] = $eeRSCF_Errors; }
-		
-		$eeOutput .= '<pre>' . print_r($eeRSCF_Log, TRUE) . '</pre>';
-		
-		// eeRSCF_WriteLogFile($eeRSCF_Log);
-		
+		$eeOutput .= eeDevOutput($eeRSCF->log);
 	}
 
     // Dump the HTML buffer

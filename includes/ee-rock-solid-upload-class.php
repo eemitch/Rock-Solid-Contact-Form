@@ -22,15 +22,15 @@ class eeRSCFU_FileUpload {
 		
 		global $eeRSCF;
 		
-		$eeRSCF->log[] = 'Running upload setup...';
+		$eeRSCF->log['notices'][] = 'Running upload setup...';
 		
 		$uploadDirArray = wp_upload_dir();
 		
 		$this->uploadDir = $uploadDirArray['basedir'] . '/' . $this->uploadFolderName . '/';
-		$eeRSCF->log[] = 'Upload Directory: ' . $this->uploadDir;
+		$eeRSCF->log['notices'][] = 'Upload Directory: ' . $this->uploadDir;
 		
 		$this->uploadUrl = $uploadDirArray['baseurl'] . '/' . $this->uploadFolderName . '/';
-		$eeRSCF->log[] = 'Upload URL: ' . $this->uploadUrl;
+		$eeRSCF->log['notices'][] = 'Upload URL: ' . $this->uploadUrl;
 		
 		self::eeRSCFU_DetectUploadLimit();
 		
@@ -57,7 +57,7 @@ class eeRSCFU_FileUpload {
 			$this->maxUploadLimit = $post_max_size;
 		}
 		
-		// $eeRSCF->log[] = 'Upload Limit: ' . $this->maxUploadLimit;
+		// $eeRSCF->log['notices'][] = 'Upload Limit: ' . $this->maxUploadLimit;
 		
 		return $this->maxUploadLimit;
 	}
@@ -75,22 +75,22 @@ class eeRSCFU_FileUpload {
 		$upload_dir = wp_upload_dir();
 		$eeRSCF_UploadDir = $upload_dir['basedir'] . '/' . $this->uploadFolderName;
 		
-		$eeRSCF_Log[] = 'Checking Folder...';
-		$eeRSCF_Log[] = $eeRSCF_UploadDir;
+		$eeRSCF->log['notices'][] = 'Checking Folder...';
+		$eeRSCF->log['notices'][] = $eeRSCF_UploadDir;
 		
 		if(strlen($eeRSCF_UploadDir)) {
 			
 			if(!@is_writable($eeRSCF_UploadDir)) {
 				
-				$eeRSCF_Log[] = 'No Directory Found.';
-				$eeRSCF_Log[] = 'Creating Upload Directory ...';
+				$eeRSCF->log['notices'][] = 'No Directory Found.';
+				$eeRSCF->log['notices'][] = 'Creating Upload Directory ...';
 				
 				// Environment Detection
 				if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-				    $eeRSCF_Log[] = 'Windows detected.';
+				    $eeRSCF->log['notices'][] = 'Windows detected.';
 				    mkdir($eeRSCF_UploadDir); // Windows
 				} else {
-				    $eeRSCF_Log[] = 'Linux detected.';
+				    $eeRSCF->log['notices'][] = 'Linux detected.';
 				    if(!mkdir($eeRSCF_UploadDir, 0755)) { // Linux - Need to set permissions
 					    $eeRSCF_Log['errors'][] = 'Cannot Create: ' . $eeRSCF_UploadDir;
 					}
@@ -103,10 +103,10 @@ class eeRSCFU_FileUpload {
 				
 				} else {
 					
-					$eeRSCF_Log[] = 'Looks Good';
+					$eeRSCF->log['notices'][] = 'Looks Good';
 				}
 			} else {
-				$eeRSCF_Log[] = 'Looks Good';
+				$eeRSCF->log['notices'][] = 'Looks Good';
 			}
 			
 			// Check index.html, create if needed.
@@ -125,7 +125,7 @@ class eeRSCFU_FileUpload {
 					
 					fclose($handle);
 					
-					// $eeRSCF_Log[] = 'index.html is in place.';
+					// $eeRSCF->log['notices'][] = 'index.html is in place.';
 				}
 			}
 			
@@ -173,11 +173,11 @@ class eeRSCFU_FileUpload {
 	
 		global $eeRSCF;
 		
-		$eeRSCF->log[] = 'Preparing for the upload...';
+		$eeRSCF->log['notices'][] = 'Preparing for the upload...';
 		
 		if($_FILES['file']['name']) {
 			
-			$eeRSCF->log[] = 'File Name: ' . $_FILES['file']['name'];
+			$eeRSCF->log['notices'][] = 'File Name: ' . $_FILES['file']['name'];
 			
 			$time = date('m-d-Y_G-i-s'); // We'll add a timestamp so files don't get overwritten.
 			
@@ -187,18 +187,18 @@ class eeRSCFU_FileUpload {
 			$ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 			$ext = '.' . $ext;
 			
-			$eeRSCF->log[] = 'File Ext: ' . $ext;
+			$eeRSCF->log['notices'][] = 'File Ext: ' . $ext;
 			
 			// Make array and remove white space from array values
 			$formatsArray = explode(',', $eeRSCF->fileFormats);
 			$formatsArray = array_filter(array_map('trim', $formatsArray));
 			
-			$eeRSCF->log[] = 'Allowed Formats: ' . implode(', ', $formatsArray);
+			$eeRSCF->log['notices'][] = 'Allowed Formats: ' . implode(', ', $formatsArray);
 			
 			// Only allow allowed files, ah?
 			if (in_array($ext,$formatsArray)) {
 			
-				$eeRSCF->log[] = 'Beginning the upload...';
+				$eeRSCF->log['notices'][] = 'Beginning the upload...';
 				
 				// File Naming
 				$fileName = pathinfo($_FILES['file']['name'], PATHINFO_FILENAME) . '_(' . $time . ')'; 
@@ -210,45 +210,45 @@ class eeRSCFU_FileUpload {
 				if (@move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) { // Move the file to the final destination
 						
 					$this->fileUploaded = $this->uploadUrl . $newFile;
-					$eeRSCF->log[] = "File Uploaded: " . $newFile . " \n\n(" . self::eeRSCFU_BytesToSize(filesize($this->uploadDir . $newFile)) . ')';
+					$eeRSCF->log['notices'][] = "File Uploaded: " . $newFile . " \n\n(" . self::eeRSCFU_BytesToSize(filesize($this->uploadDir . $newFile)) . ')';
 					return TRUE;
 					
 				} else { // Upload Problem
 					
-					$eeRSCF->errors[] = 'No file was uploaded';
+					$eeRSCF->log['errors'][] = 'No file was uploaded';
 					
 					switch ($_FILES['file']['error']) {
 						case 1:
 							// The file exceeds the upload_max_filesize setting in php.ini
-							$eeRSCF->errors[] = 'File Too Large - Please resize your file to meet the file size limit.';
+							$eeRSCF->log['errors'][] = 'File Too Large - Please resize your file to meet the file size limit.';
 							break;
 						case 2:
 							// The file exceeds the MAX_FILE_SIZE setting in the HTML form
-							$eeRSCF->errors[] = 'File Too Large - Please resize your file to meet the file size limits.';
+							$eeRSCF->log['errors'][] = 'File Too Large - Please resize your file to meet the file size limits.';
 							break;
 						case 3:
 							// The file was only partially uploaded
-							$eeRSCF->errors[] = 'Upload Interrupted - Please back up and try again.';
+							$eeRSCF->log['errors'][] = 'Upload Interrupted - Please back up and try again.';
 							break;
 						case 4:
 							// No file was uploaded
-							$eeRSCF->errors[] = 'No File was Uploaded - Please back up and try again.';
+							$eeRSCF->log['errors'][] = 'No File was Uploaded - Please back up and try again.';
 							break;
 					}
 					
 				}
 			} else {
-				$eeRSCF->errors[] = 'Sorry, the file type being uploaded is not accepted by this website.';
-				$eeRSCF->errors[] = "Your Format: $ext";
-				$eeRSCF->errors[] = 'Allowed Formats: ' . implode(', ', $formatsArray);
+				$eeRSCF->log['errors'][] = 'Sorry, the file type being uploaded is not accepted by this website.';
+				$eeRSCF->log['errors'][] = "Your Format: $ext";
+				$eeRSCF->log['errors'][] = 'Allowed Formats: ' . implode(', ', $formatsArray);
 			}
 			
 			
 		} else {
-			$eeRSCF->errors[] = 'No file reference.';
+			$eeRSCF->log['errors'][] = 'No file reference.';
 		}
 					
-		$eeRSCF->log[] = $eeRSCF->errors;
+		$eeRSCF->log['notices'][] = $eeRSCF->log['errors'];
 			
 	} // END uploader
 

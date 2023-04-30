@@ -52,7 +52,7 @@ na
 * Many under-the-hood Improvements
 * Admin UI Improvements
 * Bug Fixes
-* PHP 8.1 Approved
+* Almost PHP 8.1 Approved
 
 = 1.1.13 =
 * Bug fix caused by last update: TO != to

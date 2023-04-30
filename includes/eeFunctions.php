@@ -3,6 +3,63 @@
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeRSCF_Nonce' )) exit('That is Noncense!'); // Exit if nonce fails
 
+
+function eeDevOutput($eeArray) {
+	return PHP_EOL . "<script>console.table(" . json_encode($eeArray) . ")</script>" . PHP_EOL;
+}
+
+
+
+// Update or Install New
+function eeRSCF_UpdatePlugin() {
+	
+	global $eeRSCF;
+	$eeInstalled = get_option('eeRSCF_version');
+	
+	if($eeInstalled) {
+		
+		echo '<pre>'; print_r($eeRSCF->contactForm); echo '</pre>'; exit;
+		
+		// update_option('eeRSCF_Version' , eeRSCF_Version);
+		
+	} else {
+		
+		$eeRSCF->contactFormDefault['to'] = get_option('admin_email');
+		$eeRSCF->contactFormDefault['email'] = $eeRSCF->contactFormDefault['to'];
+		$eeRSCF->contactFormDefault['emailName'] = get_bloginfo('name');
+		
+		add_option('eeRSCF_Settings_1', $eeRSCF->contactFormDefault);
+		add_option('eeRSCF_Version' , eeRSCF_Version);
+		
+		$eeRSCF->contactForm = $eeRSCF->contactFormDefault;
+		
+	}
+		
+	return TRUE;
+}
+
+
+
+
+// Get Common Words from EE Server
+function eeGetRemoteSpamWords($eeUrl) {
+  
+  // Try to get the content using file_get_contents()
+  $eeContent = @file_get_contents($eeUrl);
+
+  // If file_get_contents() fails, try to get the content using curl
+  if (!$eeContent) {
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $eeUrl);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	$eeContent = curl_exec($ch);
+	curl_close($ch);
+  }
+
+  return $eeContent;
+}
+
+
 // Write log file
 function eeRSCF_WriteLogFile($eeLog) {
 	
@@ -54,5 +111,50 @@ function eeRSCF_WriteLogFile($eeLog) {
 		return FALSE;
 	}
 }
+
+
+
+
+
+// TO DO
+// function eeRSCF_SMTP() {
+// 	
+// 	$eeEmail = get_option('eeRSCF_email');
+// 	
+// 	if(filter_var($eeEmail, FILTER_VALIDATE_EMAIL)) {
+// 		
+// 		// Define SMTP Settings
+// 		global $phpmailer;
+// 		
+// 		if ( !is_object( $phpmailer ) ) {
+// 			$phpmailer = (object) $phpmailer;
+// 		}
+// 		
+// 		$phpmailer->Mailer = 'smtp';
+// 		$phpmailer->isHTML(FALSE);
+// 		
+// 		$phpmailer->isSMTP();
+// 		$phpmailer->From       = $eeEmail;
+// 		$phpmailer->FromName   = get_option('eeRSCF_emailName');
+// 		$phpmailer->Host       = get_option('eeRSCF_emailServer');
+// 		$phpmailer->Username   = get_option('eeRSCF_emailUsername');
+// 		$phpmailer->Password   = get_option('eeRSCF_emailPassword');
+// 		$phpmailer->Sender     = get_option('eeRSCF_emailUsername');
+// 		$phpmailer->ReturnPath = get_option('eeRSCF_emailUsername');
+// 		$phpmailer->SMTPSecure = get_option('eeRSCF_emailSecure');
+// 		$phpmailer->Port       = get_option('eeRSCF_emailPort');
+// 		$phpmailer->SMTPAuth   = TRUE; // get_option('eeRSCF_emailAuth');
+// 		$phpmailer->SMTPDebug  = 3;
+// 		
+// 		if(get_option('emailFormat') == 'HTML') {
+// 			$phpmailer->isHTML(TRUE);
+// 			$phpmailer->msgHTML = $body;
+// 			$phpmailer->Body = nl2br($body);
+// 		}
+// 		
+// 		echo '<pre>'; print_r($phpmailer); echo '</pre>'; exit;
+// 	
+// 	}
+// }
 
 ?>
