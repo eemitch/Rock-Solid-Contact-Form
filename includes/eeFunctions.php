@@ -15,13 +15,34 @@ function eeRSCF_UpdatePlugin() {
 	
 	global $eeRSCF;
 	
-	if(get_option('eeRSCF_version')) {
+	$eeVersion = get_option('eeRSCF_version');
+	
+	if( $eeVersion AND version_compare($eeVersion, eeRSCF_Version, '<') ) {
 		
-		echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
+		$eeRSCF->formSettings = $eeRSCF->contactFormDefault;
 		
-		// update_option('eeRSCF_Version' , eeRSCF_Version);
+		foreach($eeRSCF->formSettings as $eeKey => $eeValue) {
+			
+			if(is_numeric(substr($eeKey, -1))) {
+				$eeFormSettings = $eeValue;
+			}
+			
+			
+			
+			$eeSetting = get_option('eeRSCF_' . $eeKey);
+			if($eeSetting) {
+				$eeRSCF->formSettings[$eeKey] = $eeSetting;
+				// delete_option('eeRSCF_' . $eeKey);
+			}
+		}
 		
-	} else {
+		// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
+		
+		update_option('eeRSCF_Settings_1', $eeRSCF->formSettings);
+		update_option('eeRSCF_Version' , eeRSCF_Version);
+		update_option('eeRSCF_AUTH' , eeRSCF_AUTH);
+		
+	} elseif(!$eeVersion) {
 		
 		$eeSettingsArray = $eeRSCF->contactFormDefault;
 		
@@ -31,7 +52,6 @@ function eeRSCF_UpdatePlugin() {
 		
 		add_option('eeRSCF_Settings_1', $eeSettingsArray);
 		add_option('eeRSCF_Version' , eeRSCF_Version);
-		add_option('eeRSCF_AUTH' , eeRSCF_AUTH);
 		
 		$eeRSCF->formSettings = $eeSettingsArray;
 		

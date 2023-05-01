@@ -39,13 +39,8 @@ function eeRSCF_Setup() {
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-rock-solid-class.php');
 	$eeRSCF = new eeRSCF_Class();
 	
-	if(!$eeVersion OR version_compare($eeVersion, eeRSCF_Version, '<')) {
-		if( is_admin() ) { eeRSCF_UpdatePlugin(); } // Update or Install
-	} else {
-		$eeRSCF->formSettings = get_option('eeRSCF_Settings_1');
-	}
-	
-	// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
+	// Check for Install or Update
+	if( is_admin() ) { eeRSCF_UpdatePlugin(); } // Checking...
 	
 	// Get the Uploader class
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-rock-solid-upload-class.php');
