@@ -8,14 +8,14 @@ if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeRSCF_Nonce' )) exit('That is Noncense!
 class eeRSCFU_FileUpload {
 
 	// Properties ------------------------------------
-	public $uploadFolderName = 'rscf'; // Folder will be created in the WP uploads folder
+	public $uploadFolderName = eeRSCF_SLUG; // Folder will be created in the WP uploads folder
 	public $fileUploaded = FALSE;
 	public $maxUploadLimit = 8;
 	public $uploadDir = '';
 	public $uploadUrl = '';
 	
+	
 	// METHODS ---------------------------------
-
 
 	// Class setup
 	public function eeRSCFU_Setup() {
@@ -32,10 +32,10 @@ class eeRSCFU_FileUpload {
 		$this->uploadUrl = $uploadDirArray['baseurl'] . '/' . $this->uploadFolderName . '/';
 		$eeRSCF->log['notices'][] = 'Upload URL: ' . $this->uploadUrl;
 		
-		self::eeRSCFU_DetectUploadLimit();
+		$this->eeRSCFU_DetectUploadLimit();
 		
 		if(!is_dir($this->uploadDir)) {
-			self::eeRSCFU_CreateUploadDir();
+			$this->eeRSCFU_CreateUploadDir();
 		}
 	}
 
@@ -57,7 +57,7 @@ class eeRSCFU_FileUpload {
 			$this->maxUploadLimit = $post_max_size;
 		}
 		
-		// $eeRSCF->log['notices'][] = 'Upload Limit: ' . $this->maxUploadLimit;
+		$eeRSCF->log['notices'][] = 'Upload Limit: ' . $this->maxUploadLimit;
 		
 		return $this->maxUploadLimit;
 	}
@@ -70,7 +70,7 @@ class eeRSCFU_FileUpload {
 	// Create the upload folder if required.
 	private function eeRSCFU_CreateUploadDir() {
 	
-		global $eeRSCF_Log;
+		global $eeRSCF;
 		
 		$upload_dir = wp_upload_dir();
 		$eeRSCF_UploadDir = $upload_dir['basedir'] . '/' . $this->uploadFolderName;
@@ -80,7 +80,7 @@ class eeRSCFU_FileUpload {
 		
 		if(strlen($eeRSCF_UploadDir)) {
 			
-			if(!@is_writable($eeRSCF_UploadDir)) {
+			if(!is_writable($eeRSCF_UploadDir)) {
 				
 				$eeRSCF->log['notices'][] = 'No Directory Found.';
 				$eeRSCF->log['notices'][] = 'Creating Upload Directory ...';
@@ -96,7 +96,7 @@ class eeRSCFU_FileUpload {
 					}
 				}
 				
-				if(!@is_writable($eeRSCF_UploadDir)) {
+				if(!is_writable($eeRSCF_UploadDir)) {
 					$eeRSCF_Log['errors'][] = 'ERROR: I could not create the upload directory: ' . $eeRSCF_UploadDir;
 					
 					return FALSE;
@@ -113,9 +113,9 @@ class eeRSCFU_FileUpload {
 					
 			$eeFile = $eeRSCF_UploadDir . '/index.html'; // Disallow direct file indexing.
 			
-			if($handle = @fopen($eeFile, "a+")) {
+			if($handle = fopen($eeFile, "a+")) {
 				
-				if(!@is_readable($eeFile)) {
+				if(!is_readable($eeFile)) {
 				    
 					$eeRSCF_Log['errors'][] = 'ERROR: Could not write index.html';
 					
@@ -124,8 +124,6 @@ class eeRSCFU_FileUpload {
 				} else {
 					
 					fclose($handle);
-					
-					// $eeRSCF->log['notices'][] = 'index.html is in place.';
 				}
 			}
 			

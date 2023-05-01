@@ -5,23 +5,19 @@ if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeRSCF_Nonce' )) exit('That is Noncense!
 
 function eeRSCF_Settings() {
 	
-	global $eeRSCF, $eeRSCFU, $eeRSCF_Log; // Writes a log file in the plugin/logs folder.
-	
-	$eeRSCF->log['notices'][] = 'eeRSCF_Settings() Loaded';
+	global $eeRSCF, $eeRSCFU; // Writes a log file in the plugin/logs folder.
+	$eeRSCF->formID = 1;
+	$eeRSCF->log['notices'][] = 'eeRSCF Settings Page Loaded';
 	
 	// Process if POST
 	if(isset($_POST['eeRSCF_Settings']) AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 		$eeRSCF_Log[] = 'Updating Settings...';
-		
-		$eeRSCF->eeRSCF_AdminSettingsProcess($_POST);
+		$eeRSCF->eeRSCF_AdminSettingsProcess();
 	}
 	
 	// Variables
-	$eeRSCF_PluginSlug = 'rock-solid-contact-form';
 	$eeResult = FALSE;
-	$eeRSCF_Messages = array();
-	$eeRSCF_Errors = array();
-	$eeRSCF_PluginPath = plugin_dir_path( __FILE__ );
+	// $eeRSCF_PluginPath = plugin_dir_path( __FILE__ );
 	
 	// Security
 	$eeRSCF_Nonce = wp_create_nonce('ee_include_page'); // Check on the included pages
@@ -35,58 +31,48 @@ function eeRSCF_Settings() {
 	
 	// Reads the new tab's query string value
 	if( isset( $_REQUEST[ 'tab' ] ) ) { $active_tab = $_REQUEST[ 'tab' ]; } else { $active_tab = 'settings'; }
-	if( isset( $_REQUEST[ 'subtab' ] ) ) { $active_subtab = $_REQUEST[ 'subtab' ]; } else { $active_subtab = 'form_settings'; }
+	// if( isset( $_REQUEST[ 'subtab' ] ) ) { $active_subtab = $_REQUEST[ 'subtab' ]; } else { $active_subtab = 'form_settings'; }
 	
-	$eeOutput .= '<h2 class="nav-tab-wrapper">
-	</h2>'; // END Tabs
+	$eeOutput .= '<div class="eeRSCF_Admin">
+		
+	<h2 class="nav-tab-wrapper">';
+
+	// Form Settings
+	$eeOutput .= '
+	<a href="?page=' . $eeRSCF_Page . '&tab=form_settings" class="nav-tab ';  
+	if($active_tab == 'form_settings') {$eeOutput .= '  eeActiveTab ';}    
+    $active_tab == 'form_settings' ? 'nav-tab-active' : '';    
+    $eeOutput .= $active_tab . '">' . __('Contact Form', 'rock-solid-contact-form') . '</a>';
     
-    // Which Tab to Display? --------------------
+	// File Uploads
+	$eeOutput .= '
+	<a href="?page=' . $eeRSCF_Page . '&tab=file_settings" class="nav-tab ';  
+	if($active_tab == 'file_settings') {$eeOutput .= '  eeActiveTab ';}    
+    $active_tab == 'file_settings' ? 'nav-tab-active' : '';    
+    $eeOutput .= $active_tab . '">' . __('Attachments', 'rock-solid-contact-form') . '</a>';
     
-	if($active_tab == 'settings') {	
+	// Spam Blocking
+	$eeOutput .= '
+	<a href="?page=' . $eeRSCF_Page . '&tab=spam_settings" class="nav-tab ';  
+	if($active_tab == 'spam_settings') {$eeOutput .= '  eeActiveTab ';}    
+    $active_tab == 'spam_settings' ? 'nav-tab-active' : '';    
+    $eeOutput .= $active_tab . '">' . __('Spam Prevention', 'rock-solid-contact-form') . '</a>';
+    
+	// Mail Setup
+	$eeOutput .= '
+	<a href="?page=' . $eeRSCF_Page . '&tab=email_settings" class="nav-tab ';  
+	if($active_tab == 'email_settings') {$eeOutput .= '  eeActiveTab ';}    
+    $active_tab == 'email_settings' ? 'nav-tab-active' : '';    
+    $eeOutput .= $active_tab . '">' . __('Email Settings', 'rock-solid-contact-form') . '</a>';
+    
+    $eeOutput .= '</h2>'; // END Tabs
 	
-		$eeOutput .= '<div class="eeRSCF_Admin">
-		<h2 class="nav-tab-wrapper">' . __('Settings', 'rock-solid-contact-form') . '<br /><br />';
 	
-		// Form Settings
-		$eeOutput .= '
-		<a href="?page=' . $eeRSCF_Page . '&tab=form_settings" class="nav-tab ';  
-		if($active_tab == 'form_settings') {$eeOutput .= '  eeActiveTab ';}    
-	    $active_tab == 'form_settings' ? 'nav-tab-active' : '';    
-	    $eeOutput .= $active_tab . '">' . __('Contact Forms', 'rock-solid-contact-form') . '</a>';
-	    
-		// File Uploads
-		$eeOutput .= '
-		<a href="?page=' . $eeRSCF_Page . '&tab=file_settings" class="nav-tab ';  
-		if($active_tab == 'file_settings') {$eeOutput .= '  eeActiveTab ';}    
-	    $active_tab == 'file_settings' ? 'nav-tab-active' : '';    
-	    $eeOutput .= $active_tab . '">' . __('Attachments', 'rock-solid-contact-form') . '</a>';
-	    
-		// Spam Blocking
-		$eeOutput .= '
-		<a href="?page=' . $eeRSCF_Page . '&tab=spam_settings" class="nav-tab ';  
-		if($active_tab == 'spam_settings') {$eeOutput .= '  eeActiveTab ';}    
-	    $active_tab == 'spam_settings' ? 'nav-tab-active' : '';    
-	    $eeOutput .= $active_tab . '">' . __('Spam Prevention', 'rock-solid-contact-form') . '</a>';
-	    
-		// Mail Setup
-		$eeOutput .= '
-		<a href="?page=' . $eeRSCF_Page . '&tab=email_settings" class="nav-tab ';  
-		if($active_tab == 'email_settings') {$eeOutput .= '  eeActiveTab ';}    
-	    $active_tab == 'email_settings' ? 'nav-tab-active' : '';    
-	    $eeOutput .= $active_tab . '">' . __('Email Settings', 'rock-solid-contact-form') . '</a>';
-		
-		// Author
-		$eeOutput .= '
-		<a href="?page=' . $eeRSCF_Page . '&tab=author" class="nav-tab ';   
-		if($active_tab == 'author') {$eeOutput .= '  eeActiveTab '; }  
-		$active_tab == 'author' ? 'nav-tab-active' : ''; 
-		$eeOutput .= $active_tab . '">' . __('Author', 'rock-solid-contact-form') . '</a>';
-	    
-	    $eeOutput .= '</h2>'; // END Tabs
-		
-		
-	    
-	    // Forms Navigation 
+	// Which Tab to Display? --------------------
+    
+	// if($active_tab == 'form_settings') {	
+	
+		// Forms Navigation 
 		// $eeRSCF->eeRSCF_GetForms(); // Fill $eeRSCF->eeFormsArray
 		
 		
@@ -97,16 +83,16 @@ function eeRSCF_Settings() {
 		// 	$eeRSCF->formID = 1;
 		// }
 		
-		$eeRSCF->formID = 1;
+		// $eeRSCF->formID = 1;
 		
 		
 		// Get Chosen Form
-		if(isset($_POST['eeRSCF_forms'])) {
-			if($_POST['eeRSCF_forms']) {
-				$eeRSCF->formID = filter_var($_POST['eeRSCF_forms'], FILTER_VALIDATE_INT);
-				$eeRSCF->eeFormArray = get_option('eeRSCF_' . $eeRSCF->formID);
-			}	
-		}
+		// if(isset($_POST['eeRSCF_forms'])) {
+		// 	if($_POST['eeRSCF_forms']) {
+		// 		$eeRSCF->formID = filter_var($_POST['eeRSCF_forms'], FILTER_VALIDATE_INT);
+		// 		$eeRSCF->eeformSettings = get_option('eeRSCF_' . $eeRSCF->formID);
+		// 	}	
+		// }
 		
 		
 		// Add a new form
@@ -114,12 +100,12 @@ function eeRSCF_Settings() {
 		// 	if($_GET['eeRSCF_createForm'] == 1) {
 		// 		$count = count($eeRSCF->eeFormsArray);
 		// 		$eeRSCF->formID = $count+1;
-		// 		add_option('eeRSCF_' . $eeRSCF->formID, $eeRSCF->contactFormDefault);
+		// 		add_option('eeRSCF_' . $eeRSCF->formID, $eeRSCF->formSettingsDefault);
 		// 	}
 		// }
 		
 		// Get this form's settings
-		$eeRSCF->eeFormArray = get_option('eeRSCF_Settings_' . $eeRSCF->formID);
+		// $eeRSCF->eeformSettings = get_option('eeRSCF_Settings_' . $eeRSCF->formID);
 		
 		
 		// $eeOutput .= '
@@ -143,17 +129,18 @@ function eeRSCF_Settings() {
 		// $eeOutput .= '
 		// <button class="button" type="button" id="eeRSCF_createForm">New Form</button>
 		// </div>';
-    }
+    // }
     
     
     // Settings Form
-	$eeRSCF->contactForm = get_option('eeRSCF_Settings_' . $eeRSCF->formID);
+	$eeRSCF->formSettings = get_option('eeRSCF_Settings_' . $eeRSCF->formID);
+	
+	// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
     
     $eeOutput .= '
-	
-	<h2> ' . $eeRSCF->contactForm['name'] . ' Settings</h2>
+	<!-- <h2> ' . $eeRSCF->formSettings['name'] . ' Settings</h2> -->
     
-    <form action="' . $_SERVER['PHP_SELF'] . '?page=rock-solid-contact-form' . '" method="POST" id="eeRSCF_Settings">
+    <form action="' . admin_url() . '/admin.php?page=rock-solid-contact-form' . '" method="POST" id="eeRSCF_Settings">
 		<input type="hidden" name="eeRSCF_Settings" value="TRUE" />
 	';
 			
@@ -168,7 +155,7 @@ function eeRSCF_Settings() {
 		<h2>Form Email Sender</h2>
 		
 		<input type="hidden" name="eeRSCF_EmailSettings" value="TRUE" />
-		<input type="hidden" name="subtab" value="email_settings" />
+		<input type="hidden" name="tab" value="email_settings" />
 		
 		<fieldset>
 		
@@ -179,11 +166,11 @@ function eeRSCF_Settings() {
 		<label for="eeRSCF_email">The Form\'s Email</label>
 			<input type="email" name="eeRSCF_email" value="';
 			
-		if($eeRSCF->contactForm['email']) { $eeOutput .= $eeRSCF->contactForm['email']; } else { echo get_option('eeRSCF_email'); }
+		if($eeRSCF->formSettings['email']) { $eeOutput .= $eeRSCF->formSettings['email']; } else { echo get_option('eeRSCF_email'); }
 			
 		$eeOutput .= '" class="adminInput" id="eeRSCF_email" size="64" />';
 		
-		if($eeRSCF->contactForm['emailMode'] != 'SMTP') {
+		if($eeRSCF->formSettings['emailMode'] != 'SMTP') {
 		
 			$eeOutput .= '
 			
@@ -207,15 +194,15 @@ function eeRSCF_Settings() {
 		
 		<label for="eeRSCF_emailMode">SMTP Mailer</label>
 		
-		<select name="eeRSCF_emailMode" id="eeRSCF_emailMode" class="">
+		<select disabled name="eeRSCF_emailMode" id="eeRSCF_emailMode" class="">
 				<option value="PHP"';
 				
-		if($eeRSCF->contactForm['emailMode'] == 'PHP') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->formSettings['emailMode'] == 'PHP') { $eeOutput .= ' selected="selected"'; }
 				
 		$eeOutput .= '>OFF - Using Wordpress Mailer</option>
 				<option value="SMTP"';
 				
-		if($eeRSCF->contactForm['emailMode'] == 'SMTP') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->formSettings['emailMode'] == 'SMTP') { $eeOutput .= ' selected="selected"'; }
 				
 		$eeOutput .= '>ON - Using SMTP (Recommended)</option>
 			</select>
@@ -227,7 +214,7 @@ function eeRSCF_Settings() {
 		
 		<div id="eeRSCF_SMTPEntry"';
 			
-		if($eeRSCF->emailMode != 'SMTP') { $eeOutput .= ' class="eeHide"'; }
+		if($eeRSCF->formSettings['emailMode'] != 'SMTP') { $eeOutput .= ' class="eeHide"'; }
 		
 		$eeOutput .= '>
 		
@@ -243,12 +230,12 @@ function eeRSCF_Settings() {
 		<select name="eeRSCF_emailFormat" id="eeRSCF_emailFormat" class="">
 				<option value="TEXT"';
 				
-		if($eeRSCF->emailFormat == 'TEXT') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->formSettings['emailFormat'] == 'TEXT') { $eeOutput .= ' selected="selected"'; }
 				
 		$eeOutput .= '>Get Contact Messages in Text Form (Recommended)</option>
 				<option value="HTML"';
 				
-		if($eeRSCF->emailFormat == 'HTML') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->formSettings['emailFormat'] == 'HTML') { $eeOutput .= ' selected="selected"'; }
 				
 				
 		$eeOutput .= '>Get Contact Messages in HTML Format</option>
@@ -262,7 +249,7 @@ function eeRSCF_Settings() {
 		<label for="eeRSCF_emailName">The Form Name</label>
 		<input type="text" name="eeRSCF_emailName" value="';		
 		
-		if($eeRSCF->emailName) { $eeOutput .= $eeRSCF->emailName; } else { $eeOutput .= 'Rock Solid Contact Form'; }
+		if($eeRSCF->formSettings['emailName']) { $eeOutput .= $eeRSCF->formSettings['emailName']; } else { $eeOutput .= 'Rock Solid Contact Form'; }
 		
 		$eeOutput .= '" class="adminInput" id="eeRSCF_emailName" size="64" />
 		
@@ -276,7 +263,7 @@ function eeRSCF_Settings() {
 		
 		
 		
-		if($eeRSCF->emailServer) { $eeOutput .= $eeRSCF->emailServer; }
+		if($eeRSCF->formSettings['emailServer']) { $eeOutput .= $eeRSCF->formSettings['emailServer']; }
 		
 		$eeOutput .= '" class="adminInput" id="eeRSCF_emailServer" size="64" />
 		
@@ -288,8 +275,8 @@ function eeRSCF_Settings() {
 		<label for="eeRSCF_emailUsername">Mail Account Username</label>
 		<input type="text" name="eeRSCF_emailUsername" value="';
 		
-		if($eeRSCF->emailUsername) {
-			if( strlen($eeRSCF->emailUsername) > 1 ) { $eeOutput .= $eeRSCF->emailUsername; } else {  $eeOutput .= 'mail@' . basename( get_site_url() ); }
+		if($eeRSCF->formSettings['emailUsername']) {
+			if( strlen($eeRSCF->formSettings['emailUsername']) > 1 ) { $eeOutput .= $eeRSCF->formSettings['emailUsername']; } else {  $eeOutput .= 'mail@' . basename( get_site_url() ); }
 		}
 		
 		$eeOutput .= '" class="adminInput" id="eeRSCF_emailUsername" size="64" />
@@ -302,7 +289,7 @@ function eeRSCF_Settings() {
 		<label for="eeRSCF_emailPassword">Mail Account Password</label>
 		<input type="text" name="eeRSCF_emailPassword" value="';
 		
-		if($eeRSCF->emailPassword) { $eeOutput .= $eeRSCF->emailPassword; }
+		if($eeRSCF->formSettings['emailPassword']) { $eeOutput .= $eeRSCF->formSettings['emailPassword']; }
 		
 		$eeOutput .= '" class="adminInput" id="eeRSCF_emailPassword" size="64" />
 		
@@ -316,19 +303,19 @@ function eeRSCF_Settings() {
 		<select name="eeRSCF_emailSecure" id="eeRSCF_emailSecure" class="">
 				<option value="SSL"';
 				
-		if($eeRSCF->emailSecure == 'SSL') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->formSettings['emailSecure'] == 'SSL') { $eeOutput .= ' selected="selected"'; }
 				
 				
 		$eeOutput .= '>Use SSL</option>
 				<option value="TSL"';
 				
-		if($eeRSCF->emailSecure == 'TSL') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->formSettings['emailSecure'] == 'TSL') { $eeOutput .= ' selected="selected"'; }
 				
 				
 		$eeOutput .= '>Use TSL</option>
 				<option value="NO"';
 				
-		if($eeRSCF->emailSecure == 'NO') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->formSettings['emailSecure'] == 'NO') { $eeOutput .= ' selected="selected"'; }
 				
 		$eeOutput .= '>Unencrypted</option>
 			</select>
@@ -344,12 +331,12 @@ function eeRSCF_Settings() {
 		<select name="eeRSCF_emailAuth" id="eeRSCF_emailAuth" class="">
 				<option value="YES"';
 				
-		if($eeRSCF->emailAuth == 'YES') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->formSettings['emailAuth'] == 'YES') { $eeOutput .= ' selected="selected"'; }
 				
 		$eeOutput .= '>Require authorization (Recommended)</option>
 				<option value="NO"';
 				
-		if($eeRSCF->emailAuth == 'NO') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->formSettings['emailAuth'] == 'NO') { $eeOutput .= ' selected="selected"'; }
 				
 				
 		$eeOutput .= '>No Authorization</option>
@@ -364,7 +351,7 @@ function eeRSCF_Settings() {
 		<label for="eeRSCF_emailPort">Port</label>
 		<input type="text" name="eeRSCF_emailPort" value="';
 		
-		if($eeRSCF->emailPort) { $eeOutput .= $eeRSCF->emailPort; } else { $eeOutput .= '25'; }
+		if($eeRSCF->formSettings['emailPort']) { $eeOutput .= $eeRSCF->formSettings['emailPort']; } else { $eeOutput .= '25'; }
 		
 		$eeOutput .= '" class="adminInput" id="eeRSCF_emailPort" size="64" />
 		
@@ -378,12 +365,12 @@ function eeRSCF_Settings() {
 		<select name="eeRSCF_emailDebug" id="eeRSCF_emailDebug" class="">
 				<option value="NO"';
 				
-		if($eeRSCF->emailDebug == 'NO') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->formSettings['emailDebug'] == 'NO') { $eeOutput .= ' selected="selected"'; }
 				
 		$eeOutput .= '>OFF</option>
 				<option value="YES"';
 				
-		if($eeRSCF->emailDebug == 'YES') { $eeOutput .= ' selected="selected"'; }
+		if($eeRSCF->formSettings['emailDebug'] == 'YES') { $eeOutput .= ' selected="selected"'; }
 				
 				
 		$eeOutput .= '>ON</option>
@@ -410,7 +397,7 @@ function eeRSCF_Settings() {
 			<h2>File Attachments</h2>
 			
 			<input type="hidden" name="eeRSCF_FileSettings" value="TRUE" />
-			<input type="hidden" name="subtab" value="file_settings" />
+			<input type="hidden" name="tab" value="file_settings" />
 		
 		<fieldset>
 			<p>Files are uploaded to the web server rather than attached directly to messages. 
@@ -421,7 +408,7 @@ function eeRSCF_Settings() {
 			<br class="eeClearFix" />
 			
 			<label for="eeMaxFileSize">How Big? (MB):</label>
-			<input type="number" min="1" max="' . $eeRSCFU->maxUploadLimit . '" step="1" name="eeMaxFileSize" value="' . $eeRSCF->fileMaxSize . '" class="adminInput" id="eeMaxFileSize" />
+			<input type="number" min="1" max="' . $eeRSCFU->maxUploadLimit . '" step="1" name="eeMaxFileSize" value="' . $eeRSCF->formSettings['fileMaxSize'] . '" class="adminInput" id="eeMaxFileSize" />
 			
 			<br class="eeClearFix" />
 				<p class="eeNote">Your hosting limits the maximum file upload size to <strong>' . $eeRSCFU->maxUploadLimit . ' MB</strong>.</p>
@@ -430,7 +417,7 @@ function eeRSCF_Settings() {
 			<br class="eeClearFix" />
 			
 			<label for="eeFormats">Allowed Types:</label>
-			<textarea name="eeFormats" class="adminInput" id="eeFormats" />' . $eeRSCF->fileFormats . '</textarea>
+			<textarea name="eeFormats" class="adminInput" id="eeFormats" />' . $eeRSCF->formSettings['fileFormats'] . '</textarea>
 				<br class="eeClearFix" />
 				<p class="eeNote">Only use the file types you absolutely need, ie; .jpg, .jpeg, .png, .pdf, .mp4, etc</p>
 			
@@ -441,27 +428,27 @@ function eeRSCF_Settings() {
 		
 		
 		
-	} elseif($active_subtab == 'spam_settings') {
+	} elseif($active_tab == 'spam_settings') {
 	
 		$eeOutput .= '
 				
 			<h2>Spam Blocking</h2>
 			
 			<input type="hidden" name="eeRSCF_SpamSettings" value="TRUE" />
-			<input type="hidden" name="subtab" value="spam_settings" />
+			<input type="hidden" name="tab" value="spam_settings" />
 		
 		<fieldset id="eeRSCF_spamSettings">
 			
 			<span>Block Spam</span><label for="spamBlockYes" class="eeRadioLabel">Yes</label>
 			<input type="radio" name="spamBlock" value="YES" id="spamBlockYes"';
 			
-			if($eeRSCF->spamBlock == 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamBlock'] == 'YES') { $eeOutput .= 'checked'; }
 			
 			$eeOutput .= ' />
 				<label for="spamBlockNo" class="eeRadioLabel">No</label>
 				<input type="radio" name="spamBlock" value="NO" id="spamBlockNo"';
 				
-			if($eeRSCF->spamBlock != 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamBlock'] != 'YES') { $eeOutput .= 'checked'; }
 			
 			$eeOutput .= ' />
 			
@@ -475,13 +462,13 @@ function eeRSCF_Settings() {
 			<span>Block Spambots</span><label for="spamBlockBotsYes" class="eeRadioLabel">Yes</label>
 			<input type="radio" name="spamBlockBots" value="YES" id="spamBlockBotsYes"';
 			
-			if($eeRSCF->spamBlockBots == 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamBlockBots'] == 'YES') { $eeOutput .= 'checked'; }
 			
 			$eeOutput .= ' />
 				<label for="spamBlockBotsNo" class="eeRadioLabel">No</label>
 				<input type="radio" name="spamBlockBots" value="NO" id="spamBlockBotsNo"';
 				
-			if($eeRSCF->spamBlockBots != 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamBlockBots'] != 'YES') { $eeOutput .= 'checked'; }
 			
 			$eeOutput .= ' />
 			
@@ -495,7 +482,7 @@ function eeRSCF_Settings() {
 			<label for="eeRSCF_spamHoneypot">Honeypot</label>
 			<input type="text" name="spamHoneypot" value="';
 			
-			if($eeRSCF->spamHoneypot) { $eeOutput .= $eeRSCF->spamHoneypot; } else { $eeOutput .= $eeRSCF->default_spamHoneypot; }
+			if($eeRSCF->formSettings['spamHoneypot']) { $eeOutput .= $eeRSCF->formSettings['spamHoneypot']; } else { $eeOutput .= 'link'; }
 			
 			$eeOutput .= '" class="adminInput" id="eeRSCF_spamHoneypot" size="64" />
 			
@@ -505,17 +492,16 @@ function eeRSCF_Settings() {
 			
 			
 			
-			
 			<span>English Only</span><label for="spamEnglishOnlyYes" class="eeRadioLabel">Yes</label>
 			<input type="radio" name="spamEnglishOnly" value="YES" id="spamEnglishOnlyYes"';
 			
-			if($eeRSCF->spamEnglishOnly == 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamEnglishOnly'] == 'YES') { $eeOutput .= 'checked'; }
 			
 			$eeOutput .= ' />
 				<label for="spamEnglishOnlyNo" class="eeRadioLabel">No</label>
 				<input type="radio" name="spamEnglishOnly" value="NO" id="spamEnglishOnlyNo"';
 				
-			if($eeRSCF->spamEnglishOnly != 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamEnglishOnly'] != 'YES') { $eeOutput .= 'checked'; }
 			
 			$eeOutput .= ' />
 			
@@ -528,13 +514,13 @@ function eeRSCF_Settings() {
 			<span>Block Fishy</span><label for="spamBlockFishyYes" class="eeRadioLabel">Yes</label>
 			<input type="radio" name="spamBlockFishy" value="YES" id="spamBlockFishyYes"';
 			
-			if($eeRSCF->spamBlockFishy == 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamBlockFishy'] == 'YES') { $eeOutput .= 'checked'; }
 			
 			$eeOutput .= ' />
 				<label for="spamBlockFishyNo" class="eeRadioLabel">No</label>
 				<input type="radio" name="spamBlockFishy" value="NO" id="spamBlockFishyNo"';
 				
-			if($eeRSCF->spamBlockFishy != 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamBlockFishy'] != 'YES') { $eeOutput .= 'checked'; }
 			
 			
 			
@@ -548,27 +534,27 @@ function eeRSCF_Settings() {
 			$eeOutput .= '
 			<span>Block Common Words</span><label for="spamBlockCommonWordsYes" class="eeRadioLabel">Yes</label>
 			<input type="radio" name="spamBlockCommonWords" value="YES" id="spamBlockCommonWordsYes"';
-			if($eeRSCF->spamBlockCommonWords == 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamBlockCommonWords'] == 'YES') { $eeOutput .= 'checked'; }
 			$eeOutput .= ' />
 			<label for="spamBlockCommonWordsNo" class="eeRadioLabel">No</label>
 			<input type="radio" name="spamBlockCommonWords" value="NO" id="spamBlockCommonWordsNo"';
-			if($eeRSCF->spamBlockCommonWords != 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamBlockCommonWords'] != 'YES') { $eeOutput .= 'checked'; }
 			$eeOutput .= ' />
 			<p class="eeNote">Use the built-in list of words and phrases commonly found in contact form spam messages.</p>';
 			
 			$eeOutput .= '<span>Block Additional Words</span>
 			<label for="spamBlockWordsYes" class="eeRadioLabel">Yes</label>
 			<input type="radio" name="spamBlockWords" value="YES" id="spamBlockWordsYes"';
-			if($eeRSCF->spamBlockWords == 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamBlockWords'] == 'YES') { $eeOutput .= 'checked'; }
 			$eeOutput .= ' />
 			<label for="spamBlockWordsNo" class="eeRadioLabel">No</label>
 			<input type="radio" name="spamBlockWords" value="NO" id="spamBlockWordsNo"';
-			if($eeRSCF->spamBlockWords != 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamBlockWords'] != 'YES') { $eeOutput .= 'checked'; }
 			$eeOutput .= ' />
 			<p class="eeNote">Block messages containing any words or phrases you define below. Separate phrases with a comma.</p>
 			<label for="eeRSCF_spamBlockedWords">Added Words</label>
 			<textarea name="spamBlockedWords" id="eeRSCF_spamBlockedWords" >';
-			if($eeRSCF->spamBlockedWords) { $eeOutput .= $eeRSCF->spamBlockedWords; }
+			if($eeRSCF->formSettings['spamBlockedWords']) { $eeOutput .= $eeRSCF->formSettings['spamBlockedWords']; }
 			$eeOutput .= '</textarea>
 			<p class="eeNote">Add your words and phrases here to improve spam filtering.</p>';
 			
@@ -578,13 +564,13 @@ function eeRSCF_Settings() {
 			<span>Send Spam Notice</span><label for="spamSendAttackNoticeYes" class="eeRadioLabel">Yes</label>
 			<input type="radio" name="spamSendAttackNotice" value="YES" id="spamSendAttackNoticeYes"';
 			
-			if($eeRSCF->spamSendAttackNotice == 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamSendAttackNotice'] == 'YES') { $eeOutput .= 'checked'; }
 			
 			$eeOutput .= ' />
 				<label for="spamSendAttackNoticeNo" class="eeRadioLabel">No</label>
 				<input type="radio" name="spamSendAttackNotice" value="NO" id="spamSendAttackNoticeNo"';
 				
-			if($eeRSCF->spamSendAttackNotice != 'YES') { $eeOutput .= 'checked'; }
+			if($eeRSCF->formSettings['spamSendAttackNotice'] != 'YES') { $eeOutput .= 'checked'; }
 			
 			
 			
@@ -596,7 +582,7 @@ function eeRSCF_Settings() {
 			<label for="eeRSCF_spamNoticeEmail">Notice Email</label>
 			<input type="text" name="spamNoticeEmail" value="';
 			
-			if($eeRSCF->spamNoticeEmail) { $eeOutput .= $eeRSCF->spamNoticeEmail; }
+			if($eeRSCF->formSettings['spamNoticeEmail']) { $eeOutput .= $eeRSCF->formSettings['spamNoticeEmail']; }
 			
 			$eeOutput .= '" class="adminInput" id="eeRSCF_spamNoticeEmail" size="64" />
 			
@@ -617,7 +603,7 @@ function eeRSCF_Settings() {
 		
 		<input type="hidden" name="eeRSCF_formSettings" value="TRUE" />
 		<input type="hidden" name="eeRSCF_ID" value="' . $eeRSCF->formID . '" />
-			<input type="hidden" name="subtab" value="form_settings" />
+			<input type="hidden" name="tab" value="form_settings" />
 		
 		<fieldset id="eeRSCF_formSettings">
 		
@@ -628,7 +614,7 @@ function eeRSCF_Settings() {
 		$eeOutput .= '<label for="eeRSCF_formName">Name</label>
 			<input type="text" name="eeRSCF_formName" value="';
 			
-		if($eeRSCF->eeFormArray['name']) { $eeOutput .= $eeRSCF->eeFormArray['name']; }
+		if($eeRSCF->formSettings['name']) { $eeOutput .= $eeRSCF->formSettings['name']; }
 		
 		$eeOutput .= '" class="adminInput" id="eeRSCF_formName" size="64" />
 		
@@ -645,7 +631,7 @@ function eeRSCF_Settings() {
 					<label for="eeRSCF_formTO">TO</label>
 					<input type="text" name="eeRSCF_formTO" value="';
 					
-				if(!empty($eeRSCF->eeFormArray['TO'])) { $eeOutput .= $eeRSCF->eeFormArray['TO']; } 
+				if(!empty($eeRSCF->formSettings['TO'])) { $eeOutput .= $eeRSCF->formSettings['TO']; } 
 						else { $eeOutput .= get_option('admin_email'); }
 				
 				$eeOutput .= '" class="adminInput" id="eeRSCF_formTO" size="64" />
@@ -653,14 +639,14 @@ function eeRSCF_Settings() {
 					<label for="eeRSCF_formCC">CC</label>
 					<input type="text" name="eeRSCF_formCC" value="';
 					
-				if(!empty($eeRSCF->eeFormArray['CC'])) { $eeOutput .= $eeRSCF->eeFormArray['CC']; }
+				if(!empty($eeRSCF->formSettings['CC'])) { $eeOutput .= $eeRSCF->formSettings['CC']; }
 				
 				$eeOutput .= '" class="adminInput" id="eeRSCF_formCC" size="64" />
 					
 					<label for="eeRSCF_formBCC">BCC</label>
 					<input type="text" name="eeRSCF_formBCC" value="';
 					
-				if(!empty($eeRSCF->eeFormArray['BCC'])) { $eeOutput .= $eeRSCF->eeFormArray['BCC']; }
+				if(!empty($eeRSCF->formSettings['BCC'])) { $eeOutput .= $eeRSCF->formSettings['BCC']; }
 				
 				$eeOutput .= '" class="adminInput" id="eeRSCF_formBCC" size="64" />	
 				
@@ -683,7 +669,7 @@ function eeRSCF_Settings() {
 			</tr>';
 		
 		
-		$eeFields = $eeRSCF->eeFormArray['fields'];
+		$eeFields = $eeRSCF->formSettings['fields'];
 		
 		// echo '<pre>'; print_r($eeFields); echo '</pre>'; exit;
 		
@@ -732,7 +718,7 @@ function eeRSCF_Settings() {
 			
 			<input class="eeFullWidth" type="url" name="eeRSCF_confirm" value="';
 					
-				if(@$eeRSCF->eeFormArray['confirm'] != '/') { $eeOutput .= $eeRSCF->eeFormArray['confirm']; }
+				if(@$eeRSCF->formSettings['confirm'] != '/') { $eeOutput .= $eeRSCF->formSettings['confirm']; }
 			
 					$eeOutput .= '" size="128" />
 		
@@ -743,7 +729,7 @@ function eeRSCF_Settings() {
 		
 	</fieldset>
 		
-	<a id="eeRSCF_deleteForm" href="admin.php?page=rock-solid-contact-form&subtab=form_settings&eeRSCF_deleteForm=' . $eeRSCF->formID . '">Delete This Form</a>
+	<!-- <a id="eeRSCF_deleteForm" href="admin.php?page=rock-solid-contact-form&subtab=form_settings&eeRSCF_deleteForm=' . $eeRSCF->formID . '">Delete This Form</a> -->
 	
 	';
 		
@@ -752,11 +738,11 @@ function eeRSCF_Settings() {
 	// Complete the form
 	$eeOutput .= '
 	
-		<input type="submit" value="SAVE" />
+		<input id="eeRSCF_SAVE" type="submit" value="SAVE" />
 	
 	</form>
 	
-	</div>'; // END SubTabs
+	</div>'; // END Tabs
 		
 	$eeOutput .= '
 	<div id="eeAdminFooter">

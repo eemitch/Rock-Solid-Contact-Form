@@ -8,7 +8,7 @@ Plugin Name: Rock Solid Contact Form
 Plugin URI: https://elementengage.com
 Description: A basic contact form that focuses on spam prevention and deliverability
 Author: Mitchell Bennis - Element Engage, LLC
-Version: 1.2.2.1
+Version: 1.2.1.3
 Author URI: https://elementengage.com
 License: GPLv2 or later
 Text Domain: ee-rock-solid-contact-form
@@ -18,7 +18,7 @@ Domain Path: /languages
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 define('eeRSCF_SLUG', 'rock-solid-contact-form');
-define('eeRSCF_Version', '1.2.2.1');
+define('eeRSCF_Version', '1.2.1.3');
 define('eeRSCF_DevMode', TRUE); // Enables extended reporting
 //  --> When TRUE, the log file is written onto the page.
 
@@ -40,17 +40,17 @@ function eeRSCF_Setup() {
 	$eeRSCF = new eeRSCF_Class();
 	
 	if(!$eeVersion OR version_compare($eeVersion, eeRSCF_Version, '<')) {
-		eeRSCF_UpdatePlugin(); // Update or Install
+		if( is_admin() ) { eeRSCF_UpdatePlugin(); } // Update or Install
 	} else {
-		$eeRSCF->contactForm = get_option('eeRSCF_Settings_1');
+		$eeRSCF->formSettings = get_option('eeRSCF_Settings_1');
 	}
 	
-	// echo '<pre>'; print_r($eeRSCF->contactForm); echo '</pre>'; exit;
+	// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
 	
 	// Get the Uploader class
-	// include_once(plugin_dir_path(__FILE__) . 'includes/ee-rock-solid-upload-class.php');
-	// $eeRSCFU = new eeRSCFU_FileUpload();
-	// $eeRSCFU->eeRSCFU_Setup(TRUE); // Run the setup
+	include_once(plugin_dir_path(__FILE__) . 'includes/ee-rock-solid-upload-class.php');
+	$eeRSCFU = new eeRSCFU_FileUpload();
+	$eeRSCFU->eeRSCFU_Setup(); // Run the setup
 	
 	return TRUE;
 }
@@ -155,8 +155,6 @@ add_action( 'admin_enqueue_scripts', 'eeRSCF_AdminHead' );
 
 
 
-
-
 // Load stuff we need in the front-side head
 function eeRSCF_Enqueue() {
 	
@@ -175,21 +173,10 @@ add_action( 'wp_enqueue_scripts', 'eeRSCF_Enqueue' );
 
 
 // Log Failed Emails
-// function eeRSCF_Failed($wp_error) {
-//     return error_log(print_r($wp_error, true));
-// }
-// add_action('wp_mail_failed', 'eeRSCF_Failed', 10, 1);
-
-
-
-// Check Version and Update if Needed
-// Check on Plugins pages only
-// if( is_admin() AND (strpos($_SERVER['PHP_SELF'], 'plugins.php') OR  strpos($_SERVER['PHP_SELF'], 'plugin-install.php')) ) {
-// 	$eeRSCF_version = get_option('eeRSCF_version');
-// 	if(!$eeRSCF_version OR eeRSCF_version > $eeRSCF_version) {
-// 		add_action( 'plugins_loaded', 'eeRSCF_UpdatePlugin' );
-// 	}
-// }
+function eeRSCF_Failed($wp_error) {
+    return error_log(print_r($wp_error, true));
+}
+add_action('wp_mail_failed', 'eeRSCF_Failed', 10, 1);
 
 
 
@@ -198,21 +185,3 @@ function eeRSCF_ActivateContactForm() {
 	return TRUE;
 }
 register_activation_hook(__FILE__, 'eeRSCF_ActivateContactForm');
-
-
-
-
-
-// Check for Update
-// https://github.com/YahnisElsts/plugin-update-checker
-$eeRSCF_SLUG = 'rock-solid-contact-form';
-$eeRSCF_AUTH = get_option('eeRSCF_AUTH');
-
-include( plugin_dir_path(__FILE__) . '/updater/plugin-update-checker.php' );
-$eeRSCF_updateChecker = Puc_v4_Factory::buildUpdateChecker(
-	'https://github.com/eemitch/rock-solid-contact-form',
-	__FILE__,
-	$eeRSCF_SLUG
-);
-$eeRSCF_updateChecker->setAuthentication($eeRSCF_AUTH);
-$eeRSCF_updateChecker->getVcsApi()->enableReleaseAssets();

@@ -14,24 +14,26 @@ function eeDevOutput($eeArray) {
 function eeRSCF_UpdatePlugin() {
 	
 	global $eeRSCF;
-	$eeInstalled = get_option('eeRSCF_version');
 	
-	if($eeInstalled) {
+	if(get_option('eeRSCF_version')) {
 		
-		echo '<pre>'; print_r($eeRSCF->contactForm); echo '</pre>'; exit;
+		echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
 		
 		// update_option('eeRSCF_Version' , eeRSCF_Version);
 		
 	} else {
 		
-		$eeRSCF->contactFormDefault['to'] = get_option('admin_email');
-		$eeRSCF->contactFormDefault['email'] = $eeRSCF->contactFormDefault['to'];
-		$eeRSCF->contactFormDefault['emailName'] = get_bloginfo('name');
+		$eeSettingsArray = $eeRSCF->contactFormDefault;
 		
-		add_option('eeRSCF_Settings_1', $eeRSCF->contactFormDefault);
+		$eeSettingsArray['to'] = get_option('admin_email');
+		$eeSettingsArray['email'] = $eeSettingsArray['to'];
+		$eeSettingsArray['emailName'] = get_bloginfo('name');
+		
+		add_option('eeRSCF_Settings_1', $eeSettingsArray);
 		add_option('eeRSCF_Version' , eeRSCF_Version);
+		add_option('eeRSCF_AUTH' , eeRSCF_AUTH);
 		
-		$eeRSCF->contactForm = $eeRSCF->contactFormDefault;
+		$eeRSCF->formSettings = $eeSettingsArray;
 		
 	}
 		
