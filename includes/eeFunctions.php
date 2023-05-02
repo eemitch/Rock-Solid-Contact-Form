@@ -23,24 +23,36 @@ function eeRSCF_UpdatePlugin() {
 		
 		foreach($eeRSCF->formSettings as $eeKey => $eeValue) {
 			
-			if(is_numeric(substr($eeKey, -1))) {
-				$eeFormSettings = $eeValue;
-			}
-			
-			
-			
 			$eeSetting = get_option('eeRSCF_' . $eeKey);
-			if($eeSetting) {
+			if($eeSetting !== FALSE) {
 				$eeRSCF->formSettings[$eeKey] = $eeSetting;
-				// delete_option('eeRSCF_' . $eeKey);
+				delete_option('eeRSCF_' . $eeKey);
 			}
+		}
+		
+		$eeArray = get_option('eeRSCF_1');
+		if(is_array($eeArray)) {
+			
+			$eeRSCF->formSettings['name'] = $eeArray['name'];
+			if(isset($eeArray['to'])) { $eeRSCF->formSettings['to'] = $eeArray['to']; } 
+				elseif(isset($eeArray['TO'])) { $eeRSCF->formSettings['to'] = $eeArray['TO']; }
+			if(isset($eeArray['cc'])) { $eeRSCF->formSettings['cc'] = $eeArray['cc']; } 
+				elseif(isset($eeArray['CC'])) { $eeRSCF->formSettings['cc'] = $eeArray['CC']; }
+			if(isset($eeArray['bcc'])) { $eeRSCF->formSettings['bcc'] = $eeArray['bcc']; } 
+				elseif(isset($eeArray['BCC'])) { $eeRSCF->formSettings['bcc'] = $eeArray['BCC']; }
+			$eeRSCF->formSettings['fields'] = $eeArray['fields'];
+			if(isset($eeArray['confirm'])) { $eeRSCF->formSettings['confirm'] = $eeArray['confirm']; }
 		}
 		
 		// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
 		
+		delete_option('eeRSCF_1');
+		delete_option('eeRSCF_spamSendAttackNoticeToDeveloper');
+		delete_option('eeRSCF_version');
+		delete_option('eeRSCF_AUTH');
+		
 		update_option('eeRSCF_Settings_1', $eeRSCF->formSettings);
 		update_option('eeRSCF_Version' , eeRSCF_Version);
-		update_option('eeRSCF_AUTH' , eeRSCF_AUTH);
 		
 	} elseif(!$eeVersion) {
 		

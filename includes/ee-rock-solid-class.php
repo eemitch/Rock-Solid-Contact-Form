@@ -200,15 +200,15 @@ class eeRSCF_Class {
 		$eeCount = count($eeArray); // How many filled in fields?
 		
 		// Spam Bots
-		if($this->spamBlockBots == 'YES') {
+		if($this->formSettings['spamBlockBots'] == 'YES') {
 			
-			if($this->spamBlock AND $_POST[$this->spamHoneypot]) { // Honeypot. This field should never be completed.
+			if($this->formSettings['spamBlock'] AND $_POST[ $this->formSettings['spamHoneypot'] ]) { // Honeypot. This field should never be completed.
 				$this->log['errors'][] = 'Spambot Catch: Honeypot Field Completed.';
 			}
 		}
 		
 		// English Only
-		if($this->spamEnglishOnly == 'YES') {
+		if($this->formSettings['spamEnglishOnly'] == 'YES') {
 
 			foreach($eeArray as $eeKey => $eeValue) { 
 				
@@ -225,7 +225,7 @@ class eeRSCF_Class {
 		}
 		
 		// Block Fishiness
-		if($this->spamBlockFishy == 'YES') {
+		if($this->formSettings['spamBlockFishy'] == 'YES') {
 			
 			// Check for duplicated info in fields (spam)
 			$eeValues = array_count_values($eeArray);
@@ -253,28 +253,28 @@ class eeRSCF_Class {
 		
 		
 		// Block Words
-		if($this->spamBlockWords == 'YES') {
+		if($this->formSettings['spamBlockWords'] == 'YES') {
 			
 			// Block messages containing these phrases
-			$this->spamBlockedWords = explode(',', get_option('eeRSCF_spamBlockedWords'));
+			$this->formSettings['spamBlockedWords'] = explode(',', $this->formSettings['spamBlockedWords']);
 			
-			if($this->spamBlockCommonWords == 'YES') {
+			if($this->formSettings['spamBlockCommonWords'] == 'YES') {
 				
 				// Update the Common SPAM Words
 				// This is a new line delineated list of common phrases used in email spam
 				$spamBlockedCommonWords = eeGetRemoteSpamWords('http://eeserver1.net/ee-common-spam-words.txt'); // One phrase per line
 				$spamBlockedCommonWordsArray = explode(PHP_EOL, $spamBlockedCommonWords); 
-				if(is_array($this->spamBlockedWords) AND is_array($spamBlockedCommonWordsArray)) {
-					$this->spamBlockedWords = array_merge($this->spamBlockedWords, $spamBlockedCommonWordsArray);
+				if(is_array($this->formSettings['spamBlockedWords']) AND is_array($spamBlockedCommonWordsArray)) {
+					$this->formSettings['spamBlockedWords'] = array_merge($this->formSettings['spamBlockedWords'], $spamBlockedCommonWordsArray);
 				}
 			}
 			
-			$this->spamBlockedWords = array_map('trim', $this->spamBlockedWords);
+			$this->formSettings['spamBlockedWords'] = array_map('trim', $this->formSettings['spamBlockedWords']);
 			
-			// echo '<pre>'; print_r($this->spamBlockedWords); echo '</pre>'; exit;
+			// echo '<pre>'; print_r($this->formSettings['spamBlockedWords']); echo '</pre>'; exit;
 			
 			// Check if any spam words are in the message
-			foreach ($this->spamBlockedWords as $spamWord) {
+			foreach ($this->formSettings['spamBlockedWords'] as $spamWord) {
 			  
 				if (stripos($_POST['message'], ' ' . $spamWord . ' ') !== FALSE) { // Use of spaces around the word prevents sub-string matches
 					$this->log['errors'][] = 'Spam Word Catch: ' . $spamWord;
@@ -284,9 +284,9 @@ class eeRSCF_Class {
 		
 		
 		// If we detect spam, and the users want a report, create and send it here
-		if (count($this->log['errors']) >= 1 && $this->spamSendAttackNotice == 'YES') {
+		if (count($this->log['errors']) >= 1 && $this->formSettings['spamSendAttackNotice'] == 'YES') {
   			
-			  $eeTo = $this->spamNoticeEmail;
+			$eeTo = $this->formSettings['spamNoticeEmail'];
   			$eeSubject = "Spam Block Notice";
   			
   			$eeBody = "Contact Form Spam Catch" . PHP_EOL;
@@ -305,22 +305,18 @@ class eeRSCF_Class {
   			$eeBody .= "Via Rock Solid Contact Form at http://" . [the-current-url] . PHP_EOL;
   			
   			$eeHeaders = array(
-				'From: ' . $this->email,
-				'Reply-To: ' . $this->email,
+				'From: ' . $this->formSettings['email'],
+				'Reply-To: ' . $this->formSettings['email'],
 				'Content-Type: text/plain; charset=UTF-8',
   			);
   			
   			// Send Notice Email
   			if ($this->spamSendAttackNotice == 'YES') {
 				if (!wp_mail($eeTo, $eeSubject, $eeBody, $eeHeaders)) {
-	  			$this->log['errors'][] = 'Notice Email Failed to Send';
+	  				$this->log['errors'][] = 'Notice Email Failed to Send';
 				}
   			}
 		}
-
-		
-		$this->log['Errors'] = $this->log['errors'];
-		
 		
 		if(count($this->log['errors']) >= 1) {
 			
@@ -333,7 +329,6 @@ class eeRSCF_Class {
 		
 			$this->log['notices'][] = 'Spam Check OKAY!';
 			return FALSE;
-			
 		}
 	}
 	
@@ -458,7 +453,7 @@ class eeRSCF_Class {
 			<label for="eeRSCF_' . $this->formSettings['spamHoneypot'] . '">Link:</label><input type="text" name="' . $this->formSettings['spamHoneypot'] . '" value="" id="eeRSCF_' . $this->formSettings['spamHoneypot'] . '">
 		</div>
 		
-		<span id="eeRSCF_SubmitMessage"><img src="' . plugin_dir_url(__FILE__) . '/' . eeRSCF_SLUG . '/images/sending.gif" width="32" height="32" alt="Sending Icon" /> Sending Your Message</span>
+		<span id="eeRSCF_SubmitMessage"><img src="' . plugin_dir_url(__FILE__) . '/images/sending.gif" width="32" height="32" alt="Sending Icon" /> Sending Your Message</span>
 		
 		</fieldset>
 		<input type="submit" id="eeRSCF_Submit" value="SEND">
@@ -480,10 +475,12 @@ class eeRSCF_Class {
 		
 		global $eeRSCFU; // Get Upload Class
 		
-		$this->formID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
+		// $this->formID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
+		
+		// echo '<pre>'; print_r($this->formSettings); echo '</pre>'; exit;
 		
 		// Are we Blocking SPAM?
-		if($this->spamBlock == 'YES') {
+		if($this->formSettings['spamBlock'] == 'YES') {
 			if( $this->eeRSCF_formSpamCheck() ) { // This is SPAM
 				wp_die('Sorry, there was a problem with your message. Please go back and try again.');
 			}
@@ -502,11 +499,11 @@ class eeRSCF_Class {
 		// echo '<pre>'; print_r($this->thePost); echo '</pre>'; exit;
 		
 		// There's a file and its size is less than our defined limit
-		if(isset($_FILES['file']['name'])) {
-			if($_FILES['file']['size'] <= $this->fileMaxSize*1048576) {
+		if(!empty($_FILES['file']['name'])) {
+			if($_FILES['file']['size'] <= $this->formSettings['fileMaxSize']*1048576) {
 				$eeRSCFU->eeRSCFU_Uploader();
 			} else {
-				$this->log['errors'][] = 'File size is too large. Maximum allowed is ' . $this->fileMaxSize . 'MB';
+				$this->log['errors'][] = 'File size is too large. Maximum allowed is ' . $this->formSettings['fileMaxSize'] . 'MB';
 			}
 		}
 
@@ -514,23 +511,6 @@ class eeRSCF_Class {
 				
 			$this->log['notices'][] = 'Preparing the Email...';
 			
-			$eeThisformSettings = get_option('eeRSCF_' . $this->formID);
-			
-			if(isset($eeThisformSettings['TO'])) {
-				$this->to = $eeThisformSettings['TO'];
-			} else {
-				$this->log['errors'][] = 'No TO Address Configured';
-				return FALSE;
-			}
-			
-			if(isset($eeThisformSettings['CC'])) {
-				$this->cc = $eeThisformSettings['CC'];
-			}
-			
-			if(isset($eeThisformSettings['BCC'])) {
-				$this->bcc = $eeThisformSettings['BCC'];
-			}
-
 			// Loop through and see if we have a Subject field
 			foreach($this->thePost as $eeValue){
 				$eeField = explode(':', $eeValue);
@@ -539,37 +519,37 @@ class eeRSCF_Class {
 						$eeSubject = stripslashes($eeSubject);
 					}
 			}
-			if(empty($eeSubject)) { $eeSubject = 'Contact Form Message (' . $_SERVER['HTTP_HOST'] . ')'; }
+			if(empty($eeSubject)) { $eeSubject = 'Contact Form Message (' . basename(home_url()) . ')'; }
 			
 			// Email assembly
-			$eeHeaders = "From: " . get_bloginfo('name') . ' <' . $this->email . ">\n";
-			if($this->cc) { $eeHeaders .= "CC: " . $this->cc . "\n"; }
-			if($this->bcc) { $eeHeaders .= "BCC: " . $this->bcc . "\n"; }
-			$eeHeaders .= "Return-Path: " . $this->email . "\n" . "Reply-To: " . $this->sender . "\n";
+			$eeHeaders = "From: " . get_bloginfo('name') . ' <' . $this->formSettings['email'] . ">" . PHP_EOL;
+			if($this->formSettings['cc']) { $eeHeaders .= "CC: " . $this->formSettings['cc'] . PHP_EOL; }
+			if($this->formSettings['bcc']) { $eeHeaders .= "BCC: " . $this->formSettings['bcc'] . PHP_EOL; }
+			$eeHeaders .= "Return-Path: " . $this->formSettings['email'] . PHP_EOL . "Reply-To: " . $this->sender . PHP_EOL;
 			
 			$eeBody = '';
 			
 			foreach ($this->thePost as $value) {
-				$eeBody .= $value . "\n\n";
+				$eeBody .= $value . PHP_EOL . PHP_EOL;
 			}
 			
-			if($eeRSCFU->fileUploaded) { $eeBody .= 'File: ' . $eeRSCFU->fileUploaded . "\n\n"; }
+			if($eeRSCFU->fileUploaded) { $eeBody .= 'File: ' . $eeRSCFU->fileUploaded . PHP_EOL . PHP_EOL; }
 			
-			$eeBody .= "---\n\n" . 'This message was sent via the contact form located at http://' . $this->baseURL . '/' . "\n\n";
+			$eeBody .=  PHP_EOL . PHP_EOL . 'This message was sent via the contact form located at ' . home_url() . '/' . PHP_EOL . PHP_EOL;
 			
 			$eeBody = stripslashes($eeBody);
 			$eeBody = strip_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
 				
-			if(filter_var($eeThisformSettings['confirm'], FILTER_VALIDATE_URL)) {
+			if(filter_var($this->formSettings['confirm'], FILTER_VALIDATE_URL)) {
 				
-				$eeUrl = $eeThisformSettings['confirm'];
+				$eeUrl = $this->formSettings['confirm'];
 			
 			} else {
 				
-				$eeUrl = site_home();
+				$eeUrl = home_url();
 			}
 			
-			if(wp_mail($this->to, $eeSubject, $eeBody, $eeHeaders) ) { // <<< ---------------- OR send the message the basic way.
+			if(wp_mail($this->formSettings['to'], $eeSubject, $eeBody, $eeHeaders) ) { // <<< ---------------- OR send the message the basic way.
 				
 				$this->log['notices'][] = 'WP Mail Sent';
 				
@@ -578,7 +558,7 @@ class eeRSCF_Class {
 			} else {
 				
 				$this->log['errors'][] = 'PHP Message Failed to Send.';
-				$this->log['errors'][] = 'To: ' . $this->to;
+				$this->log['errors'][] = 'To: ' . $this->formSettings['to'];
 			}
 			
 		} else {
@@ -701,17 +681,17 @@ class eeRSCF_Class {
 				}
 	
 				// Email Addresses
-				if( isset($_POST['eeRSCF_formTO']) ) {
+				if( isset($_POST['eeRSCF_form_to']) ) {
 				
-					$delivery = array('TO', 'CC', 'BCC');
+					$delivery = array('to', 'cc', 'bcc');
 					
 					foreach($delivery as $to) {
 					
 						$eeSet = ''; // String of comma delineated emails
 						
-						if( isset($_POST['eeRSCF_form' . $to ]) ) {
+						if( isset($_POST['eeRSCF_form_' . $to ]) ) {
 								
-							$eeString = htmlspecialchars($_POST['eeRSCF_form' . $to ]);
+							$eeString = htmlspecialchars($_POST['eeRSCF_form_' . $to ]);
 							
 							if(strpos($eeString, ',')) { // More than one address
 							

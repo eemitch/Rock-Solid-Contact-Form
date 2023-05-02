@@ -188,7 +188,7 @@ class eeRSCFU_FileUpload {
 			$eeRSCF->log['notices'][] = 'File Ext: ' . $ext;
 			
 			// Make array and remove white space from array values
-			$formatsArray = explode(',', $eeRSCF->fileFormats);
+			$formatsArray = explode(',', $eeRSCF->formSettings['fileFormats']);
 			$formatsArray = array_filter(array_map('trim', $formatsArray));
 			
 			$eeRSCF->log['notices'][] = 'Allowed Formats: ' . implode(', ', $formatsArray);

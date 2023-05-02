@@ -133,7 +133,7 @@ function eeRSCF_Settings() {
     
     
     // Settings Form
-	$eeRSCF->formSettings = get_option('eeRSCF_Settings_' . $eeRSCF->formID);
+	// $eeRSCF->formSettings = get_option('eeRSCF_Settings_' . $eeRSCF->formID);
 	
 	// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
     
@@ -629,24 +629,24 @@ function eeRSCF_Settings() {
 			<h3>Delivery</h3>
 					
 					<label for="eeRSCF_formTO">TO</label>
-					<input type="text" name="eeRSCF_formTO" value="';
+					<input type="text" name="eeRSCF_form_to" value="';
 					
-				if(!empty($eeRSCF->formSettings['TO'])) { $eeOutput .= $eeRSCF->formSettings['TO']; } 
-						else { $eeOutput .= get_option('admin_email'); }
+				if(!empty($eeRSCF->formSettings['to'])) { $eeOutput .= $eeRSCF->formSettings['to']; } 
+						// else { $eeOutput .= get_option('admin_email'); }
 				
 				$eeOutput .= '" class="adminInput" id="eeRSCF_formTO" size="64" />
 						
 					<label for="eeRSCF_formCC">CC</label>
-					<input type="text" name="eeRSCF_formCC" value="';
+					<input type="text" name="eeRSCF_form_cc" value="';
 					
-				if(!empty($eeRSCF->formSettings['CC'])) { $eeOutput .= $eeRSCF->formSettings['CC']; }
+				if(!empty($eeRSCF->formSettings['cc'])) { $eeOutput .= $eeRSCF->formSettings['cc']; }
 				
 				$eeOutput .= '" class="adminInput" id="eeRSCF_formCC" size="64" />
 					
 					<label for="eeRSCF_formBCC">BCC</label>
-					<input type="text" name="eeRSCF_formBCC" value="';
+					<input type="text" name="eeRSCF_form_bcc" value="';
 					
-				if(!empty($eeRSCF->formSettings['BCC'])) { $eeOutput .= $eeRSCF->formSettings['BCC']; }
+				if(!empty($eeRSCF->formSettings['bcc'])) { $eeOutput .= $eeRSCF->formSettings['bcc']; }
 				
 				$eeOutput .= '" class="adminInput" id="eeRSCF_formBCC" size="64" />	
 				

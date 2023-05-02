@@ -47,6 +47,8 @@ function eeRSCF_Setup() {
 	$eeRSCFU = new eeRSCFU_FileUpload();
 	$eeRSCFU->eeRSCFU_Setup(); // Run the setup
 	
+	$eeRSCF->formSettings = get_option('eeRSCF_Settings_' . $eeRSCF->formID);
+	
 	return TRUE;
 }
 add_action('init', 'eeRSCF_Setup');
