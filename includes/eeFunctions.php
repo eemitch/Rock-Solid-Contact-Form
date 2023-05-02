@@ -19,6 +19,8 @@ function eeRSCF_UpdatePlugin() {
 	
 	if( $eeVersion AND version_compare($eeVersion, eeRSCF_Version, '<') ) {
 		
+		delete_option('eeRSCF_spamBlockedCommonWords'); // We get this remote now
+		
 		$eeRSCF->formSettings = $eeRSCF->contactFormDefault;
 		
 		foreach($eeRSCF->formSettings as $eeKey => $eeValue) {
@@ -50,6 +52,7 @@ function eeRSCF_UpdatePlugin() {
 		delete_option('eeRSCF_spamSendAttackNoticeToDeveloper');
 		delete_option('eeRSCF_version');
 		delete_option('eeRSCF_AUTH');
+		delete_option('eeRSCF_eeContactFormOld');
 		
 		update_option('eeRSCF_Settings_1', $eeRSCF->formSettings);
 		update_option('eeRSCF_Version' , eeRSCF_Version);
