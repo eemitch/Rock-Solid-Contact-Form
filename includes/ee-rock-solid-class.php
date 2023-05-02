@@ -15,7 +15,6 @@ class eeRSCF_Class {
 	public $pluginName = "Rock Solid Contact Form";
 	public $websiteLink = 'https://elementengage.com';
 	public $formID = 1;
-	// public $contactForm = array(); // 
 	public $theFormOutput = ''; // Front-End HTML Output
 	public $formSettings = array(); // Holds Current Form Settings
 	public $formsArray = array(); // Holds multiple form - TO DO
@@ -300,9 +299,9 @@ class eeRSCF_Class {
   			$eeBody .= "User IP: " . @$_SERVER['REMOTE_ADDR'] . PHP_EOL;
   			$eeBody .= "Came From: " . @$_POST['SCRIPT_REFERER'] . @$_SERVER['QUERY_STRING'] . PHP_EOL;
   			$eeBody .= "Attacker Message" . PHP_EOL . "-----------------------------------" . PHP_EOL;
-  			$eeBody .= $this->eeRSCF_PostProcess($_POST) . PHP_EOL . PHP_EOL . 
+  			$eeBody .= implode("\n\n", $this->eeRSCF_PostProcess($_POST)) . PHP_EOL . PHP_EOL . 
 			  	"-----------------------------------" . PHP_EOL;
-  			$eeBody .= "Via Rock Solid Contact Form at http://" . [the-current-url] . PHP_EOL;
+  			$eeBody .= "Via Rock Solid Contact Form at " . home_url() . PHP_EOL;
   			
   			$eeHeaders = array(
 				'From: ' . $this->formSettings['email'],
@@ -311,7 +310,7 @@ class eeRSCF_Class {
   			);
   			
   			// Send Notice Email
-  			if ($this->spamSendAttackNotice == 'YES') {
+  			if ($this->formSettings['spamSendAttackNotice'] == 'YES') {
 				if (!wp_mail($eeTo, $eeSubject, $eeBody, $eeHeaders)) {
 	  				$this->log['errors'][] = 'Notice Email Failed to Send';
 				}
