@@ -17,14 +17,21 @@ Domain Path: /languages
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
+// DEV MODE  --> When TRUE, the log file is written onto the page.
+define('eeRSCF_DevMode', TRUE); // Enables extended reporting
+
+// This Plugin
 define('eeRSCF_SLUG', 'rock-solid-contact-form');
 define('eeRSCF_Version', '1.2.1.3');
-define('eeRSCF_DevMode', TRUE); // Enables extended reporting
-//  --> When TRUE, the log file is written onto the page.
+
+// Remote Spam Words List
+define('eeRSCF_RemoteSpamWordsURL', 'http://eeserver1.net/ee-common-spam-words.txt'); // One phrase per line
+// IMPORTANT - This URL is over-ridden by a Cloudflare Worker Rule
+// https://ee-common-spam-words.element-engage.workers.dev/
+
 
 $eeRSCF = ''; // Our Main class
 $eeRSCFU = ''; // Our Upload class
-
 
 // Plugin Setup
 function eeRSCF_Setup() {

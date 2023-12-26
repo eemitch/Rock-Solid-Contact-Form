@@ -191,6 +191,7 @@ class eeRSCF_Class {
 	private function eeRSCF_formSpamCheck() {
 		
 		$this->log['notices'][] = 'Form Spam Check...';
+		$this->log['catch'] = array();
 		
 		$tamper = FALSE;
 		$entries = array();
@@ -202,7 +203,7 @@ class eeRSCF_Class {
 		if($this->formSettings['spamBlockBots'] == 'YES') {
 			
 			if($this->formSettings['spamBlock'] AND $_POST[ $this->formSettings['spamHoneypot'] ]) { // Honeypot. This field should never be completed.
-				$this->log['errors'][] = 'Spambot Catch: Honeypot Field Completed.';
+				$this->log['catch'][] = 'Spambot Catch: Honeypot Field Completed.';
 			}
 		}
 		
@@ -216,7 +217,7 @@ class eeRSCF_Class {
 					
 					// If you can't read it, block it.
 					if(preg_match('/[А-Яа-яЁё]/u', $eeValue) OR preg_match('/\p{Han}+/u', $eeValue)) {
-						$this->log['errors'][] = "Foreign Language Detected";
+						$this->log['catch'][] = "Non-English Language Detected";
 						break;
 					}
 				}
@@ -230,22 +231,22 @@ class eeRSCF_Class {
 			$eeValues = array_count_values($eeArray);
 			foreach($eeValues as $eeValue) {
 				if($eeValue > 2) { 
-					$this->log['errors'][] = "3x Duplicated Same Field Entries";
+					$this->log['catch'][] = "3x Duplicated Same Field Entries";
 				}
 			}
 			
-			foreach( $eeArray as $eeKey => $eeValue){
+			foreach( $eeArray as $eeKey => $eeValue) {
 				
 				if(strpos($eeValue, '&#') OR strpos($eeValue, '&#') === 0) {
-					$this->log['errors'][] = "Malicious Submission";
+					$this->log['catch'][] = "Malicious Submission";
 				}
 				
 				if(strpos($eeValue, '[url]') OR strpos($eeValue, '[url]') === 0) {
-					$this->log['errors'][] = "Form Tampering";
+					$this->log['catch'][] = "Form Tampering";
 				}
 				
 				if(strlen(strip_tags($eeValue)) != strlen($eeValue) ) {
-					$this->log['errors'][] = "HTML Tags Found";
+					$this->log['catch'][] = "HTML Tags Found";
 				}
 			}
 		}
@@ -254,87 +255,86 @@ class eeRSCF_Class {
 		// Block Words
 		if($this->formSettings['spamBlockWords'] == 'YES') {
 			
-			// Block messages containing these phrases
-			$this->formSettings['spamBlockedWords'] = explode(',', $this->formSettings['spamBlockedWords']);
-			
-			if($this->formSettings['spamBlockCommonWords'] == 'YES') {
-				
-				// Update the Common SPAM Words
-				// This is a new line delineated list of common phrases used in email spam
-				$spamBlockedCommonWords = eeGetRemoteSpamWords('http://eeserver1.net/ee-common-spam-words.txt'); // One phrase per line
-				$spamBlockedCommonWordsArray = explode(PHP_EOL, $spamBlockedCommonWords); 
-				if(is_array($this->formSettings['spamBlockedWords']) AND is_array($spamBlockedCommonWordsArray)) {
-					$this->formSettings['spamBlockedWords'] = array_merge($this->formSettings['spamBlockedWords'], $spamBlockedCommonWordsArray);
-				}
-			}
-			
+			// Update the Common SPAM Words
+			// This is a new line delineated list of common phrases used in email spam
+			$spamBlockedCommonWords_LOCAL = explode(',', $this->formSettings['spamBlockedWords']);
+			$spamBlockedCommonWords_REMOTE = explode(PHP_EOL, eeGetRemoteSpamWords(eeRSCF_RemoteSpamWordsURL));
+			$this->formSettings['spamBlockedWords'] = array_merge($spamBlockedCommonWords_LOCAL, $spamBlockedCommonWords_REMOTE);
 			$this->formSettings['spamBlockedWords'] = array_map('trim', $this->formSettings['spamBlockedWords']);
 			
-			// echo '<pre>'; print_r($this->formSettings['spamBlockedWords']); echo '</pre>'; exit;
-			
-			// Check if any spam words are in the message
-			foreach ($this->formSettings['spamBlockedWords'] as $spamWord) {
-			  
-				if (stripos($_POST['message'], ' ' . $spamWord . ' ') !== FALSE) { // Use of spaces around the word prevents sub-string matches
-					$this->log['errors'][] = 'Spam Word Catch: ' . $spamWord;
+			if( !empty($this->formSettings['spamBlockedWords']) ) {
+				
+				foreach($eeArray as $eeValue) {
+					
+					// The text we check for blocked terms
+					$eeValue = preg_replace('/[!?.]/', '', $eeValue); // Strip off common punctuations
+					
+					// Check if any spam words are in the message
+					foreach ($this->formSettings['spamBlockedWords'] as $spamWord) {
+						
+						// Escape any special characters in the spam word
+						$safeSpamWord = preg_quote($spamWord, '/');
+						
+						// Use regex to detect the word with word boundaries (\b) and case-insensitive matching ('i')
+						if (preg_match('/\b' . $safeSpamWord . '\b/i', $eeValue)) {
+							$this->log['catch'][] = 'Spam Word Catch: ' . $spamWord;
+						}
+					}
 				}
 			}
 		}
 		
-		
 		// If we detect spam, and the users want a report, create and send it here
-		if (count($this->log['errors']) >= 1 && $this->formSettings['spamSendAttackNotice'] == 'YES') {
-  			
+		if (count($this->log['catch']) >= 1 && $this->formSettings['spamSendAttackNotice'] == 'YES') {
+		  
 			$eeTo = $this->formSettings['spamNoticeEmail'];
-  			$eeSubject = "Spam Block Notice";
-  			
-  			$eeBody = "Contact Form Spam Catch" . PHP_EOL;
-  			$eeBody .= "-----------------------------------" . PHP_EOL . PHP_EOL;
-  			foreach ($this->log['errors'] as $eeError) {
+			$eeSubject = "Spam Block Notice";
+			
+			$eeBody = "Contact Form Spam Catch" . PHP_EOL;
+			$eeBody .= "-----------------------------------" . PHP_EOL . PHP_EOL;
+			foreach ($this->log['catch'] as $eeError) {
 				$eeBody .= $eeError . PHP_EOL;
-  			}
-  			$eeBody .= PHP_EOL . "Attacker" . PHP_EOL;
-  			$eeBody .= "-----------------------------------" . PHP_EOL;
-  			$eeBody .= "User Agent: " . @$_SERVER['HTTP_USER_AGENT'] . PHP_EOL;
-  			$eeBody .= "User IP: " . @$_SERVER['REMOTE_ADDR'] . PHP_EOL;
-  			$eeBody .= "Came From: " . @$_POST['SCRIPT_REFERER'] . @$_SERVER['QUERY_STRING'] . PHP_EOL;
-  			$eeBody .= "Attacker Message" . PHP_EOL . "-----------------------------------" . PHP_EOL;
-  			$eeBody .= implode("\n\n", $this->eeRSCF_PostProcess($_POST)) . PHP_EOL . PHP_EOL . 
-			  	"-----------------------------------" . PHP_EOL;
-  			$eeBody .= "Via Rock Solid Contact Form at " . home_url() . PHP_EOL;
-  			
-  			$eeHeaders = array(
+			}
+			$eeBody .= PHP_EOL . "Attacker" . PHP_EOL;
+			$eeBody .= "-----------------------------------" . PHP_EOL;
+			$eeBody .= "User Agent: " . (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Not Available') . PHP_EOL;
+			$eeBody .= "User IP: " . (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'Not Available') . PHP_EOL;
+			$eeBody .= "Came From: " . (isset($_POST['SCRIPT_REFERER']) ? $_POST['SCRIPT_REFERER'] : '') . (isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '') . PHP_EOL;
+			$eeBody .= "Attacker Message" . PHP_EOL . "-----------------------------------" . PHP_EOL;
+			$eeBody .= implode("\n\n", $this->eeRSCF_PostProcess($_POST)) . PHP_EOL . PHP_EOL . 
+				  "-----------------------------------" . PHP_EOL;
+			$eeBody .= "Via Rock Solid Contact Form at " . home_url() . PHP_EOL;
+			
+			$eeHeaders = array(
 				'From: ' . $this->formSettings['email'],
 				'Reply-To: ' . $this->formSettings['email'],
 				'Content-Type: text/plain; charset=UTF-8',
-  			);
-  			
-  			// Send Notice Email
-  			if ($this->formSettings['spamSendAttackNotice'] == 'YES') {
+			);
+			
+			// Send Notice Email
+			if (function_exists('wp_mail')) {
 				if (!wp_mail($eeTo, $eeSubject, $eeBody, $eeHeaders)) {
-	  				$this->log['errors'][] = 'Notice Email Failed to Send';
+					$this->log['errors'][] = 'Notice Email Failed to Send';
 				}
-  			}
+			} else {
+				mail($eeTo, $eeSubject, $eeBody, $eeHeaders);
+			}
 		}
+
 		
-		if(count($this->log['errors']) >= 1) {
+		if(count($this->log['catch']) >= 1) {
 			
 			$this->log['notices'][] = 'Spam Check FAIL!';
 			$this->log['notices'][] = $this->log['errors'];
 			$this->log['errors'] = array();
-			return TRUE;
+			return TRUE; // THIS IS SPAM !!!
 		
 		} else {
 		
 			$this->log['notices'][] = 'Spam Check OKAY!';
-			return FALSE;
+			return FALSE; // Seems okay...
 		}
 	}
-	
-	
-	
-	
-	
 	
 	
 	
@@ -481,7 +481,7 @@ class eeRSCF_Class {
 		// Are we Blocking SPAM?
 		if($this->formSettings['spamBlock'] == 'YES') {
 			if( $this->eeRSCF_formSpamCheck() ) { // This is SPAM
-				wp_die('Sorry, there was a problem with your message. Please go back and try again.');
+				wp_die('Sorry, there was a problem with your message content. Please go back and try again.');
 			}
 		} 
 	
