@@ -3,7 +3,7 @@ Contributors: eemitch
 Requires at least: 5
 Requires PHP: 7.4
 Tested up to: 6.4
-Stable tag: 1.2.1.3
+Stable tag: 1.2.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -48,8 +48,9 @@ na
  
 == Changelog ==
 
-= 1.2.1.3 =
+= 1.2.2 =
 * Spam checking improvements
+* Admin settings form improvments
 
 = 1.2.1.2 =
 * Many under-the-hood Improvements

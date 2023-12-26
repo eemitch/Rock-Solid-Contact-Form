@@ -138,9 +138,11 @@ function eeRSCF_Settings() {
 	// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
     
     $eeOutput .= '
-	<!-- <h2> ' . $eeRSCF->formSettings['name'] . ' Settings</h2> -->
+	<!-- <h2> ' . $eeRSCF->formSettings['name'] . ' Settings</h2> -->';
     
-    <form action="' . admin_url() . '/admin.php?page=rock-solid-contact-form' . '" method="POST" id="eeRSCF_Settings">
+    $eeOutput .= $eeRSCF->eeRSCF_ResultsNotification();
+	
+	$eeOutput .= '<form action="' . admin_url() . '/admin.php?page=rock-solid-contact-form' . '" method="POST" id="eeRSCF_Settings">
 		<input type="hidden" name="eeRSCF_Settings" value="TRUE" />
 	';
 			

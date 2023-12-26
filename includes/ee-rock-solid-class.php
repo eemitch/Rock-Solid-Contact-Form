@@ -277,7 +277,9 @@ class eeRSCF_Class {
 						
 						// Use regex to detect the word with word boundaries (\b) and case-insensitive matching ('i')
 						if (preg_match('/\b' . $safeSpamWord . '\b/i', $eeValue)) {
-							$this->log['catch'][] = 'Spam Word Catch: ' . $spamWord;
+							if($spamWord) {
+								$this->log['catch'][] = 'Spam Word Catch: ' . $spamWord;
+							}
 						}
 					}
 				}
@@ -461,7 +463,11 @@ class eeRSCF_Class {
 		</div>';
 	
 		// Log to the browser console	
-		if(eeRSCF_DevMode) { $this->theFormOutput .= eeDevOutput($this->log); }
+		if(eeRSCF_DevMode) { 
+			$this->theFormOutput .= eeDevOutput($this->log); // Output to console
+			$this->theFormOutput .= '<pre>LOG: ' . print_r($this->log, TRUE) . '</pre>';
+			$this->theFormOutput .= '<pre>SETTINGS: ' . print_r($this->formSettings, TRUE) . '</pre>';
+		}
 		
 		return $this->theFormOutput;
 	}
@@ -480,7 +486,7 @@ class eeRSCF_Class {
 		
 		// Are we Blocking SPAM?
 		if($this->formSettings['spamBlock'] == 'YES') {
-			if( $this->eeRSCF_formSpamCheck() ) { // This is SPAM
+			if( $this->eeRSCF_formSpamCheck() === TRUE ) { // This is SPAM
 				wp_die('Sorry, there was a problem with your message content. Please go back and try again.');
 			}
 		} 
@@ -538,7 +544,7 @@ class eeRSCF_Class {
 			
 			$eeBody = stripslashes($eeBody);
 			$eeBody = strip_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
-				
+			
 			if(filter_var($this->formSettings['confirm'], FILTER_VALIDATE_URL)) {
 				
 				$eeUrl = $this->formSettings['confirm'];
@@ -548,16 +554,19 @@ class eeRSCF_Class {
 				$eeUrl = home_url();
 			}
 			
-			if(wp_mail($this->formSettings['to'], $eeSubject, $eeBody, $eeHeaders) ) { // <<< ---------------- OR send the message the basic way.
+			// wp_die(print_r($this->formSettings));
+			
+			if( wp_mail($this->formSettings['to'], $eeSubject, $eeBody, $eeHeaders) ) {
 				
 				$this->log['notices'][] = 'WP Mail Sent';
 				
-				wp_redirect($eeUrl); exit;
+				// wp_redirect($eeUrl); exit;
+				
+				header('location: ' . $eeUrl);
 				
 			} else {
 				
 				$this->log['errors'][] = 'PHP Message Failed to Send.';
-				$this->log['errors'][] = 'To: ' . $this->formSettings['to'];
 			}
 			
 		} else {
@@ -645,8 +654,8 @@ class eeRSCF_Class {
 	
 	
 	
-			
-	function eeRSCF_AdminSettingsProcess()	{
+	// Process Admin Settings		
+	public function eeRSCF_AdminSettingsProcess()	{
 		
 		// echo '<pre>'; print_r($this->log); echo '</pre>'; exit;
 		
@@ -655,9 +664,6 @@ class eeRSCF_Class {
 		if($_POST AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 			
 			global $wpdb, $eeRSCF, $eeRSCFU;
-			
-			
-			
 			
 			// Contact Form Fields and Destinations
 			if( isset($_POST['eeRSCF_formSettings']) ) {
@@ -680,7 +686,7 @@ class eeRSCF_Class {
 				}
 	
 				// Email Addresses
-				if( isset($_POST['eeRSCF_form_to']) ) {
+				if( !empty($_POST['eeRSCF_form_to']) ) {
 				
 					$delivery = array('to', 'cc', 'bcc');
 					
@@ -720,11 +726,10 @@ class eeRSCF_Class {
 									$this->log['errors'][] = 'Bad ' . $to . ' Address: ' . $_POST['eeAdmin' . $to];
 								}
 							}
+						
 						}
 							
-						$eeSet;
-						
-						if($eeSet) { $eeRSCF->formSettings[$to] = $eeSet; }
+						$eeRSCF->formSettings[$to] = $eeSet;
 					}
 
 				} else {
@@ -758,7 +763,7 @@ class eeRSCF_Class {
 				}
 				
 				// Results Page
-				if(isset($_POST['eeRSCF_confirm'])) {
+				if(!empty($_POST['eeRSCF_confirm'])) {
 					
 					$eeRSCF->formSettings['confirm'] = filter_var($_POST['eeRSCF_confirm'], FILTER_VALIDATE_URL);
 					
@@ -768,6 +773,10 @@ class eeRSCF_Class {
 				} else {
 					$eeRSCF->formSettings['confirm'] = home_url();
 				}
+				
+				
+				// echo '<pre>'; print_r($this->log); echo '</pre>'; exit;
+				
 			}
 			
 			
@@ -970,9 +979,60 @@ class eeRSCF_Class {
 			// Save to the Database
 			if(empty($this->log['errors'])) {
 				update_option('eeRSCF_Settings_' . $this->formID, $eeRSCF->formSettings); // Update the database
+				$this->log['messages'][] = 'The Settings Have Been Saved';
 			}
 			
 		}
+	}
+	
+	
+	
+	
+	// This method should return the results of an operation; success, warning or failure.
+	public function eeRSCF_ResultsNotification() {
+		
+		$eeOutput = '';
+		
+		$eeLogParts = array('errors' => 'error', 'warnings' => 'warning', 'messages' => 'success');
+		
+		foreach($eeLogParts as $eePart => $eeType) {
+			
+			if(!empty($this->log[$eePart])) {
+			
+				$eeOutput .= '<div class="';
+				
+				if( is_admin() ) {
+					$eeOutput .=  'notice notice-' . $eeType . ' is-dismissible';
+				} else {
+					$eeOutput .= 'eeResultsNotification eeResultsNotification_' . $eeType;
+				}
+				
+				$eeOutput .= '">
+				<ul>';
+				
+				foreach($this->log[$eePart] as $eeValue) { // We can go two-deep arrays
+					
+					if(is_array($eeValue)) {
+						foreach ($eeValue as $eeValue2) {
+							$eeOutput .= '
+							<li>' . $eeValue2 . '</li>' . PHP_EOL;
+						}
+					} else {
+						$eeOutput .= '
+						<li>' . $eeValue . '</li>' . PHP_EOL;
+					}
+				}
+				$eeOutput .= '
+				</ul>
+				</div>';
+				
+				$this->log[$eePart] = array(); // Clear this part fo the array
+				
+			}
+		}
+		
+		return $eeOutput;
+	
 	}	
 			
 			

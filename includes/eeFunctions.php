@@ -13,6 +13,8 @@ function eeDevOutput($eeArray) {
 // Update or Install New
 function eeRSCF_UpdatePlugin() {
 	
+	return TRUE;
+	
 	global $eeRSCF;
 	
 	$eeVersion = get_option('eeRSCF_version');
@@ -95,6 +97,8 @@ function eeGetRemoteSpamWords($eeUrl) {
 
   return $eeContent;
 }
+
+
 
 
 // Write log file
