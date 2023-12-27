@@ -527,6 +527,7 @@ class eeRSCF_Class {
 			if(empty($eeSubject)) { $eeSubject = 'Contact Form Message (' . basename(home_url()) . ')'; }
 			
 			// Email assembly
+			if(empty($this->formSettings['email'])) { $this->formSettings['email'] = 'mail@' . $_SERVER['HTTP_HOST']; } // Fallback
 			$eeHeaders = "From: " . get_bloginfo('name') . ' <' . $this->formSettings['email'] . ">" . PHP_EOL;
 			if($this->formSettings['cc']) { $eeHeaders .= "CC: " . $this->formSettings['cc'] . PHP_EOL; }
 			if($this->formSettings['bcc']) { $eeHeaders .= "BCC: " . $this->formSettings['bcc'] . PHP_EOL; }
@@ -560,9 +561,9 @@ class eeRSCF_Class {
 				
 				$this->log['notices'][] = 'WP Mail Sent';
 				
-				// wp_redirect($eeUrl); exit;
+				wp_redirect($eeUrl); exit;
 				
-				header('location: ' . $eeUrl);
+				// header('location: ' . $eeUrl); exit;
 				
 			} else {
 				

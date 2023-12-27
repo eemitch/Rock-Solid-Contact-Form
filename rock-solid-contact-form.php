@@ -47,7 +47,7 @@ function eeRSCF_Setup() {
 	$eeRSCF = new eeRSCF_Class();
 	
 	// Check for Install or Update
-	if( is_admin() ) { eeRSCF_UpdatePlugin(); } // Checking...
+	// if( is_admin() ) { eeRSCF_UpdatePlugin(); } // Checking...
 	
 	// Get the Uploader class
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-rock-solid-upload-class.php');

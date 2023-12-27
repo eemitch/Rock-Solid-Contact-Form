@@ -50,7 +50,7 @@ na
 
 = 1.2.2 =
 * Spam checking improvements
-* Admin settings form improvments
+* Admin settings form improvements
 
 = 1.2.1.2 =
 * Many under-the-hood Improvements
