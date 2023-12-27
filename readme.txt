@@ -7,7 +7,7 @@ Stable tag: 1.2.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-A rock solid contact form that focuses on spam, security and deliverability
+A rock solid WordPress contact form plugin that focuses on spam prevention, security and mail deliverability.
 
 == Description ==
 
