@@ -11,16 +11,9 @@ A rock solid WordPress contact form plugin that focuses on spam prevention, secu
 
 == Description ==
 
-Rock Solid Contact Form is the result of years of work, managing a network of Wordpress websites. I built it to work for me, first and foremost.
-
-Rock Solid does not require any form building. Simply place the shortcode [rock-solid-contact] on page, post or widget and it will work.
-
-To improve upon the default, visit the settings pages for Files, Spam and Email. Use SMTP if possible.
+Rock Solid Contact Form is the result of years of work, managing a network of Wordpress websites. I built it to work for me, first and foremost. Rock Solid does not require any form building. Simply place the shortcode [rock-solid-contact] on page, post or widget and it will work. To improve upon the default, visit the settings pages for Files, Spam and Email.
 
 
-
-
- 
 == Installation ==
  
 1. Upload the plugin folder to the '/wp-content/plugins/' directory.
@@ -51,6 +44,7 @@ na
 = 1.2.2 =
 * Spam checking improvements
 * Admin settings form improvements
+* PHP 8.1 Approved
 
 = 1.2.1.2 =
 * Many under-the-hood Improvements
