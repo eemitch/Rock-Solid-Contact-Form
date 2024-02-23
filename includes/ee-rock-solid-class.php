@@ -134,54 +134,48 @@ class eeRSCF_Class {
 	
 	
 	
-
 	
 	private function eeRSCF_PostProcess() {
-	     
-	     $this->log['notices'][] = 'Processing the post...';
-	     
-	     $eeIgnore = array('eeRSCF', 'eeRSCF_ID', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER');
-	     
-	     foreach ($_POST as $eeKey => $eeValue) {
-	        
-	        if(!in_array($eeKey, $eeIgnore) AND $eeValue) {
-					
-				$eeValue = htmlspecialchars(strip_tags($eeValue));
-				
-				if(strpos($eeKey, 'mail')) { 
-					if(!filter_var($eeValue, FILTER_VALIDATE_EMAIL )) {
-						$this->log['errors'][] = 'Your email address in not correct.';
-					} else {
-						$eeValue = strtolower($eeValue);
-						$this->sender = $eeValue;
-					}
-				}
-				
-				if(strpos($eeKey, 'ebsite')) { 
-					
-					if(!strpos($eeValue, 'ttp')) { // add the http if needed.
-						$eeValue = 'http://' . $eeValue;
-					}
-					
-					if( !filter_var( $eeValue, FILTER_VALIDATE_URL) ) {
-						$this->log['errors'][] = 'Your website address in not correct.';
-					} else {
-						$eeValue = strtolower($eeValue);
-					}
-				}
-				
-				$eeField = $this->eeRSCF_UnSlug($eeKey);
-				$this->thePost[] = $eeField . ': ' . $eeValue;
+	
+		$this->log['notices'][] = 'Processing the post...';
+	
+		$eeIgnore = ['eeRSCF', 'eeRSCF_ID', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER'];
+	
+		foreach ($_POST as $eeKey => $eeValue) {
+			
+			if (in_array($eeKey, $eeIgnore) || empty($eeValue)) {
+				continue;
 			}
-	        
-	        if(is_array($eeValue)) { // Is $value is an array?
-	            $this->eeRSCF_PostProcess($eeValue);
-	        }
-	    } 
-	        
-	    $this->log['notices'][] = $this->thePost;
-	    
-	    return $this->thePost;
+	
+			// Sanitize and validate specific fields
+			switch (true) {
+				case strpos($eeKey, 'mail') !== false:
+					$eeValue = sanitize_email($eeValue);
+					if (!is_email($eeValue)) {
+						$this->log['errors'][] = 'Your email address is not correct.';
+						continue 2; // Skip to the next $_POST item
+					}
+					$this->sender = strtolower($eeValue);
+					break;
+				case strpos($eeKey, 'ebsite') !== false:
+					$eeValue = esc_url_raw($eeValue, ['http', 'https']);
+					if (empty($eeValue)) {
+						$this->log['errors'][] = 'Your website address is not correct.';
+						continue 2; // Skip to the next $_POST item
+					}
+					break;
+				default:
+					$eeValue = sanitize_text_field($eeValue);
+					break;
+			}
+	
+			$eeField = $this->eeRSCF_UnSlug($eeKey);
+			$this->thePost[] = $eeField . ': ' . $eeValue;
+		}
+	
+		$this->log['notices'][] = $this->thePost;
+	
+		return $this->thePost;
 	}
 	
 	

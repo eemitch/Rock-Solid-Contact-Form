@@ -8,7 +8,7 @@ Plugin Name: Rock Solid Contact Form
 Plugin URI: https://elementengage.com
 Description: A basic contact form that focuses on spam prevention and deliverability
 Author: Mitchell Bennis - Element Engage, LLC
-Version: 1.2.2
+Version: 1.2.3
 Author URI: https://elementengage.com
 License: GPLv2 or later
 Text Domain: ee-rock-solid-contact-form
@@ -22,7 +22,7 @@ define('eeRSCF_DevMode', FALSE); // Enables extended reporting
 
 // This Plugin
 define('eeRSCF_SLUG', 'rock-solid-contact-form');
-define('eeRSCF_Version', '1.2.2');
+define('eeRSCF_Version', '1.2.3');
 
 // Remote Spam Words List
 define('eeRSCF_RemoteSpamWordsURL', 'http://eeserver1.net/ee-common-spam-words.txt'); // One phrase per line

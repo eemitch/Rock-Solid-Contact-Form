@@ -41,6 +41,9 @@ na
  
 == Changelog ==
 
+= 1.2.3 =
+* Improved security.
+
 = 1.2.2 =
 * Spam checking improvements
 * Admin settings form improvements
