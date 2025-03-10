@@ -1,13 +1,119 @@
-<?php // eeRSCF File Uploading Classes - mitchellbennis@gmail.com
+<?php // ee-classes.php version 1.0.0 - mitchellbennis@gmail.com
 	
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeRSCF_Nonce' )) exit('That is Noncense!'); // Exit if nonce fails
 	
-
-
-class eeRSCFU_FileUpload {
-
-	// Properties ------------------------------------
+class eeHelper_Class {
+	
+	// GENERAL -------------
+	
+	// Create a slug
+	public function eeRSCF_MakeSlug($string){
+	   $slug = preg_replace('/[^A-Za-z0-9-]+/', '-', $string);
+	   $slug = strtolower($slug);
+	   return $slug;
+	}
+	
+	// Undo a Slug
+	public function eeRSCF_UnSlug($slug){
+	   $string = str_replace('-', ' ', $slug);
+	   $string = ucwords($string);
+	   return $string;
+	}
+	
+	
+	
+	// NOTIFICATIONS
+	
+	
+	// Results Notice Display
+	public function eeRSCF_ResultsNotification() {
+		
+		$eeOutput = '';
+		
+		$eeLogParts = array('errors' => 'error', 'warnings' => 'warning', 'messages' => 'success');
+		
+		foreach($eeLogParts as $eePart => $eeType) {
+			
+			if(!empty($this->log[$eePart])) {
+			
+				$eeOutput .= '<div class="';
+				
+				if( is_admin() ) {
+					$eeOutput .=  'notice notice-' . $eeType . ' is-dismissible';
+				} else {
+					$eeOutput .= 'eeResultsNotification eeResultsNotification_' . $eeType;
+				}
+				
+				$eeOutput .= '">
+				<ul>';
+				
+				foreach($this->log[$eePart] as $eeValue) { // We can go two-deep arrays
+					
+					if(is_array($eeValue)) {
+						foreach ($eeValue as $eeValue2) {
+							$eeOutput .= '
+							<li>' . $eeValue2 . '</li>' . PHP_EOL;
+						}
+					} else {
+						$eeOutput .= '
+						<li>' . $eeValue . '</li>' . PHP_EOL;
+					}
+				}
+				$eeOutput .= '
+				</ul>
+				</div>';
+				
+				$this->log[$eePart] = array(); // Clear this part fo the array
+				
+			}
+		}
+		
+		return $eeOutput;
+	
+	}
+	
+	
+	// Notice Email
+	function eeRSCF_NoticeEmail($messages, $to, $from, $name = '') {
+		
+		if($messages AND $to AND $from) {
+			
+			$body = '';
+			$headers = "From: $from";
+			$subject = $name . " Admin Notice";
+			
+			if(is_array($messages)) {
+				foreach ($messages as $value) {
+					if(is_array($value)) {
+						foreach ($value as $value2) {
+							$body .= $value2 . "\n\n";
+						}
+					} else {
+						$body .= $value . "\n\n";
+					}
+				}
+			} else {
+				$body = $messages . "\n\n";
+			}
+			
+			$body .= 'Via: ' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+		
+			if(!mail($to,$subject,$body,$headers)) { // Email the message or error report
+				?><script>alert('EMAIL SEND FAILED');</script><?php
+			}
+		
+		} else {
+			?><script>alert('EMAIL SEND FAILED');</script><?php
+		}
+		
+		return FALSE;		
+	}
+	
+	
+	
+	
+	// FILE UPLOADS ------------------------------------------------------------------------
+	
 	public $uploadFolderName = eeRSCF_SLUG; // Folder will be created in the WP uploads folder
 	public $fileUploaded = FALSE;
 	public $maxUploadLimit = 8;
@@ -15,10 +121,7 @@ class eeRSCFU_FileUpload {
 	public $uploadUrl = '';
 	
 	
-	// METHODS ---------------------------------
-
-	// Class setup
-	public function eeRSCFU_Setup() {
+	public function eeHelper() {
 		
 		global $eeRSCF;
 		
@@ -38,9 +141,9 @@ class eeRSCFU_FileUpload {
 			$this->eeRSCFU_CreateUploadDir();
 		}
 	}
-
 	
-
+	
+	
 	
 	
 	
@@ -87,12 +190,12 @@ class eeRSCFU_FileUpload {
 				
 				// Environment Detection
 				if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-				    $eeRSCF->log['notices'][] = 'Windows detected.';
-				    mkdir($eeRSCF_UploadDir); // Windows
+					$eeRSCF->log['notices'][] = 'Windows detected.';
+					mkdir($eeRSCF_UploadDir); // Windows
 				} else {
-				    $eeRSCF->log['notices'][] = 'Linux detected.';
-				    if(!mkdir($eeRSCF_UploadDir, 0755)) { // Linux - Need to set permissions
-					    $eeRSCF_Log['errors'][] = 'Cannot Create: ' . $eeRSCF_UploadDir;
+					$eeRSCF->log['notices'][] = 'Linux detected.';
+					if(!mkdir($eeRSCF_UploadDir, 0755)) { // Linux - Need to set permissions
+						$eeRSCF_Log['errors'][] = 'Cannot Create: ' . $eeRSCF_UploadDir;
 					}
 				}
 				
@@ -116,7 +219,7 @@ class eeRSCFU_FileUpload {
 			if($handle = fopen($eeFile, "a+")) {
 				
 				if(!is_readable($eeFile)) {
-				    
+					
 					$eeRSCF_Log['errors'][] = 'ERROR: Could not write index.html';
 					
 					return FALSE;
@@ -138,32 +241,32 @@ class eeRSCFU_FileUpload {
 		return TRUE;
 		
 	}
-
+	
 	
 	private function eeRSCFU_BytesToSize($bytes, $precision = 2) {  
-	    
-	    $kilobyte = 1024;
-	    $megabyte = $kilobyte * 1024;
-	    $gigabyte = $megabyte * 1024;
-	    $terabyte = $gigabyte * 1024;
+		
+		$kilobyte = 1024;
+		$megabyte = $kilobyte * 1024;
+		$gigabyte = $megabyte * 1024;
+		$terabyte = $gigabyte * 1024;
 	   
-	    if (($bytes >= 0) && ($bytes < $kilobyte)) {
-	        return $bytes . ' B';
+		if (($bytes >= 0) && ($bytes < $kilobyte)) {
+			return $bytes . ' B';
 	 
-	    } elseif (($bytes >= $kilobyte) && ($bytes < $megabyte)) {
-	        return round($bytes / $kilobyte, $precision) . ' KB';
+		} elseif (($bytes >= $kilobyte) && ($bytes < $megabyte)) {
+			return round($bytes / $kilobyte, $precision) . ' KB';
 	 
-	    } elseif (($bytes >= $megabyte) && ($bytes < $gigabyte)) {
-	        return round($bytes / $megabyte, $precision) . ' MB';
+		} elseif (($bytes >= $megabyte) && ($bytes < $gigabyte)) {
+			return round($bytes / $megabyte, $precision) . ' MB';
 	 
-	    } elseif (($bytes >= $gigabyte) && ($bytes < $terabyte)) {
-	        return round($bytes / $gigabyte, $precision) . ' GB';
+		} elseif (($bytes >= $gigabyte) && ($bytes < $terabyte)) {
+			return round($bytes / $gigabyte, $precision) . ' GB';
 	 
-	    } elseif ($bytes >= $terabyte) {
-	        return round($bytes / $terabyte, $precision) . ' TB';
-	    } else {
-	        return $bytes . ' B';
-	    }
+		} elseif ($bytes >= $terabyte) {
+			return round($bytes / $terabyte, $precision) . ' TB';
+		} else {
+			return $bytes . ' B';
+		}
 	}
 	
 	
@@ -249,7 +352,9 @@ class eeRSCFU_FileUpload {
 		$eeRSCF->log['notices'][] = $eeRSCF->log['errors'];
 			
 	} // END uploader
+	
 
-}	
+}
+	
 	
 ?>

@@ -41,46 +41,6 @@
 	background-color: #f4f4f4;
 }
 
-
-/* FORM NAVIGATION */
-
-#eeRSCF_FormsNav {
-  display: flex;
-  align-items: center;
-  margin: 0;
-  padding: 5px;
-  padding-top: 10px;
-}
-
-#eeRSCF_FormsNav form {
-  display: flex;
-  align-items: center;
-  width: 100%; /* make the form 100% wide */
-}
-
-#eeRSCF_FormsNav select {
-  flex: 1; /* make the select element fill the remaining space */
-}
-
-#eeRSCF_FormsNav input[type="submit"],
-#eeRSCF_FormsNav button {
-  margin-left: 10px;
-}
-
-
-
-
-
-
-
-
-
-/* #eeRSCF_delivery input[type=text],
-#eeRSCF_formName {
-	width: 65%;
-	font-size: 110%;
-} */
-
 /* ADMIN SETTINGS FORMS */
 
 #eeRSCF_formSettings p.button {

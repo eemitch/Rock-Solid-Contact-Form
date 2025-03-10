@@ -1,0 +1,89 @@
+<?php
+
+if (!defined('ABSPATH')) exit; // Exit if accessed directly
+if (!wp_verify_nonce($eeRSCF_Nonce, 'eeRSCF_Nonce')) exit('That is Noncense!'); // Exit if nonce fails
+
+function eeRSCF_Settings() {
+	
+	global $eeRSCF, $eeHelper;
+
+	$eeRSCF->formID = 1;
+	$eeRSCF->log['notices'][] = 'eeRSCF Settings Page Loaded';
+
+	// Process if POST
+	if (isset($_POST['eeRSCF_Settings']) && check_admin_referer('ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
+		$eeRSCF_Log[] = 'Updating Settings...';
+		$eeRSCF->eeRSCF_AdminSettingsProcess();
+	}
+
+	// Security nonce
+	$eeRSCF_Nonce = wp_create_nonce('ee_include_page');
+
+	// Determine the active tab
+	$active_tab = isset($_REQUEST['tab']) ? $_REQUEST['tab'] : 'settings';
+	$eeRSCF_Page = 'rock-solid-contact-form';
+	
+	// Output page header and tabs
+	$eeOutput = '<div class="eeRSCF_Tabs wrap">
+	<h1>' . __('Rock Solid Contact Form', 'rock-solid-contact-form') . '</h1>
+	<div class="eeRSCF_Admin">
+	<h2 class="nav-tab-wrapper">';
+
+	$tabs = array(
+		'form_settings' => __('Contact Form', 'rock-solid-contact-form'),
+		'file_settings' => __('Attachments', 'rock-solid-contact-form'),
+		'spam_settings' => __('Spam Prevention', 'rock-solid-contact-form'),
+		'email_settings' => __('Email Settings', 'rock-solid-contact-form')
+	);
+
+	foreach ($tabs as $tab => $label) {
+		$eeOutput .= '<a href="?page=' . $eeRSCF_Page . '&tab=' . $tab . '" class="nav-tab ' . ($active_tab == $tab ? 'nav-tab-active' : '') . '">' . $label . '</a>';
+	}
+
+	$eeOutput .= '</h2></div>'; // End Tabs
+
+	// Install Settings
+	if(empty($eeRSCF->formSettings)) {
+		$eeRSCF->contactFormDefault['to'] = get_option('admin_email');
+		update_option('eeRSCF_Settings', $eeRSCF->contactFormDefault);
+		$eeRSCF->confirm = home_url();
+		update_option('eeRSCF_Confirm', $eeRSCF->confirm);
+		$eeRSCF->formSettings = $eeRSCF->contactFormDefault;
+	}
+	
+	// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
+	
+	
+	$eeOutput .= $eeHelper->eeRSCF_ResultsNotification();
+	$eeOutput .= '<form action="' . admin_url() . '/admin.php?page=rock-solid-contact-form" method="POST" id="eeRSCF_Settings">
+		<input type="hidden" name="eeRSCF_Settings" value="TRUE" />';
+	$eeOutput .= wp_nonce_field('ee-rock-solid-settings', 'ee-rock-solid-settings-nonce', TRUE, FALSE);
+
+	// Include the appropriate tab content function
+	if ($active_tab == 'file_settings') {
+		include_once(plugin_dir_path(__FILE__) . 'ee-settings-file.php');
+	} elseif ($active_tab == 'spam_settings') {
+		include_once(plugin_dir_path(__FILE__) . 'ee-settings-spam.php');
+	} elseif ($active_tab == 'email_settings') {
+		include_once(plugin_dir_path(__FILE__) . 'ee-settings-email.php');
+	} else {
+		include_once(plugin_dir_path(__FILE__) . 'ee-settings-form.php');
+	}
+
+	// Submit Button & Footer
+	$eeOutput .= '<input id="eeRSCF_SAVE" type="submit" value="SAVE" /></form>';
+	$eeOutput .= '<div id="eeAdminFooter"><p><a href="' . $eeRSCF->websiteLink . '">' . 
+		$eeRSCF->pluginName . ' &rarr; ' . __('Version', 'rock-solid-contact-form') . ' ' . eeRSCF_Version . '</a></p></div>';
+	
+	$eeOutput .= '</div>'; // End wrap
+
+	// Debug Mode Output
+	if (eeRSCF_DevMode) {
+		$eeOutput .= eeDevOutput($eeRSCF->log);
+	}
+	
+	// Dump the HTML buffer
+	echo $eeOutput;
+}
+
+?>

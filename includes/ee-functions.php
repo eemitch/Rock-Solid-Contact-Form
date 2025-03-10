@@ -4,6 +4,78 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeRSCF_Nonce' )) exit('That is Noncense!'); // Exit if nonce fails
 
 
+// Shortcode - Usage: [rock-solid-contact]
+function eeRSCF_FrontEnd($atts, $content = null) {
+	global $eeRSCF;
+	return $eeRSCF->eeRSCF_formDisplay(1);
+}
+
+
+// Catch the POST and process it
+function eeRSCF_ContactProcess() {
+	global $eeRSCF, $eeHelper;
+	if(wp_verify_nonce($_POST['ee-rock-solid-nonce'], 'ee-rock-solid')) { // Front-end
+		$eeRSCF->eeRSCF_SendEmail();
+	}
+}
+
+
+// Load stuff we need in the front-side head
+function eeRSCF_Enqueue() {
+	
+	// Register the style like this for a theme:
+	wp_register_style( 'ee-rock-solid-contact-form-css', plugin_dir_url(__FILE__) . '../css/style.css');
+	wp_enqueue_style('ee-rock-solid-contact-form-css');
+	
+	// Javascript
+	$eeDeps = array('jquery');
+	wp_enqueue_script('ee-rock-solid-contact-form-js-footer',plugin_dir_url(__FILE__) . '../js/scripts.js',$eeDeps,'30',TRUE);
+}
+
+
+
+// Load stuff we need in the Admin head
+function eeRSCF_AdminEnqueue($eeHook) {
+		
+	// wp_die($eeHook); // Use this to discover the hook for each page
+	
+	// Only load scripts if on these Admin pages.
+	$eeHooks = array(
+		'toplevel_page_rock-solid-contact-form'
+	);
+	
+	if(in_array($eeHook, $eeHooks)) {
+		wp_enqueue_style( 'rock-solid-contact-form-admin-style', plugins_url( '../css/style-admin.css', __FILE__ ) );
+		wp_enqueue_script('rock-solid-contact-form-admin-js', plugins_url('../js/scripts-admin.js', __FILE__) );
+		wp_enqueue_script('rock-solid-contact-form-admin-js-footer', plugins_url('../js/scripts-admin-footer.js', __FILE__), '', '1', TRUE );
+	}
+}
+
+
+// Admin Menu
+function eeRSCF_BackEnd() {
+	
+	global $eeRSCF;
+	
+	$eeRSCF_Nonce = wp_create_nonce('eeRSCF_Nonce'); // Security
+	include_once(plugin_dir_path(__FILE__) . '../includes/ee-settings.php'); // Admin's List Management Page
+	
+	// Top-Level Menu Addition
+	add_menu_page(__('Rock Solid Contact Form', 'rock-solid-contact-form'), __('Contact Form', 'rock-solid-contact-form'), 'edit_posts', 'rock-solid-contact-form', 'eeRSCF_Settings', '
+dashicons-email');
+
+}
+
+
+// Log Failed Emails
+function eeRSCF_Failed($wp_error) {
+	return error_log(print_r($wp_error, true));
+}
+add_action('wp_mail_failed', 'eeRSCF_Failed', 10, 1);
+
+
+
+
 function eeDevOutput($eeArray) {
 	return PHP_EOL . "<script>console.table(" . json_encode($eeArray) . ")</script>" . PHP_EOL;
 }

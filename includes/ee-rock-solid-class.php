@@ -15,10 +15,10 @@ class eeRSCF_Class {
 	public $pluginName = "Rock Solid Contact Form";
 	public $websiteLink = 'https://elementengage.com';
 	public $formID = 1;
-	public $theFormOutput = ''; // Front-End HTML Output
 	public $formSettings = array(); // Holds Current Form Settings
-	public $formsArray = array(); // Holds multiple form - TO DO
-	public $permalink = '';
+	public $confirm = '';
+	public $theFormOutput = '';
+	
 	public $basePath = '';
 	public $baseURL = '';
 	public $pluginPath = '';
@@ -38,18 +38,14 @@ class eeRSCF_Class {
 		'messages' => array(),
 		'warnings' => array(),
 		'errors' => array()
-	);
-		
-	// $this->log['notices'][] = 'Processing Form Settings';	
+	);	
 		
 		
 	// Default Contact Form
 	public $contactFormDefault = array(
-		'name' => 'Main Contact Form',
 		'to' => '',
 		'cc' => '',
 		'bcc' => '',
-		'confirm' => '', // The page after
 		'fields' => array(
 			'first-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'First Name'), 
 			'last-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Last Name'), 
@@ -93,50 +89,10 @@ class eeRSCF_Class {
 
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	// Methods -----------------------------------------------------------
-	
-	// Create a slug
-	public function eeRSCF_MakeSlug($string){
-	   $slug = preg_replace('/[^A-Za-z0-9-]+/', '-', $string);
-	   $slug = strtolower($slug);
-	   return $slug;
-	}
-	
-	// Undo a Slug
-	public function eeRSCF_UnSlug($slug){
-	   $string = str_replace('-', ' ', $slug);
-	   $string = ucwords($string);
-	   return $string;
-	}	
-	
-	// Get Forms Info
-	public function eeRSCF_GetForms() {
-		
-		for($i = 1; $i <= 99; $i++) {
-		
-			$eeThisformSettings = get_option('eeRSCF_' . $i);
-			
-			if( is_array($eeThisformSettings) ) {
-				
-				$this->eeFormsArray[$i] = $eeThisformSettings['name'];
-				
-				$this->log['notices'][] = 'Form Found: eeRSCF_' . $i;
-			}
-		}
-	}
-	
-	
-	
-	
 	private function eeRSCF_PostProcess() {
 	
+		global $eeHelper;
+		
 		$this->log['notices'][] = 'Processing the post...';
 	
 		$eeIgnore = ['eeRSCF', 'eeRSCF_ID', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER'];
@@ -169,7 +125,7 @@ class eeRSCF_Class {
 					break;
 			}
 	
-			$eeField = $this->eeRSCF_UnSlug($eeKey);
+			$eeField = $eeHelper->eeRSCF_UnSlug($eeKey);
 			$this->thePost[] = $eeField . ': ' . $eeValue;
 		}
 	
@@ -337,6 +293,8 @@ class eeRSCF_Class {
 	
 	public function eeRSCF_formDisplay() {
 		
+		global $eeHelper;
+		
 		$this->log['notices'][] = 'Displaying the Form...';
 		
 		if($this->log['errors']) {
@@ -375,7 +333,7 @@ class eeRSCF_Class {
 					
 					if($eeFieldArray['label']) { 
 						$this->theFormOutput .= stripslashes($eeFieldArray['label']); } 
-							else { $this->theFormOutput .= $this->eeRSCF_UnSlug($eeField); }
+							else { $this->theFormOutput .= $eeHelper->eeRSCF_UnSlug($eeField); }
 					
 					$this->theFormOutput .= '</label>';
 					
@@ -388,7 +346,7 @@ class eeRSCF_Class {
 					
 					// Check for custom label
 					if($eeFieldArray['label']) {
-						$this->theFormOutput .= $this->eeRSCF_MakeSlug($eeFieldArray['label']);
+						$this->theFormOutput .= $eeHelper->eeRSCF_MakeSlug($eeFieldArray['label']);
 					} else {
 						
 						$this->theFormOutput .= $eeField;
@@ -472,7 +430,7 @@ class eeRSCF_Class {
 	
 	public function eeRSCF_SendEmail() {
 		
-		global $eeRSCFU; // Get Upload Class
+		global $eeHelper; // Get Upload Class
 		
 		// $this->formID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
 		
@@ -500,7 +458,7 @@ class eeRSCF_Class {
 		// There's a file and its size is less than our defined limit
 		if(!empty($_FILES['file']['name'])) {
 			if($_FILES['file']['size'] <= $this->formSettings['fileMaxSize']*1048576) {
-				$eeRSCFU->eeRSCFU_Uploader();
+				$eeHelper->eeRSCFU_Uploader();
 			} else {
 				$this->log['errors'][] = 'File size is too large. Maximum allowed is ' . $this->formSettings['fileMaxSize'] . 'MB';
 			}
@@ -533,21 +491,12 @@ class eeRSCF_Class {
 				$eeBody .= $value . PHP_EOL . PHP_EOL;
 			}
 			
-			if($eeRSCFU->fileUploaded) { $eeBody .= 'File: ' . $eeRSCFU->fileUploaded . PHP_EOL . PHP_EOL; }
+			if($eeHelper->fileUploaded) { $eeBody .= 'File: ' . $eeHelper->fileUploaded . PHP_EOL . PHP_EOL; }
 			
 			$eeBody .=  PHP_EOL . PHP_EOL . 'This message was sent via the contact form located at ' . home_url() . '/' . PHP_EOL . PHP_EOL;
 			
 			$eeBody = stripslashes($eeBody);
 			$eeBody = strip_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
-			
-			if(filter_var($this->formSettings['confirm'], FILTER_VALIDATE_URL)) {
-				
-				$eeUrl = $this->formSettings['confirm'];
-			
-			} else {
-				
-				$eeUrl = home_url();
-			}
 			
 			// wp_die(print_r($this->formSettings));
 			
@@ -555,9 +504,9 @@ class eeRSCF_Class {
 				
 				$this->log['notices'][] = 'WP Mail Sent';
 				
-				wp_redirect($eeUrl); exit;
+				wp_redirect($this->confirm);
 				
-				// header('location: ' . $eeUrl); exit;
+				exit;
 				
 			} else {
 				
@@ -568,54 +517,6 @@ class eeRSCF_Class {
 			$this->log['errors'][] = 'Message not sent. Please try again.';
 		}	
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	function eeRSCF_NoticeEmail($messages, $to, $from, $name, $mode = 'standard') {
-		
-		if($to AND $from) {
-			
-			$body = '';
-			$headers = "From: $from";
-			
-			if($mode == 'error') {
-				$subject = $name . " Error";
-			} else {
-				$subject = $name . " Admin Notice";
-			}
-			
-			if(is_array($messages)) {
-				foreach ($messages as $value) {
-					if(is_array($value)) {
-						foreach ($value as $value2) {
-							$body .= $value2 . "\n\n";
-						}
-					} else {
-						$body .= $value . "\n\n";
-					}
-				}
-			} else {
-				$body = $messages . "\n\n";
-			}
-			
-			$body .= 'Via: ' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-		
-			if(!mail($to,$subject,$body,$headers)) { // Email the message or error report
-				?><script>alert('EMAIL SEND FAILED');</script><?php
-			}
-		
-		} else {
-			?><script>alert('EMAIL SEND FAILED');</script><?php
-		}
-		
-		return FALSE;		
-	}
-	
 	
 	
 	
@@ -649,16 +550,16 @@ class eeRSCF_Class {
 	
 	
 	
+	
+	
 	// Process Admin Settings		
 	public function eeRSCF_AdminSettingsProcess()	{
-		
-		// echo '<pre>'; print_r($this->log); echo '</pre>'; exit;
 		
 		$this->log['notices'][] = 'Processing Form Settings';
 		
 		if($_POST AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 			
-			global $wpdb, $eeRSCF, $eeRSCFU;
+			global $wpdb, $eeRSCF, $eeHelper;
 			
 			// Contact Form Fields and Destinations
 			if( isset($_POST['eeRSCF_formSettings']) ) {
@@ -758,25 +659,13 @@ class eeRSCF_Class {
 				}
 				
 				// Results Page
-				if(!empty($_POST['eeRSCF_confirm'])) {
-					
-					$eeRSCF->formSettings['confirm'] = filter_var($_POST['eeRSCF_confirm'], FILTER_VALIDATE_URL);
-					
-					if(strlen($eeRSCF->formSettings['confirm']) === 0) {
-						$eeRSCF->formSettings['confirm'] = home_url();
-					}
-				} else {
-					$eeRSCF->formSettings['confirm'] = home_url();
-				}
-				
-				
-				// echo '<pre>'; print_r($this->log); echo '</pre>'; exit;
+				if(!empty($_POST['eeRSCF_Confirm'])) {
+					$eeRSCF->confirm = filter_var($_POST['eeRSCF_Confirm'], FILTER_VALIDATE_URL);
+					if(empty($eeRSCF->confirm)) { $eeRSCF->confirm = home_url(); }
+				} else { $eeRSCF->confirm = home_url(); }
+				update_option('eeRSCF_Confirm', $eeRSCF->confirm);
 				
 			}
-			
-			
-			
-			
 			
 			
 			
@@ -787,8 +676,8 @@ class eeRSCF_Class {
 				$uploadMaxSize = (int) $_POST['eeMaxFileSize'];
 				
 				// Can't be more than the system allows.
-				if(!$uploadMaxSize OR $uploadMaxSize > $eeRSCFU->maxUploadLimit) { 
-					$uploadMaxSize = $eeRSCFU->maxUploadLimit;
+				if(!$uploadMaxSize OR $uploadMaxSize > $eeHelper->maxUploadLimit) { 
+					$uploadMaxSize = $eeHelper->maxUploadLimit;
 				}
 				$eeRSCF->formSettings['fileMaxSize'] = $uploadMaxSize; // Update the database
 				
@@ -797,9 +686,6 @@ class eeRSCF_Class {
 				if(!$formats) { $formats = $this->fileFormats; } // Go with default if none.
 				$eeRSCF->formSettings['fileFormats'] = $formats; // Update the database
 			}			
-			
-			
-			
 			
 			
 			
@@ -854,9 +740,7 @@ class eeRSCF_Class {
 				// Validate and sanitize the spamNoticeEmail field
 				if (isset($_POST['spamNoticeEmail'])) {
 					$eeRSCF->formSettings['spamNoticeEmail'] = filter_var($_POST['spamNoticeEmail'], FILTER_VALIDATE_EMAIL );
-				}				
-				
-				
+				}
 				
 			
 				// Spam Prevention
@@ -871,7 +755,7 @@ class eeRSCF_Class {
 				
 				// Honeypot
 				$settings = htmlspecialchars($_POST['spamHoneypot']);
-				$settings = $this->eeRSCF_MakeSlug($settings);
+				$settings = $eeHelper->eeRSCF_MakeSlug($settings);
 				$this->log['notices'] = 'Spam Honeypot: ' . $settings;
 				update_option('eeRSCF_spamHoneypot', $settings); // Update the database
 				
@@ -912,8 +796,6 @@ class eeRSCF_Class {
 			}
 			
 			
-			
-			
 			// Email Settings
 			if(isset($_POST['eeRSCF_EmailSettings'])) {
 				
@@ -922,7 +804,7 @@ class eeRSCF_Class {
 				// Validate and sanitize eeRSCF_EmailSettings
 				if ( isset( $_POST['eeRSCF_EmailSettings'] ) && $_POST['eeRSCF_EmailSettings'] == 'TRUE' ) {
 					$eeRSCF->formSettings['email'] = filter_var( $_POST['eeRSCF_email'], FILTER_SANITIZE_EMAIL );
-					$eeRSCF->formSettings['emailMode'] = ( $_POST['eeRSCF_emailMode'] == 'SMTP' ) ? 'SMTP' : 'PHP';
+					// $eeRSCF->formSettings['emailMode'] = ( $_POST['eeRSCF_emailMode'] == 'SMTP' ) ? 'SMTP' : 'PHP';
 				}
 				
 				// Validate and sanitize eeRSCF_emailFormat
@@ -973,61 +855,11 @@ class eeRSCF_Class {
 			
 			// Save to the Database
 			if(empty($this->log['errors'])) {
-				update_option('eeRSCF_Settings_' . $this->formID, $eeRSCF->formSettings); // Update the database
+				update_option('eeRSCF_Settings', $eeRSCF->formSettings); // Update the database
 				$this->log['messages'][] = 'The Settings Have Been Saved';
 			}
 			
 		}
-	}
-	
-	
-	
-	
-	// This method should return the results of an operation; success, warning or failure.
-	public function eeRSCF_ResultsNotification() {
-		
-		$eeOutput = '';
-		
-		$eeLogParts = array('errors' => 'error', 'warnings' => 'warning', 'messages' => 'success');
-		
-		foreach($eeLogParts as $eePart => $eeType) {
-			
-			if(!empty($this->log[$eePart])) {
-			
-				$eeOutput .= '<div class="';
-				
-				if( is_admin() ) {
-					$eeOutput .=  'notice notice-' . $eeType . ' is-dismissible';
-				} else {
-					$eeOutput .= 'eeResultsNotification eeResultsNotification_' . $eeType;
-				}
-				
-				$eeOutput .= '">
-				<ul>';
-				
-				foreach($this->log[$eePart] as $eeValue) { // We can go two-deep arrays
-					
-					if(is_array($eeValue)) {
-						foreach ($eeValue as $eeValue2) {
-							$eeOutput .= '
-							<li>' . $eeValue2 . '</li>' . PHP_EOL;
-						}
-					} else {
-						$eeOutput .= '
-						<li>' . $eeValue . '</li>' . PHP_EOL;
-					}
-				}
-				$eeOutput .= '
-				</ul>
-				</div>';
-				
-				$this->log[$eePart] = array(); // Clear this part fo the array
-				
-			}
-		}
-		
-		return $eeOutput;
-	
 	}	
 			
 			
