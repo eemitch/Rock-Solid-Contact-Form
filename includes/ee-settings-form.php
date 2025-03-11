@@ -2,20 +2,19 @@
 
 $eeOutput .= '
 	
+	<h2>Form Configuration</h2>
+	
 	<input type="hidden" name="eeRSCF_formSettings" value="TRUE" />
 	<input type="hidden" name="eeRSCF_ID" value="' . $eeRSCF->formID . '" />
 		<input type="hidden" name="tab" value="form_settings" />
 	
 	<fieldset id="eeRSCF_formSettings">
 	
-	<!-- <p>Select the contact form fields to display. Also select if the field should be required. Change the text for each label as required. A text input box for the message will be provided automatically.</p> -->
+	<p>Select the contact form fields to display. Also select if the field should be required. Change the text for each label as required. A text input box for the message will be provided automatically.</p>
 	
 	';
 			
 	$eeOutput .= '
-	<label>Shortcode</label><input id="eeRSCF_shortCode" type="text" name="eeRSCF_shortCode" value="[rock-solid-contact]" />
-	<p class="button eeRSCF_copyToClipboard">Copy Shortcode</p>
-	
 	<fieldset id="eeRSCF_delivery">
 	
 		<h3>Delivery</h3>
@@ -78,7 +77,7 @@ $eeOutput .= '
 				
 				<td><input type="text" name="eeRSCF_fields[' . $eeFieldName . '][' . $field . ']" value="';
 				
-				if($value) { $eeOutput .= stripslashes($value); } else { $eeOutput .= $eeRSCF->eeRSCF_UnSlug($field); }
+				if($value) { $eeOutput .= stripslashes($value); } else { $eeOutput .= $eeHelper->eeUnSlug($field); }
 		
 				$eeOutput .= '" size="32" /></td>';
 			

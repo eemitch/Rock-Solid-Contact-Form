@@ -24,10 +24,18 @@ function eeRSCF_Settings() {
 	$eeRSCF_Page = 'rock-solid-contact-form';
 	
 	// Output page header and tabs
-	$eeOutput = '<div class="eeRSCF_Tabs wrap">
-	<h1>' . __('Rock Solid Contact Form', 'rock-solid-contact-form') . '</h1>
+	$eeOutput = '
+	<header id="eeRSCF_Header">
+		<div class="eeRSCF_ShortcodeWrapper">
+			<input id="eeRSCF_shortCode" type="text" name="eeRSCF_shortCode" value="[rock-solid-contact]" />
+			<button class="eeRSCF_copyToClipboard">Copy</button>
+		</div>
+		<h1>' . __('Rock Solid Contact Form', 'rock-solid-contact-form') . '</h1>
+	</header>
+	
+	<div class="eeRSCF_Tabs wrap">
 	<div class="eeRSCF_Admin">
-	<h2 class="nav-tab-wrapper">';
+		<h2 class="nav-tab-wrapper">';
 
 	$tabs = array(
 		'form_settings' => __('Contact Form', 'rock-solid-contact-form'),
@@ -41,15 +49,6 @@ function eeRSCF_Settings() {
 	}
 
 	$eeOutput .= '</h2></div>'; // End Tabs
-
-	// Install Settings
-	if(empty($eeRSCF->formSettings)) {
-		$eeRSCF->contactFormDefault['to'] = get_option('admin_email');
-		update_option('eeRSCF_Settings', $eeRSCF->contactFormDefault);
-		$eeRSCF->confirm = home_url();
-		update_option('eeRSCF_Confirm', $eeRSCF->confirm);
-		$eeRSCF->formSettings = $eeRSCF->contactFormDefault;
-	}
 	
 	// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
 	

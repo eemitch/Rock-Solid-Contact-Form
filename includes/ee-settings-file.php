@@ -1,7 +1,5 @@
 <?php
 
-
-
 $eeOutput .= '
 		
 	<h2>File Attachments</h2>
@@ -12,8 +10,6 @@ $eeOutput .= '
 <fieldset>
 	<p>Files are uploaded to the web server rather than attached directly to messages. 
 	A link to the file is then included within the message.</p>
-	
-	<p>Files will be uploaded to: <em>' . $eeHelper->uploadUrl . '</em></p>
 	
 	<br class="eeClearFix" />
 	

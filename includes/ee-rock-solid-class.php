@@ -125,7 +125,7 @@ class eeRSCF_Class {
 					break;
 			}
 	
-			$eeField = $eeHelper->eeRSCF_UnSlug($eeKey);
+			$eeField = $eeHelper->eeUnSlug($eeKey);
 			$this->thePost[] = $eeField . ': ' . $eeValue;
 		}
 	
@@ -333,7 +333,7 @@ class eeRSCF_Class {
 					
 					if($eeFieldArray['label']) { 
 						$this->theFormOutput .= stripslashes($eeFieldArray['label']); } 
-							else { $this->theFormOutput .= $eeHelper->eeRSCF_UnSlug($eeField); }
+							else { $this->theFormOutput .= $eeHelper->eeUnSlug($eeField); }
 					
 					$this->theFormOutput .= '</label>';
 					
@@ -346,7 +346,7 @@ class eeRSCF_Class {
 					
 					// Check for custom label
 					if($eeFieldArray['label']) {
-						$this->theFormOutput .= $eeHelper->eeRSCF_MakeSlug($eeFieldArray['label']);
+						$this->theFormOutput .= $eeHelper->eeMakeSlug($eeFieldArray['label']);
 					} else {
 						
 						$this->theFormOutput .= $eeField;
@@ -455,12 +455,24 @@ class eeRSCF_Class {
 		
 		// echo '<pre>'; print_r($this->thePost); echo '</pre>'; exit;
 		
-		// There's a file and its size is less than our defined limit
-		if(!empty($_FILES['file']['name'])) {
-			if($_FILES['file']['size'] <= $this->formSettings['fileMaxSize']*1048576) {
-				$eeHelper->eeRSCFU_Uploader();
+		
+		// File Attachment
+		$eeFileURL = FALSE;
+		if(!empty($_FILES['file']) AND $this->formSettings['fields']['attachments']['show'] == 'YES') {
+			
+			$formatsArray = explode(',', $this->formSettings['fileFormats']);
+			$formatsArray = array_filter(array_map('trim', $formatsArray));
+			$fileExt = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+			$max_size = $this->formSettings['fileMaxSize'] * 1048576; // Convert MB to Bytes
+		
+			if( $_FILES['file']['size'] <= $max_size ) {
+				if( in_array($fileExt,$formatsArray) ) {
+					$eeFileURL = $eeHelper->eeUploader($_FILES['file'],  'ee-contact'  );
+				} else {
+					$this->log['errors'][] = 'FileType ' . $fileExt . ' Not Allowed';
+				}
 			} else {
-				$this->log['errors'][] = 'File size is too large. Maximum allowed is ' . $this->formSettings['fileMaxSize'] . 'MB';
+				$this->log['errors'][] = 'File size of ' . $this->eeBytesToSize($_FILES['file']['size']) . ' is too large. Maximum allowed is ' . $this->formSettings['fileMaxSize'] . 'MB';
 			}
 		}
 
@@ -491,7 +503,7 @@ class eeRSCF_Class {
 				$eeBody .= $value . PHP_EOL . PHP_EOL;
 			}
 			
-			if($eeHelper->fileUploaded) { $eeBody .= 'File: ' . $eeHelper->fileUploaded . PHP_EOL . PHP_EOL; }
+			if($eeFileURL) { $eeBody .= 'File: ' . $eeFileURL . PHP_EOL . PHP_EOL; }
 			
 			$eeBody .=  PHP_EOL . PHP_EOL . 'This message was sent via the contact form located at ' . home_url() . '/' . PHP_EOL . PHP_EOL;
 			
@@ -682,7 +694,7 @@ class eeRSCF_Class {
 				$eeRSCF->formSettings['fileMaxSize'] = $uploadMaxSize; // Update the database
 				
 				// Strip all but what we need for the comma list of file extensions
-				$formats = preg_replace("/[^a-z0-9.,]/i", "", $_POST['eeFormats']);
+				$formats = preg_replace("/[^a-z0-9,]/i", "", $_POST['eeFormats']);
 				if(!$formats) { $formats = $this->fileFormats; } // Go with default if none.
 				$eeRSCF->formSettings['fileFormats'] = $formats; // Update the database
 			}			
@@ -755,7 +767,7 @@ class eeRSCF_Class {
 				
 				// Honeypot
 				$settings = htmlspecialchars($_POST['spamHoneypot']);
-				$settings = $eeHelper->eeRSCF_MakeSlug($settings);
+				$settings = $eeHelper->eeMakeSlug($settings);
 				$this->log['notices'] = 'Spam Honeypot: ' . $settings;
 				update_option('eeRSCF_spamHoneypot', $settings); // Update the database
 				

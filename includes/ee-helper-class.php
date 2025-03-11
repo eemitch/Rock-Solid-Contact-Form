@@ -7,14 +7,14 @@ class eeHelper_Class {
 	// GENERAL -------------
 	
 	// Create a slug
-	public function eeRSCF_MakeSlug($string){
+	public function eeMakeSlug($string){
 	   $slug = preg_replace('/[^A-Za-z0-9-]+/', '-', $string);
 	   $slug = strtolower($slug);
 	   return $slug;
 	}
 	
 	// Undo a Slug
-	public function eeRSCF_UnSlug($slug){
+	public function eeUnSlug($slug){
 	   $string = str_replace('-', ' ', $slug);
 	   $string = ucwords($string);
 	   return $string;
@@ -113,42 +113,11 @@ class eeHelper_Class {
 	
 	
 	// FILE UPLOADS ------------------------------------------------------------------------
-	
-	public $uploadFolderName = eeRSCF_SLUG; // Folder will be created in the WP uploads folder
-	public $fileUploaded = FALSE;
 	public $maxUploadLimit = 8;
-	public $uploadDir = '';
-	public $uploadUrl = '';
-	
-	
-	public function eeHelper() {
-		
-		global $eeRSCF;
-		
-		$eeRSCF->log['notices'][] = 'Running upload setup...';
-		
-		$uploadDirArray = wp_upload_dir();
-		
-		$this->uploadDir = $uploadDirArray['basedir'] . '/' . $this->uploadFolderName . '/';
-		$eeRSCF->log['notices'][] = 'Upload Directory: ' . $this->uploadDir;
-		
-		$this->uploadUrl = $uploadDirArray['baseurl'] . '/' . $this->uploadFolderName . '/';
-		$eeRSCF->log['notices'][] = 'Upload URL: ' . $this->uploadUrl;
-		
-		$this->eeRSCFU_DetectUploadLimit();
-		
-		if(!is_dir($this->uploadDir)) {
-			$this->eeRSCFU_CreateUploadDir();
-		}
-	}
-	
-	
-	
-	
 	
 	
 	// Detect max upload size.
-	public function eeRSCFU_DetectUploadLimit() {
+	public function eeDetectUploadLimit() {
 		
 		global $eeRSCF;
 		
@@ -166,84 +135,7 @@ class eeHelper_Class {
 	}
 	
 	
-	
-	
-	
-	
-	// Create the upload folder if required.
-	private function eeRSCFU_CreateUploadDir() {
-	
-		global $eeRSCF;
-		
-		$upload_dir = wp_upload_dir();
-		$eeRSCF_UploadDir = $upload_dir['basedir'] . '/' . $this->uploadFolderName;
-		
-		$eeRSCF->log['notices'][] = 'Checking Folder...';
-		$eeRSCF->log['notices'][] = $eeRSCF_UploadDir;
-		
-		if(strlen($eeRSCF_UploadDir)) {
-			
-			if(!is_writable($eeRSCF_UploadDir)) {
-				
-				$eeRSCF->log['notices'][] = 'No Directory Found.';
-				$eeRSCF->log['notices'][] = 'Creating Upload Directory ...';
-				
-				// Environment Detection
-				if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-					$eeRSCF->log['notices'][] = 'Windows detected.';
-					mkdir($eeRSCF_UploadDir); // Windows
-				} else {
-					$eeRSCF->log['notices'][] = 'Linux detected.';
-					if(!mkdir($eeRSCF_UploadDir, 0755)) { // Linux - Need to set permissions
-						$eeRSCF_Log['errors'][] = 'Cannot Create: ' . $eeRSCF_UploadDir;
-					}
-				}
-				
-				if(!is_writable($eeRSCF_UploadDir)) {
-					$eeRSCF_Log['errors'][] = 'ERROR: I could not create the upload directory: ' . $eeRSCF_UploadDir;
-					
-					return FALSE;
-				
-				} else {
-					
-					$eeRSCF->log['notices'][] = 'Looks Good';
-				}
-			} else {
-				$eeRSCF->log['notices'][] = 'Looks Good';
-			}
-			
-			// Check index.html, create if needed.
-					
-			$eeFile = $eeRSCF_UploadDir . '/index.html'; // Disallow direct file indexing.
-			
-			if($handle = fopen($eeFile, "a+")) {
-				
-				if(!is_readable($eeFile)) {
-					
-					$eeRSCF_Log['errors'][] = 'ERROR: Could not write index.html';
-					
-					return FALSE;
-					
-				} else {
-					
-					fclose($handle);
-				}
-			}
-			
-		} else {
-			$eeRSCF_Log['errors'] = 'No upload directory defined';
-					
-			return FALSE;
-		}
-		
-		$this->uploadDir = $eeRSCF_UploadDir;
-		
-		return TRUE;
-		
-	}
-	
-	
-	private function eeRSCFU_BytesToSize($bytes, $precision = 2) {  
+	private function eeBytesToSize($bytes, $precision = 2) {  
 		
 		$kilobyte = 1024;
 		$megabyte = $kilobyte * 1024;
@@ -270,91 +162,56 @@ class eeHelper_Class {
 	}
 	
 	
-	public function eeRSCFU_Uploader() {
 	
-		global $eeRSCF;
+	// File Uploader
+	function eeUploader($eeFile, $eePath = '') { // File Object, Path Relative to wp-content/uploads
 		
-		$eeRSCF->log['notices'][] = 'Preparing for the upload...';
-		
-		if($_FILES['file']['name']) {
-			
-			$eeRSCF->log['notices'][] = 'File Name: ' . $_FILES['file']['name'];
-			
-			$time = date('m-d-Y_G-i-s'); // We'll add a timestamp so files don't get overwritten.
-			
-			// Get the original file extension
-			$fileName = $_FILES['file']['name'];
-			
-			$ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-			$ext = '.' . $ext;
-			
-			$eeRSCF->log['notices'][] = 'File Ext: ' . $ext;
-			
-			// Make array and remove white space from array values
-			$formatsArray = explode(',', $eeRSCF->formSettings['fileFormats']);
-			$formatsArray = array_filter(array_map('trim', $formatsArray));
-			
-			$eeRSCF->log['notices'][] = 'Allowed Formats: ' . implode(', ', $formatsArray);
-			
-			// Only allow allowed files, ah?
-			if (in_array($ext,$formatsArray)) {
-			
-				$eeRSCF->log['notices'][] = 'Beginning the upload...';
-				
-				// File Naming
-				$fileName = pathinfo($_FILES['file']['name'], PATHINFO_FILENAME) . '_(' . $time . ')'; 
-				$fileName = str_replace(' ', '_', $fileName); // Replace any spaces with underscores
-			
-				$newFile = $fileName . $ext;  // Assemble new file name and extension.
-				$targetPath = $this->uploadDir . basename($newFile); // Define where the file will go.
-			
-				if (@move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) { // Move the file to the final destination
-						
-					$this->fileUploaded = $this->uploadUrl . $newFile;
-					$eeRSCF->log['notices'][] = "File Uploaded: " . $newFile . " \n\n(" . self::eeRSCFU_BytesToSize(filesize($this->uploadDir . $newFile)) . ')';
-					return TRUE;
-					
-				} else { // Upload Problem
-					
-					$eeRSCF->log['errors'][] = 'No file was uploaded';
-					
-					switch ($_FILES['file']['error']) {
-						case 1:
-							// The file exceeds the upload_max_filesize setting in php.ini
-							$eeRSCF->log['errors'][] = 'File Too Large - Please resize your file to meet the file size limit.';
-							break;
-						case 2:
-							// The file exceeds the MAX_FILE_SIZE setting in the HTML form
-							$eeRSCF->log['errors'][] = 'File Too Large - Please resize your file to meet the file size limits.';
-							break;
-						case 3:
-							// The file was only partially uploaded
-							$eeRSCF->log['errors'][] = 'Upload Interrupted - Please back up and try again.';
-							break;
-						case 4:
-							// No file was uploaded
-							$eeRSCF->log['errors'][] = 'No File was Uploaded - Please back up and try again.';
-							break;
-					}
-					
-				}
-			} else {
-				$eeRSCF->log['errors'][] = 'Sorry, the file type being uploaded is not accepted by this website.';
-				$eeRSCF->log['errors'][] = "Your Format: $ext";
-				$eeRSCF->log['errors'][] = 'Allowed Formats: ' . implode(', ', $formatsArray);
-			}
-			
-			
-		} else {
-			$eeRSCF->log['errors'][] = 'No file reference.';
+		// Check if a file was uploaded
+		if(empty($eeFile)) {
+			trigger_error('No file uploaded or an error occurred.');
+			return FALSE;
 		}
-					
-		$eeRSCF->log['notices'][] = $eeRSCF->log['errors'];
-			
-	} // END uploader
+		
+		// Get upload directory info
+		$upload_dir = wp_upload_dir();
+		$base_dir = $upload_dir['basedir']; // Absolute base directory
+		$base_url = $upload_dir['baseurl']; // Base URL
+		
+		// Ensure the directory exists, create if necessary
+		if (!is_dir($base_dir . '/' . $eePath)) {
+			if (!wp_mkdir_p($base_dir . '/' . $eePath)) {
+				trigger_error('Failed to create upload directory: ' . $base_dir . '/' . $eePath, E_USER_WARNING);
+				return FALSE;
+			}
+		}
+		
+		// Prevent directory traversal
+		$given_path = $base_dir . '/' . $eePath; // Remove slashes to avoid double slashes
+		$resolved_path = realpath($base_dir . '/' . $eePath);
+		if($resolved_path === false || strpos($resolved_path, $given_path) !== 0) {
+			trigger_error('Invalid upload directory: ' . $resolved_path, E_USER_WARNING);
+			return FALSE;
+		}
 	
+		// Get file details
+		$file_name = sanitize_file_name($eeFile['name']);
+		$file_tmp = $eeFile['tmp_name'];
+		$file_size = $eeFile['size'];
+		$file_type = pathinfo($file_name, PATHINFO_EXTENSION);
+	
+		// Generate a unique file name
+		$unique_file_name = wp_unique_filename($eePath, $file_name);
+		$file_destination = $resolved_path . '/' . $unique_file_name;
+	
+		// Move file to upload directory
+		if(move_uploaded_file($file_tmp, $file_destination)) {
+			return str_replace($base_dir, $base_url, $file_destination); // Return the URL
+		} else {
+			trigger_error('Upload Process Failed');
+			return FALSE;
+		}
+	}
 
 }
-	
 	
 ?>
