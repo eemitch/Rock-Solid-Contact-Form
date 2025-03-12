@@ -30,10 +30,6 @@ if($eeRSCF->formSettings['emailMode'] != 'SMTP') {
 
 
 $eeOutput .= '
-<br class="eeClearFix" />
-
-<p><strong>NOTE: </strong> When you get a message, simply reply. It will go to the email address of the person who submitted the contact form.</p>
-
 
 <h3>SMTP <small>(Optional)</small></h3>
 
@@ -57,8 +53,6 @@ if($eeRSCF->formSettings['emailMode'] == 'SMTP') { $eeOutput .= ' selected="sele
 $eeOutput .= '>ON - Using SMTP (Recommended)</option>
 	</select>
 	
-	<p><strong>NOTE: </strong> You may need to contact your host to get the settings required.</p>
-	
 </fieldset>	
 
 
@@ -71,6 +65,8 @@ $eeOutput .= '>
 <fieldset id="eeRSCF_emailModeSMTP">
 
 <h3>Configure an SMTP Email Account</h3>
+
+<p>You may need to contact your host to get the settings required.</p>
 
 
 <label for="eeRSCF_emailFormat">Message Format</label>

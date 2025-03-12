@@ -61,10 +61,9 @@ class eeRSCF_Class {
 			'subject' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Subject'), 
 			'attachments' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Attachments')
 		),
-		'fileAllowUploads' => 'YES',
 		'fileMaxSize' => 8,
 		'fileFormats' => '.gif, .jpg, .jpeg, .bmp, .png, .tif, .tiff, .txt, .eps, .psd, .ai, .pdf, .doc, .xls, .ppt, .docx, .xlsx, .pptx, .odt, .ods, .odp, .odg, .wav, .wmv, .wma, .flv, .3gp, .avi, .mov, .mp4, .m4v, .mp3, .webm, .zip',
-		'spamBlock' => 'YES',
+		'spamBlock' => 'NO',
 		'spamBlockBots' => 'YES',
 		'spamHoneypot' => 'link',
 		'spamEnglishOnly' => 'YES',
@@ -682,7 +681,8 @@ class eeRSCF_Class {
 			
 			
 			// Attachements
-			if( isset($_POST['eeRSCF_FileSettings']) ) {
+			if($eeRSCF->formSettings['fields']['attachments']['show'] == 'YES' 
+				AND isset($_POST['eeRSCF_FileSettings']) ) {
 				
 				// This must be a number
 				$uploadMaxSize = (int) $_POST['eeMaxFileSize'];
@@ -816,7 +816,7 @@ class eeRSCF_Class {
 				// Validate and sanitize eeRSCF_EmailSettings
 				if ( isset( $_POST['eeRSCF_EmailSettings'] ) && $_POST['eeRSCF_EmailSettings'] == 'TRUE' ) {
 					$eeRSCF->formSettings['email'] = filter_var( $_POST['eeRSCF_email'], FILTER_SANITIZE_EMAIL );
-					// $eeRSCF->formSettings['emailMode'] = ( $_POST['eeRSCF_emailMode'] == 'SMTP' ) ? 'SMTP' : 'PHP';
+					$eeRSCF->formSettings['emailMode'] = ( $_POST['eeRSCF_emailMode'] == 'SMTP' ) ? 'SMTP' : 'PHP';
 				}
 				
 				// Validate and sanitize eeRSCF_emailFormat
