@@ -119,7 +119,7 @@ function eeRSCF_UpdatePlugin() {
 	$eeVersion = get_option('eeRSCF_Version');
 	if($eeVersion == eeRSCF_Version) { return TRUE; } // Return if we're good.
 	
-	if($eeRSCF->formSettings) { // Installed
+	if($eeRSCF->formSettings OR $eeVersion) { // Installed
 		
 		if(version_compare($eeVersion, eeRSCF_Version, '<') ) {
 			
