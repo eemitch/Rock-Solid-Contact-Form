@@ -58,7 +58,8 @@ function eeRSCF_Setup() {
 		$eeRSCF->confirm = get_option('eeRSCF_Confirm');
 	}
 
-
+	// Load text domain for internationalization
+	load_plugin_textdomain( 'ee-rock-solid-contact-form', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 
 	add_action( 'admin_menu', 'eeRSCF_BackEnd' );
 	add_action( 'admin_enqueue_scripts', 'eeRSCF_AdminEnqueue' );

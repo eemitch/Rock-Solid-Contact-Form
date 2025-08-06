@@ -26,6 +26,7 @@ class eeRSCF_Class {
 	public $formSettings = array(); // Holds Current Form Settings
 	public $confirm = '';
 	public $theFormOutput = '';
+	public $fileFormats = 'jpg,jpeg,png,gif,pdf,doc,docx,txt'; // Default file formats
 
 	public $basePath = '';
 	public $baseURL = '';
@@ -984,17 +985,17 @@ class eeRSCF_Class {
 
 				// Validate and sanitize eeRSCF_emailName
 				if ( isset( $_POST['eeRSCF_emailName'] ) ) {
-					$eeRSCF->formSettings['emailName'] = htmlspecialchars( $_POST['eeRSCF_emailName'], ENT_QUOTES );
+					$eeRSCF->formSettings['emailName'] = sanitize_text_field( $_POST['eeRSCF_emailName'] );
 				}
 
 				// Validate and sanitize eeRSCF_emailServer
 				if ( isset( $_POST['eeRSCF_emailServer'] ) ) {
-					$eeRSCF->formSettings['emailServer'] = htmlspecialchars( $_POST['eeRSCF_emailServer'], ENT_QUOTES );
+					$eeRSCF->formSettings['emailServer'] = sanitize_text_field( $_POST['eeRSCF_emailServer'] );
 				}
 
 				// Validate and sanitize eeRSCF_emailUsername
 				if ( isset( $_POST['eeRSCF_emailUsername'] ) ) {
-					$eeRSCF->formSettings['emailUsername'] = htmlspecialchars( $_POST['eeRSCF_emailUsername'], ENT_QUOTES );
+					$eeRSCF->formSettings['emailUsername'] = sanitize_text_field( $_POST['eeRSCF_emailUsername'] );
 				}
 
 				// Validate and sanitize eeRSCF_emailPassword
