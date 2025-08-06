@@ -1,7 +1,7 @@
 <?php
 
 $eeOutput .= '
-	
+
 <h2>Form Email Sender</h2>
 
 <input type="hidden" name="eeRSCF_EmailSettings" value="TRUE" />
@@ -9,21 +9,21 @@ $eeOutput .= '
 
 <fieldset>
 
-<p>The Contact Form sends an email message to you when someone submits the form. 
+<p>The Contact Form sends an email message to you when someone submits the form.
 Therefore, a rock solid contact form needs to have an email address to send from.</p>
 
 
 <label for="eeRSCF_email">The Form\'s Email</label>
 	<input type="email" name="eeRSCF_email" value="';
-	
+
 if($eeRSCF->formSettings['email']) { $eeOutput .= $eeRSCF->formSettings['email']; } else { echo get_option('eeRSCF_email'); }
-	
+
 $eeOutput .= '" class="adminInput" id="eeRSCF_email" size="64" />';
 
 if($eeRSCF->formSettings['emailMode'] != 'SMTP') {
 
 	$eeOutput .= '
-	
+
 	<p class="eeNote">To improve deliverability, the form\'s email address should be a working address on this web server, such as <strong><em>mail@' . $_SERVER['HTTP_HOST'] . '</em></strong>.</p>';
 }
 
@@ -33,8 +33,8 @@ $eeOutput .= '
 
 <h3>SMTP <small>(Optional)</small></h3>
 
-<p>To improve email appearance, options 
-and to protect your domain from blacklisting, it is recommended to configure an 
+<p>To improve email appearance, options
+and to protect your domain from blacklisting, it is recommended to configure an
 actual email account for the contact form and use SMTP to send messages rather than
 relying on the built-in Wordpress(PHP) mailer.</p>
 
@@ -42,22 +42,22 @@ relying on the built-in Wordpress(PHP) mailer.</p>
 
 <select name="eeRSCF_emailMode" id="eeRSCF_emailMode" class="">
 		<option value="PHP"';
-		
+
 if($eeRSCF->formSettings['emailMode'] == 'PHP') { $eeOutput .= ' selected="selected"'; }
-		
+
 $eeOutput .= '>OFF - Using Wordpress Mailer</option>
 		<option value="SMTP"';
-		
+
 if($eeRSCF->formSettings['emailMode'] == 'SMTP') { $eeOutput .= ' selected="selected"'; }
-		
+
 $eeOutput .= '>ON - Using SMTP (Recommended)</option>
 	</select>
-	
-</fieldset>	
+
+</fieldset>
 
 
 <div id="eeRSCF_SMTPEntry"';
-	
+
 if($eeRSCF->formSettings['emailMode'] != 'SMTP') { $eeOutput .= ' class="eeHide"'; }
 
 $eeOutput .= '>
@@ -73,15 +73,15 @@ $eeOutput .= '>
 
 <select name="eeRSCF_emailFormat" id="eeRSCF_emailFormat" class="">
 		<option value="TEXT"';
-		
+
 if($eeRSCF->formSettings['emailFormat'] == 'TEXT') { $eeOutput .= ' selected="selected"'; }
-		
+
 $eeOutput .= '>Text</option>
 		<option value="HTML"';
-		
+
 if($eeRSCF->formSettings['emailFormat'] == 'HTML') { $eeOutput .= ' selected="selected"'; }
-		
-		
+
+
 $eeOutput .= '>HTML</option>
 	</select>
 
@@ -91,7 +91,7 @@ $eeOutput .= '>HTML</option>
 
 
 <label for="eeRSCF_emailName">The Form Name</label>
-<input type="text" name="eeRSCF_emailName" value="';		
+<input type="text" name="eeRSCF_emailName" value="';
 
 if($eeRSCF->formSettings['emailName']) { $eeOutput .= $eeRSCF->formSettings['emailName']; } else { $eeOutput .= 'Rock Solid Contact Form'; }
 
@@ -126,8 +126,8 @@ if($eeRSCF->formSettings['emailUsername']) {
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailUsername" size="64" />
 
 	<p class="eeNote">This is the username for your local mail server, often the complete email address.</p>
-	
-	
+
+
 
 
 <label for="eeRSCF_emailPassword">Mail Account Password</label>
@@ -146,24 +146,24 @@ $eeOutput .= '" class="adminInput" id="eeRSCF_emailPassword" size="64" />
 
 <select name="eeRSCF_emailSecure" id="eeRSCF_emailSecure" class="">
 		<option value="SSL"';
-		
+
 if($eeRSCF->formSettings['emailSecure'] == 'SSL') { $eeOutput .= ' selected="selected"'; }
-		
-		
+
+
 $eeOutput .= '>Use SSL</option>
 		<option value="TSL"';
-		
+
 if($eeRSCF->formSettings['emailSecure'] == 'TSL') { $eeOutput .= ' selected="selected"'; }
-		
-		
+
+
 $eeOutput .= '>Use TSL</option>
 		<option value="NO"';
-		
+
 if($eeRSCF->formSettings['emailSecure'] == 'NO') { $eeOutput .= ' selected="selected"'; }
-		
+
 $eeOutput .= '>Unencrypted</option>
 	</select>
-	
+
 	<p class="eeNote">SSL (Secure Sockets Layers) establishes an encrypted link between this web server and your receiving email server when sending messages.</p>
 
 
@@ -174,15 +174,15 @@ $eeOutput .= '>Unencrypted</option>
 
 <select name="eeRSCF_emailAuth" id="eeRSCF_emailAuth" class="">
 		<option value="YES"';
-		
+
 if($eeRSCF->formSettings['emailAuth'] == 'YES') { $eeOutput .= ' selected="selected"'; }
-		
+
 $eeOutput .= '>Require authorization (Recommended)</option>
 		<option value="NO"';
-		
+
 if($eeRSCF->formSettings['emailAuth'] == 'NO') { $eeOutput .= ' selected="selected"'; }
-		
-		
+
+
 $eeOutput .= '>No Authorization</option>
 	</select>
 
@@ -200,28 +200,28 @@ if($eeRSCF->formSettings['emailPort']) { $eeOutput .= $eeRSCF->formSettings['ema
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailPort" size="64" />
 
 	<p class="eeNote">This is the outgoing mail port. Common ports are 25, 465, 587, 2525 and 2526</p>
-	
 
-	
+
+
 
 <label for="eeRSCF_emailDebug">Debug Mode</label>
 
 <select name="eeRSCF_emailDebug" id="eeRSCF_emailDebug" class="">
 		<option value="NO"';
-		
+
 if($eeRSCF->formSettings['emailDebug'] == 'NO') { $eeOutput .= ' selected="selected"'; }
-		
+
 $eeOutput .= '>OFF</option>
 		<option value="YES"';
-		
+
 if($eeRSCF->formSettings['emailDebug'] == 'YES') { $eeOutput .= ' selected="selected"'; }
-		
-		
+
+
 $eeOutput .= '>ON</option>
 	</select>
-	
+
 	<p class="eeNote">This will write errors to your local Wordpress error log file. Turn this ON only when troubleshooting.</p>
-	
+
 
 
 </fieldset>

@@ -3,7 +3,7 @@ Contributors: eemitch
 Requires at least: 5.0
 Requires PHP: 7.4
 Tested up to: 6.4
-Stable tag: 2.1
+Stable tag: 2.1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -47,13 +47,15 @@ Yes, the settings allow you to enable/disable fields, adjust spam protection, an
 
 == Upgrade Notice ==
 
-= 2.1 =
-- Major security and spam prevention improvements.
-- Better file attachment handling and validation.
-- Updated admin UI with improved usability.
-- PHP 8.x compatibility verified.
+= 2.1.2 =
+- Minor improvements
 
 == Changelog ==
+
+= 2.1.2 =
+
+* Fixed an bug with allowed file upload types for first installers.
+
 
 = 2.1 =
 * Improved file upload security, including directory traversal protection.

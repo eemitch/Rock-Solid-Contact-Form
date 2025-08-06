@@ -1,5 +1,5 @@
 <?php
-	
+
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeRSCF_Nonce' )) exit('That is Noncense!'); // Exit if nonce fails
 
@@ -22,11 +22,11 @@ function eeRSCF_ContactProcess() {
 
 // Load stuff we need in the front-side head
 function eeRSCF_Enqueue() {
-	
+
 	// Register the style like this for a theme:
 	wp_register_style( 'ee-rock-solid-contact-form-css', plugin_dir_url(__FILE__) . '../css/style.css');
 	wp_enqueue_style('ee-rock-solid-contact-form-css');
-	
+
 	// Javascript
 	$eeDeps = array('jquery');
 	wp_enqueue_script('ee-rock-solid-contact-form-js-footer',plugin_dir_url(__FILE__) . '../js/scripts.js',$eeDeps,'30',TRUE);
@@ -36,14 +36,14 @@ function eeRSCF_Enqueue() {
 
 // Load stuff we need in the Admin head
 function eeRSCF_AdminEnqueue($eeHook) {
-		
+
 	// wp_die($eeHook); // Use this to discover the hook for each page
-	
+
 	// Only load scripts if on these Admin pages.
 	$eeHooks = array(
 		'toplevel_page_rock-solid-contact-form'
 	);
-	
+
 	if(in_array($eeHook, $eeHooks)) {
 		wp_enqueue_style( 'rock-solid-contact-form-admin-style', plugins_url( '../css/style-admin.css', __FILE__ ) );
 		wp_enqueue_script('rock-solid-contact-form-admin-js', plugins_url('../js/scripts-admin.js', __FILE__) );
@@ -54,12 +54,12 @@ function eeRSCF_AdminEnqueue($eeHook) {
 
 // Admin Menu
 function eeRSCF_BackEnd() {
-	
+
 	global $eeRSCF;
-	
+
 	$eeRSCF_Nonce = wp_create_nonce('eeRSCF_Nonce'); // Security
 	include_once(plugin_dir_path(__FILE__) . '../includes/ee-settings.php'); // Admin's List Management Page
-	
+
 	// Top-Level Menu Addition
 	add_menu_page(__('Rock Solid Contact Form', 'rock-solid-contact-form'), __('Contact Form', 'rock-solid-contact-form'), 'edit_posts', 'rock-solid-contact-form', 'eeRSCF_Settings', '
 dashicons-email');
@@ -85,7 +85,7 @@ function eeDevOutput($eeArray) {
 
 // Get Common Words from EE Server
 function eeGetRemoteSpamWords($eeUrl) {
-  
+
   // Try to get the content using file_get_contents()
   $eeContent = @file_get_contents($eeUrl);
 
@@ -106,45 +106,45 @@ function eeGetRemoteSpamWords($eeUrl) {
 
 // Write log file
 function eeRSCF_WriteLogFile($eeLog) {
-	
+
 	if($eeLog) {
-		
+
 		$eeLogFile = plugin_dir_path( __FILE__ ) . 'logs/eeLog.txt';
-		
+
 		// File Size Management
 		$eeLimit = 262144; // 262144 = 256kb  1048576 = 1 MB
 		$eeSize = @filesize($eeLogFile);
-		
+
 		if(@filesize($eeLogFile) AND $eeSize > $eeLimit) {
 			unlink($eeLogFile); // Delete the file. Start Anew.
 		}
-		
+
 		// Write the Log Entry
 		if($handle = @fopen($eeLogFile, "a+")) {
-			
+
 			if(@is_writable($eeLogFile)) {
-			    
+
 				fwrite($handle, 'Date: ' . date("Y-m-d H:i:s") . "\n");
-			    
+
 			    foreach($eeLog as $key => $logEntry){
-			    
-			    	if(is_array($logEntry)) { 
-				    	
+
+			    	if(is_array($logEntry)) {
+
 				    	foreach($logEntry as $key2 => $logEntry2){
 					    	fwrite($handle, '(' . $key2 . ') ' . $logEntry2 . "\n");
 					    }
-					    
+
 				    } else {
 					    fwrite($handle, '(' . $key . ') ' . $logEntry . "\n");
 				    }
 			    }
-			    	
+
 			    fwrite($handle, "\n\n\n---------------------------------------\n\n\n"); // Separator
-			
+
 			    fclose($handle);
-			    
+
 			    return TRUE;
-			 
+
 			} else {
 			    return FALSE;
 			}

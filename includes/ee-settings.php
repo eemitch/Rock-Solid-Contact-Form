@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) exit; // Exit if accessed directly
 if (!wp_verify_nonce($eeRSCF_Nonce, 'eeRSCF_Nonce')) exit('That is Noncense!'); // Exit if nonce fails
 
 function eeRSCF_Settings() {
-	
+
 	global $eeRSCF, $eeHelper;
 
 	$eeRSCF->formID = 1;
@@ -22,7 +22,7 @@ function eeRSCF_Settings() {
 	// Determine the active tab
 	$active_tab = isset($_REQUEST['tab']) ? $_REQUEST['tab'] : 'settings';
 	$eeRSCF_Page = 'rock-solid-contact-form';
-	
+
 	// Output page header and tabs
 	$eeOutput = '
 	<header id="eeRSCF_Header">
@@ -32,7 +32,7 @@ function eeRSCF_Settings() {
 		</div>
 		<h1>' . __('Rock Solid Contact Form', 'rock-solid-contact-form') . '</h1>
 	</header>
-	
+
 	<div class="eeRSCF_Tabs wrap">
 	<div class="eeRSCF_Admin">
 		<h2 class="nav-tab-wrapper">';
@@ -49,10 +49,10 @@ function eeRSCF_Settings() {
 	}
 
 	$eeOutput .= '</h2></div>'; // End Tabs
-	
+
 	// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
-	
-	
+
+
 	$eeOutput .= $eeHelper->eeRSCF_ResultsNotification();
 	$eeOutput .= '<form action="' . admin_url() . '/admin.php?page=rock-solid-contact-form" method="POST" id="eeRSCF_Settings">
 		<input type="hidden" name="eeRSCF_Settings" value="TRUE" />';
@@ -71,16 +71,16 @@ function eeRSCF_Settings() {
 
 	// Submit Button & Footer
 	$eeOutput .= '<input id="eeRSCF_SAVE" type="submit" value="SAVE" /></form>';
-	$eeOutput .= '<div id="eeAdminFooter"><p><a href="' . $eeRSCF->websiteLink . '">' . 
+	$eeOutput .= '<div id="eeAdminFooter"><p><a href="' . $eeRSCF->websiteLink . '">' .
 		$eeRSCF->pluginName . ' &rarr; ' . __('Version', 'rock-solid-contact-form') . ' ' . eeRSCF_Version . '</a></p></div>';
-	
+
 	$eeOutput .= '</div>'; // End wrap
 
 	// Debug Mode Output
 	if (eeRSCF_DevMode) {
 		$eeOutput .= eeDevOutput($eeRSCF->log);
 	}
-	
+
 	// Dump the HTML buffer
 	echo $eeOutput;
 }
