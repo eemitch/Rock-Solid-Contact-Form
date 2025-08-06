@@ -1,8 +1,15 @@
 <?php
+/**
+ * Core utility functions for Rock Solid Contact Form
+ *
+ * @package Rock_Solid_Contact_Form
+ * @since 2.1.2
+ * @author Mitchell Bennis - Element Engage, LLC
+ */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeRSCF_Nonce' )) exit('That is Noncense!'); // Exit if nonce fails
-
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly
+}
 
 // Shortcode - Usage: [rock-solid-contact]
 function eeRSCF_FrontEnd($atts, $content = null) {
@@ -20,34 +27,60 @@ function eeRSCF_ContactProcess() {
 }
 
 
-// Load stuff we need in the front-side head
+// Load frontend assets
 function eeRSCF_Enqueue() {
+	// Register and enqueue CSS with proper versioning
+	wp_enqueue_style(
+		'rock-solid-contact-form-css',
+		plugin_dir_url(__FILE__) . '../css/style.css',
+		array(),
+		'2.1.2'
+	);
 
-	// Register the style like this for a theme:
-	wp_register_style( 'ee-rock-solid-contact-form-css', plugin_dir_url(__FILE__) . '../css/style.css');
-	wp_enqueue_style('ee-rock-solid-contact-form-css');
-
-	// Javascript
-	$eeDeps = array('jquery');
-	wp_enqueue_script('ee-rock-solid-contact-form-js-footer',plugin_dir_url(__FILE__) . '../js/scripts.js',$eeDeps,'30',TRUE);
+	// Register and enqueue JavaScript with proper dependencies and versioning
+	wp_enqueue_script(
+		'rock-solid-contact-form-js',
+		plugin_dir_url(__FILE__) . '../js/scripts.js',
+		array('jquery'),
+		'2.1.2',
+		true
+	);
 }
 
 
 
 // Load stuff we need in the Admin head
 function eeRSCF_AdminEnqueue($eeHook) {
-
-	// wp_die($eeHook); // Use this to discover the hook for each page
-
-	// Only load scripts if on these Admin pages.
+	// Only load scripts if on the Rock Solid Contact Form admin pages
 	$eeHooks = array(
 		'toplevel_page_rock-solid-contact-form'
 	);
 
 	if(in_array($eeHook, $eeHooks)) {
-		wp_enqueue_style( 'rock-solid-contact-form-admin-style', plugins_url( '../css/style-admin.css', __FILE__ ) );
-		wp_enqueue_script('rock-solid-contact-form-admin-js', plugins_url('../js/scripts-admin.js', __FILE__) );
-		wp_enqueue_script('rock-solid-contact-form-admin-js-footer', plugins_url('../js/scripts-admin-footer.js', __FILE__), '', '1', TRUE );
+		// Admin CSS with proper versioning
+		wp_enqueue_style(
+			'rock-solid-contact-form-admin-style',
+			plugins_url( '../css/style-admin.css', __FILE__ ),
+			array(),
+			'2.1.2'
+		);
+
+		// Admin JavaScript with proper versioning and dependencies
+		wp_enqueue_script(
+			'rock-solid-contact-form-admin-js',
+			plugins_url('../js/scripts-admin.js', __FILE__),
+			array('jquery'),
+			'2.1.2',
+			false
+		);
+
+		wp_enqueue_script(
+			'rock-solid-contact-form-admin-js-footer',
+			plugins_url('../js/scripts-admin-footer.js', __FILE__),
+			array('jquery'),
+			'2.1.2',
+			true
+		);
 	}
 }
 

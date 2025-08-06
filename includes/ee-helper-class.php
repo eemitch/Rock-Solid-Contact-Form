@@ -1,6 +1,15 @@
-<?php // ee-classes.php version 1.0.0 - mitchellbennis@gmail.com
+<?php
+/**
+ * Helper utilities and notifications for Rock Solid Contact Form
+ *
+ * @package Rock_Solid_Contact_Form
+ * @since 2.1.2
+ * @author Mitchell Bennis - Element Engage, LLC
+ */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly
+}
 
 class eeHelper_Class {
 

@@ -1,4 +1,14 @@
 <?php
+/**
+ * File attachment settings for Rock Solid Contact Form
+ *
+ * @package Rock_Solid_Contact_Form
+ * @since 2.1.2
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly
+}
 
 $eeOutput .= '
 

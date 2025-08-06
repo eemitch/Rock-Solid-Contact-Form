@@ -1,4 +1,14 @@
 <?php
+/**
+ * Email configuration settings for Rock Solid Contact Form
+ *
+ * @package Rock_Solid_Contact_Form
+ * @since 2.1.2
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly
+}
 
 $eeOutput .= '
 
@@ -47,7 +57,7 @@ $eeOutput .= '>OFF - Using Wordpress Mailer</option>
 
 if($eeRSCF->formSettings['emailMode'] == 'SMTP') { $eeOutput .= ' selected="selected"'; }
 
-$eeOutput .= '>ON - Using SMTP (Recommended)</option>
+$eeOutput .= '>ON - Using SMTP (BETA)</option>
 	</select>
 
 </fieldset>

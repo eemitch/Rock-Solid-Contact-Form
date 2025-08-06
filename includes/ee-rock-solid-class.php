@@ -1,7 +1,15 @@
-<?php // EE Contact Form Main Class
+<?php
+/**
+ * Main plugin class for Rock Solid Contact Form
+ *
+ * @package Rock_Solid_Contact_Form
+ * @since 2.1.2
+ * @author Mitchell Bennis - Element Engage, LLC
+ */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-if ( ! wp_verify_nonce( $eeRSCF_Nonce, 'eeRSCF_Nonce' )) exit('That is Noncense!'); // Exit if nonce fails
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly
+}
 
 // NOTES -------
 
