@@ -102,6 +102,9 @@ class eeRSCF_Class {
 				continue;
 			}
 
+			// SECURITY: Comprehensive input validation and sanitization
+			$originalValue = $eeValue;
+
 			// Sanitize and validate specific fields
 			switch (true) {
 				case strpos($eeKey, 'mail') !== false:
@@ -120,7 +123,14 @@ class eeRSCF_Class {
 					}
 					break;
 				default:
-					$eeValue = sanitize_text_field($eeValue);
+					// SECURITY: Enhanced sanitization for all other fields
+					$eeValue = $this->eeRSCF_SecureSanitize($eeValue, $eeKey);
+
+					// SECURITY: Reject if sanitization changed the content significantly
+					if ($this->eeRSCF_SecurityCheck($originalValue, $eeValue, $eeKey)) {
+						$this->log['errors'][] = 'Invalid content detected in ' . $eeHelper->eeUnSlug($eeKey) . ' field. Please remove any scripts, HTML tags, or suspicious characters.';
+						continue 2; // Skip to the next $_POST item
+					}
 					break;
 			}
 
@@ -131,6 +141,118 @@ class eeRSCF_Class {
 		$this->log['notices'][] = $this->thePost;
 
 		return $this->thePost;
+	}
+
+	/**
+	 * SECURITY: Comprehensive sanitization function
+	 * Applies multiple layers of security to user input
+	 */
+	private function eeRSCF_SecureSanitize($value, $fieldName = '') {
+
+		// First pass: WordPress sanitization
+		$value = sanitize_text_field($value);
+
+		// SECURITY: Remove potential script injections
+		$value = preg_replace('/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/mi', '', $value);
+		$value = preg_replace('/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/mi', '', $value);
+		$value = preg_replace('/javascript:/i', '', $value);
+		$value = preg_replace('/on\w+\s*=/i', '', $value); // Remove event handlers like onclick, onload, etc.
+
+		// SECURITY: Remove potential SQL injection patterns
+		$sqlPatterns = [
+			'/(\b(select|insert|update|delete|drop|create|alter|exec|union|script)\b)/i',
+			'/(\-\-|\#|\/\*|\*\/)/i', // SQL comments
+			'/(\bor\b|\band\b)\s*\d+\s*=\s*\d+/i', // OR 1=1, AND 1=1 patterns
+			'/\b(union|select)\s+.*\bfrom\b/i'
+		];
+
+		foreach ($sqlPatterns as $pattern) {
+			$value = preg_replace($pattern, '', $value);
+		}
+
+		// SECURITY: Remove command injection patterns
+		$cmdPatterns = [
+			'/\$\(.*?\)/', // Command substitution $(command)
+			'/`.*?`/', // Backtick command execution
+			'/\|\s*(cat|ls|dir|whoami|id|pwd|uname|ps|netstat|ifconfig|ping)/', // Piped commands
+			'/;\s*(cat|ls|dir|whoami|id|pwd|uname|ps|netstat|ifconfig|ping)/', // Semicolon commands
+			'/&&\s*(cat|ls|dir|whoami|id|pwd|uname|ps|netstat|ifconfig|ping)/', // AND commands
+		];
+
+		foreach ($cmdPatterns as $pattern) {
+			$value = preg_replace($pattern, '', $value);
+		}
+
+		// SECURITY: Remove path traversal attempts
+		$value = str_replace(['../', '..\\', '../', '..\\'], '', $value);
+		$value = preg_replace('/\.{2,}/', '.', $value); // Multiple dots
+
+		// SECURITY: Remove potential log injection patterns (Log4Shell, etc.)
+		$value = preg_replace('/\$\{.*?\}/', '', $value); // ${expression} patterns
+		$value = preg_replace('/%\{.*?\}/', '', $value); // %{expression} patterns
+
+		// SECURITY: Remove null bytes and control characters
+		$value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $value);
+
+		// SECURITY: Limit length to prevent buffer overflow attempts
+		$maxLengths = [
+			'first-name' => 100,
+			'last-name' => 100,
+			'subject' => 200,
+			'phone' => 50,
+			'message' => 5000,
+			'default' => 500
+		];
+
+		$maxLength = isset($maxLengths[$fieldName]) ? $maxLengths[$fieldName] : $maxLengths['default'];
+		if (strlen($value) > $maxLength) {
+			$value = substr($value, 0, $maxLength);
+		}
+
+		return $value;
+	}
+
+	/**
+	 * SECURITY: Check if content was significantly modified during sanitization
+	 * This helps detect and reject malicious input attempts
+	 */
+	private function eeRSCF_SecurityCheck($original, $sanitized, $fieldName = '') {
+
+		// If the sanitized version is significantly shorter, it likely contained malicious content
+		$originalLength = strlen($original);
+		$sanitizedLength = strlen($sanitized);
+
+		// Allow for some normal sanitization (whitespace trimming, etc.)
+		$tolerableReduction = 0.1; // 10% reduction is acceptable
+
+		if ($originalLength > 10 && $sanitizedLength < ($originalLength * (1 - $tolerableReduction))) {
+			// Content was significantly reduced - likely contained malicious code
+			return true;
+		}
+
+		// SECURITY: Check for common attack patterns in original content
+		$suspiciousPatterns = [
+			'/<script/i',
+			'/javascript:/i',
+			'/\$\{.*?\}/', // Template injection
+			'/\.\.\//i', // Path traversal
+			'/union.*select/i', // SQL injection
+			'/drop.*table/i', // SQL injection
+			'/exec\(/i', // Code execution
+			'/eval\(/i', // Code execution
+			'/system\(/i', // System calls
+			'/passthru\(/i', // System calls
+			'/shell_exec\(/i', // System calls
+			'/`.*`/', // Command execution
+		];
+
+		foreach ($suspiciousPatterns as $pattern) {
+			if (preg_match($pattern, $original)) {
+				return true; // Reject - contains suspicious patterns
+			}
+		}
+
+		return false; // Content is acceptable
 	}
 
 
