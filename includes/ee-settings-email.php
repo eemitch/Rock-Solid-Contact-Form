@@ -33,10 +33,7 @@ $eeOutput .= '
 
 <h3>SMTP <small>(Optional)</small></h3>
 
-<p>To improve email appearance, options
-and to protect your domain from blacklisting, it is recommended to configure an
-actual email account for the contact form and use SMTP to send messages rather than
-relying on the built-in Wordpress(PHP) mailer.</p>
+<p>SMTP (Simple Mail Transfer Protocol) sends emails through your email provider\'s servers instead of your website\'s server. This dramatically improves email deliverability and reduces the chance of messages being marked as spam.</p>
 
 <label for="eeRSCF_emailMode">SMTP Mailer</label>
 
@@ -64,9 +61,9 @@ $eeOutput .= '>
 
 <fieldset id="eeRSCF_emailModeSMTP">
 
-<h3>Configure an SMTP Email Account</h3>
+<h3>Configure an SMTP Email Account (BETA)</h3>
 
-<p>You may need to contact your host to get the settings required.</p>
+<p><strong>Need help finding these settings?</strong> Look for "SMTP Settings" or "Outgoing Mail" in your email provider\'s help documentation. Popular providers: <strong>Gmail</strong> (smtp.gmail.com:587), <strong>Outlook</strong> (smtp-mail.outlook.com:587), <strong>Yahoo</strong> (smtp.mail.yahoo.com:587).</p>
 
 
 <label for="eeRSCF_emailFormat">Message Format</label>
@@ -85,7 +82,7 @@ if($eeRSCF->formSettings['emailFormat'] == 'HTML') { $eeOutput .= ' selected="se
 $eeOutput .= '>HTML</option>
 	</select>
 
-	<p class="eeNote">Define the format of the message you receive from the contact form.</p>
+	<p class="eeNote">Choose <strong>HTML</strong> for rich formatting with links and styling, or <strong>Text</strong> for simple plain text messages. Most users prefer HTML.</p>
 
 
 
@@ -97,7 +94,7 @@ if($eeRSCF->formSettings['emailName']) { $eeOutput .= $eeRSCF->formSettings['ema
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailName" size="64" />
 
-	<p class="eeNote">This is the name for the form that will appear in your email. It is associated with your email address.</p>
+	<p class="eeNote">This display name appears as the sender in email notifications. Example: "Website Contact Form" or your business name.</p>
 
 
 
@@ -111,7 +108,7 @@ if($eeRSCF->formSettings['emailServer']) { $eeOutput .= $eeRSCF->formSettings['e
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailServer" size="64" />
 
-	<p class="eeNote">This is the hostname of your local mail server, such as mail.' . $_SERVER['HTTP_HOST'] . '</p>
+	<p class="eeNote">Your email provider\'s SMTP server address. Common examples: <strong>smtp.gmail.com</strong>, <strong>smtp.outlook.com</strong>, or <strong>mail.yourdomain.com</strong>. Check your email provider\'s help documentation for the correct hostname.</p>
 
 
 
@@ -125,7 +122,7 @@ if($eeRSCF->formSettings['emailUsername']) {
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailUsername" size="64" />
 
-	<p class="eeNote">This is the username for your local mail server, often the complete email address.</p>
+	<p class="eeNote">Your complete email address for SMTP authentication. For Gmail/Outlook, use your full email address. For hosting providers, this might be just the username portion.</p>
 
 
 
@@ -137,7 +134,7 @@ if($eeRSCF->formSettings['emailPassword']) { $eeOutput .= $eeRSCF->formSettings[
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailPassword" size="64" />
 
-	<p class="eeNote">This is the password for the email account.</p>
+	<p class="eeNote">The password for your email account. For Gmail/Outlook, you may need to generate an <strong>App Password</strong> instead of using your regular login password. Check your email provider\'s 2-factor authentication settings.</p>
 
 
 
@@ -151,12 +148,12 @@ if($eeRSCF->formSettings['emailSecure'] == 'SSL') { $eeOutput .= ' selected="sel
 
 
 $eeOutput .= '>Use SSL</option>
-		<option value="TSL"';
+		<option value="TLS"';
 
-if($eeRSCF->formSettings['emailSecure'] == 'TSL') { $eeOutput .= ' selected="selected"'; }
+if($eeRSCF->formSettings['emailSecure'] == 'TLS') { $eeOutput .= ' selected="selected"'; }
 
 
-$eeOutput .= '>Use TSL</option>
+$eeOutput .= '>Use TLS</option>
 		<option value="NO"';
 
 if($eeRSCF->formSettings['emailSecure'] == 'NO') { $eeOutput .= ' selected="selected"'; }
@@ -164,7 +161,7 @@ if($eeRSCF->formSettings['emailSecure'] == 'NO') { $eeOutput .= ' selected="sele
 $eeOutput .= '>Unencrypted</option>
 	</select>
 
-	<p class="eeNote">SSL (Secure Sockets Layers) establishes an encrypted link between this web server and your receiving email server when sending messages.</p>
+	<p class="eeNote">Encryption method for secure email transmission. <strong>TLS is recommended</strong> for most modern email providers. Use SSL for older systems or if TLS doesn\'t work. Only use Unencrypted if your email provider specifically requires it.</p>
 
 
 
@@ -186,7 +183,7 @@ if($eeRSCF->formSettings['emailAuth'] == 'NO') { $eeOutput .= ' selected="select
 $eeOutput .= '>No Authorization</option>
 	</select>
 
-	<p class="eeNote">Your account may or may not require authentication.</p>
+	<p class="eeNote">Nearly all email providers require authentication. Choose <strong>"Require authorization"</strong> unless your hosting company specifically tells you otherwise.</p>
 
 
 
@@ -199,7 +196,7 @@ if($eeRSCF->formSettings['emailPort']) { $eeOutput .= $eeRSCF->formSettings['ema
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailPort" size="64" />
 
-	<p class="eeNote">This is the outgoing mail port. Common ports are 25, 465, 587, 2525 and 2526</p>
+	<p class="eeNote">SMTP port number for your email provider. <strong>Common combinations:</strong> TLS + Port 587, SSL + Port 465, Gmail uses 587, Outlook uses 587. If unsure, try 587 first.</p>
 
 
 
@@ -220,7 +217,7 @@ if($eeRSCF->formSettings['emailDebug'] == 'YES') { $eeOutput .= ' selected="sele
 $eeOutput .= '>ON</option>
 	</select>
 
-	<p class="eeNote">This will write errors to your local Wordpress error log file. Turn this ON only when troubleshooting.</p>
+	<p class="eeNote">Enable this only when emails are not sending properly. Debug information will be written to your WordPress error log (usually wp-content/debug.log). <strong>Turn OFF</strong> once working to avoid log file bloat.</p>
 
 
 

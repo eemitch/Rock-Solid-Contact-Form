@@ -264,8 +264,18 @@ class eeRSCF_Class {
 
 			// Send Notice Email
 			if (function_exists('wp_mail')) {
+				// Use SMTP for spam notices too if configured
+				if ($this->formSettings['emailMode'] == 'SMTP') {
+					add_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
+				}
+
 				if (!wp_mail($eeTo, $eeSubject, $eeBody, $eeHeaders)) {
 					$this->log['errors'][] = 'Notice Email Failed to Send';
+				}
+
+				// Remove SMTP hook after sending
+				if ($this->formSettings['emailMode'] == 'SMTP') {
+					remove_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
 				}
 			} else {
 				mail($eeTo, $eeSubject, $eeBody, $eeHeaders);
@@ -479,6 +489,14 @@ class eeRSCF_Class {
 
 			$this->log['notices'][] = 'Preparing the Email...';
 
+			// Configure SMTP if enabled
+			if ($this->formSettings['emailMode'] == 'SMTP') {
+				add_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
+				$this->log['notices'][] = 'SMTP Mode Enabled';
+			} else {
+				$this->log['notices'][] = 'Using WordPress Default Mailer';
+			}
+
 			// Loop through and see if we have a Subject field
 			foreach($this->thePost as $eeValue){
 				$eeField = explode(':', $eeValue);
@@ -515,6 +533,11 @@ class eeRSCF_Class {
 
 				$this->log['notices'][] = 'WP Mail Sent';
 
+				// Remove SMTP hook to prevent affecting other emails
+				if ($this->formSettings['emailMode'] == 'SMTP') {
+					remove_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
+				}
+
 				wp_redirect($this->confirm);
 
 				exit;
@@ -522,6 +545,11 @@ class eeRSCF_Class {
 			} else {
 
 				$this->log['errors'][] = 'PHP Message Failed to Send.';
+
+				// Remove SMTP hook even on failure
+				if ($this->formSettings['emailMode'] == 'SMTP') {
+					remove_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
+				}
 			}
 
 		} else {
@@ -871,6 +899,76 @@ class eeRSCF_Class {
 				$this->log['messages'][] = 'The Settings Have Been Saved';
 			}
 
+		}
+	}
+
+
+
+
+	// Configure SMTP for WordPress PHPMailer
+	public function eeRSCF_configure_smtp($phpmailer) {
+
+		// Only configure SMTP if the setting is enabled
+		if ($this->formSettings['emailMode'] == 'SMTP') {
+
+			$this->log['notices'][] = 'Configuring SMTP...';
+
+			// Enable SMTP
+			$phpmailer->isSMTP();
+
+			// SMTP Server Configuration
+			if (!empty($this->formSettings['emailServer'])) {
+				$phpmailer->Host = $this->formSettings['emailServer'];
+			}
+
+			// Authentication
+			if ($this->formSettings['emailAuth']) {
+				$phpmailer->SMTPAuth = true;
+				if (!empty($this->formSettings['emailUsername'])) {
+					$phpmailer->Username = $this->formSettings['emailUsername'];
+				}
+				if (!empty($this->formSettings['emailPassword'])) {
+					$phpmailer->Password = $this->formSettings['emailPassword'];
+				}
+			} else {
+				$phpmailer->SMTPAuth = false;
+			}
+
+			// Security/Encryption
+			if (!empty($this->formSettings['emailSecure'])) {
+				if ($this->formSettings['emailSecure'] == 'SSL') {
+					$phpmailer->SMTPSecure = 'ssl';
+				} elseif ($this->formSettings['emailSecure'] == 'TLS') {
+					$phpmailer->SMTPSecure = 'tls';
+				}
+			}
+
+			// Port
+			if (!empty($this->formSettings['emailPort'])) {
+				$phpmailer->Port = (int) $this->formSettings['emailPort'];
+			}
+
+			// Debug Mode
+			if ($this->formSettings['emailDebug']) {
+				$phpmailer->SMTPDebug = 2; // Enable verbose debug output
+				$phpmailer->Debugoutput = function($str, $level) {
+					error_log("SMTP Debug: " . $str);
+				};
+			}
+
+			// From Name
+			if (!empty($this->formSettings['emailName'])) {
+				$phpmailer->FromName = $this->formSettings['emailName'];
+			}
+
+			// HTML Format
+			if ($this->formSettings['emailFormat'] == 'HTML') {
+				$phpmailer->isHTML(true);
+			} else {
+				$phpmailer->isHTML(false);
+			}
+
+			$this->log['notices'][] = 'SMTP Configuration Complete';
 		}
 	}
 
