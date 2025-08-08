@@ -28,7 +28,8 @@ function eeRSCF_ContactProcess() {
 	global $eeRSCF, $eeHelper;
 
 	// Validate nonce before processing
-	if ( ! isset( $_POST['ee-rock-solid-nonce'] ) || ! wp_verify_nonce( $_POST['ee-rock-solid-nonce'], 'ee-rock-solid' ) ) {
+	$nonce = isset($_POST['ee-rock-solid-nonce']) ? sanitize_text_field(wp_unslash($_POST['ee-rock-solid-nonce'])) : '';
+	if (empty($nonce) || !wp_verify_nonce($nonce, 'ee-rock-solid')) {
 		wp_die( 'Security check failed. Please try again.', 'Security Error', array( 'response' => 403 ) );
 	}
 
@@ -126,13 +127,6 @@ function eeRSCF_BackEnd() {
 }
 
 
-// Log Failed Emails
-function eeRSCF_Failed($wp_error) {
-	return error_log(print_r($wp_error, true));
-}
-add_action('wp_mail_failed', 'eeRSCF_Failed', 10, 1);
-
-
 
 
 function eeDevOutput($eeArray) {
@@ -145,17 +139,26 @@ function eeDevOutput($eeArray) {
 // Get Common Words from EE Server
 function eeGetRemoteSpamWords($eeUrl) {
 
-  // Try to get the content using file_get_contents()
-  $eeContent = @file_get_contents($eeUrl);
+  // Use WordPress HTTP API instead of cURL
+  $response = wp_remote_get($eeUrl, array(
+	'timeout' => 30,
+	'user-agent' => 'Rock Solid Contact Form/' . eeRSCF_Version,
+	'sslverify' => true
+  ));
 
-  // If file_get_contents() fails, try to get the content using curl
-  if (!$eeContent) {
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_URL, $eeUrl);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	$eeContent = curl_exec($ch);
-	curl_close($ch);
+  // Check for errors
+  if (is_wp_error($response)) {
+	return false;
   }
+
+  // Get the response code
+  $response_code = wp_remote_retrieve_response_code($response);
+  if ($response_code !== 200) {
+	return false;
+  }
+
+  // Get the body content
+  $eeContent = wp_remote_retrieve_body($response);
 
   return $eeContent;
 }
@@ -168,53 +171,149 @@ function eeRSCF_WriteLogFile($eeLog) {
 
 	if($eeLog) {
 
+		// Initialize WordPress filesystem
+		if (!function_exists('WP_Filesystem')) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+
+		$filesystem = WP_Filesystem();
+		if (!$filesystem) {
+			return FALSE;
+		}
+
+		global $wp_filesystem;
 		$eeLogFile = plugin_dir_path( __FILE__ ) . 'logs/eeLog.txt';
 
 		// File Size Management
 		$eeLimit = 262144; // 262144 = 256kb  1048576 = 1 MB
-		$eeSize = @filesize($eeLogFile);
 
-		if(@filesize($eeLogFile) AND $eeSize > $eeLimit) {
-			unlink($eeLogFile); // Delete the file. Start Anew.
+		if ($wp_filesystem->exists($eeLogFile)) {
+			$eeSize = $wp_filesystem->size($eeLogFile);
+			if ($eeSize && $eeSize > $eeLimit) {
+				wp_delete_file($eeLogFile); // Delete the file. Start Anew.
+			}
 		}
 
-		// Write the Log Entry
-		if($handle = @fopen($eeLogFile, "a+")) {
+		// Prepare log content
+		$logContent = '';
 
-			if(@is_writable($eeLogFile)) {
+		// Get existing content if file exists and we're appending
+		if ($wp_filesystem->exists($eeLogFile)) {
+			$logContent = $wp_filesystem->get_contents($eeLogFile);
+		}
 
-				fwrite($handle, 'Date: ' . date("Y-m-d H:i:s") . "\n");
+		// Add new log entry
+		$logContent .= 'Date: ' . gmdate("Y-m-d H:i:s") . "\n";
 
-			    foreach($eeLog as $key => $logEntry){
+		foreach($eeLog as $key => $logEntry){
 
-			    	if(is_array($logEntry)) {
+			if(is_array($logEntry)) {
 
-				    	foreach($logEntry as $key2 => $logEntry2){
-					    	fwrite($handle, '(' . $key2 . ') ' . $logEntry2 . "\n");
-					    }
-
-				    } else {
-					    fwrite($handle, '(' . $key . ') ' . $logEntry . "\n");
-				    }
-			    }
-
-			    fwrite($handle, "\n\n\n---------------------------------------\n\n\n"); // Separator
-
-			    fclose($handle);
-
-			    return TRUE;
+				foreach($logEntry as $key2 => $logEntry2){
+					$logContent .= '(' . $key2 . ') ' . $logEntry2 . "\n";
+				}
 
 			} else {
-			    return FALSE;
+				$logContent .= '(' . $key . ') ' . $logEntry . "\n";
 			}
+		}
+
+		$logContent .= "\n\n\n---------------------------------------\n\n\n"; // Separator
+
+		// Write the content using WP_Filesystem
+		if ($wp_filesystem->put_contents($eeLogFile, $logContent)) {
+			return TRUE;
 		} else {
 			return FALSE;
 		}
+
 	} else {
 		return FALSE;
 	}
 }
 
 
+// Update or Install New
+function eeRSCF_UpdatePlugin() {
+
+	global $eeRSCF;
+
+	$eeRSCF->formSettings = get_option('eeRSCF_Settings_1');
+	$eeVersion = get_option('eeRSCF_Version');
+	if($eeVersion == eeRSCF_Version) { return TRUE; } // Return if we're good.
+
+	if($eeRSCF->formSettings OR $eeVersion) { // Installed
+
+		if(version_compare($eeVersion, eeRSCF_Version, '<') ) {
+
+			$eeRSCF->formSettings = get_option('eeRSCF_Settings_1');
+
+			if(!empty($eeRSCF->formSettings)) {
+
+				// Move the confirmation URL to its own option
+				if($eeRSCF->formSettings['confirm']) {
+					$eeRSCF->confirm = $eeRSCF->formSettings['confirm'];
+				}
+
+				// Complete missing FROM address if needed
+				if(empty($eeRSCF->formSettings['email'])) {
+					$eeRSCF->formSettings['email'] = !empty($eeRSCF->contactFormDefault['email']) ? $eeRSCF->contactFormDefault['email'] : get_option('admin_email');
+				}
+
+				// Get rid of dots in file types
+				$formats = $eeRSCF->formSettings['fileFormats'];
+				$formats = preg_replace('/\s*\.([a-z0-9]+)/i', ' $1', $formats);
+				$formats = trim($formats);
+
+				$eeRSCF->formSettings['fileFormats'] = $formats;
+
+				// Out with the Old... (Use WordPress functions instead of direct DB query)
+				// List of known plugin options to clean up during upgrade
+				$plugin_options = array(
+					'eeRSCF_Settings_1',
+					'eeRSCF_Confirm_1',
+					'eeRSCF_Version_1'
+				);
+
+				// Clean up old options using WordPress functions
+				foreach ($plugin_options as $option_name) {
+					delete_option($option_name);
+				}
+
+				unset($eeRSCF->formSettings['name']);
+				unset($eeRSCF->formSettings['confirm']);
+
+				// In with the New
+				update_option('eeRSCF_Version' , eeRSCF_Version);
+				update_option('eeRSCF_Settings', $eeRSCF->formSettings); // In with the New
+				update_option('eeRSCF_Confirm', $eeRSCF->confirm);
+
+				return TRUE;
+			}
+		}
+
+	} else { // New Installation
+
+		// Install Settings
+		if(empty($eeRSCF->formSettings)) {
+			// Use class defaults, fallback to WordPress admin email if not set
+			if(empty($eeRSCF->contactFormDefault['to'])) {
+				$eeRSCF->contactFormDefault['to'] = get_option('admin_email');
+			}
+			if(empty($eeRSCF->contactFormDefault['email'])) {
+				$eeRSCF->contactFormDefault['email'] = get_option('admin_email');
+			}
+
+			update_option('eeRSCF_Settings', $eeRSCF->contactFormDefault);
+			$eeRSCF->confirm = !empty($eeRSCF->contactFormDefault['confirm']) ? $eeRSCF->contactFormDefault['confirm'] : home_url();
+			update_option('eeRSCF_Confirm', $eeRSCF->confirm);
+			$eeRSCF->formSettings = $eeRSCF->contactFormDefault;
+			update_option('eeRSCF_Version' , eeRSCF_Version);
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
 
 ?>

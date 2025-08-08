@@ -105,7 +105,9 @@ class eeHelper_Class {
 				$body = $messages . "\n\n";
 			}
 
-			$body .= 'Via: ' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+			$http_host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+			$php_self = isset($_SERVER['PHP_SELF']) ? sanitize_text_field(wp_unslash($_SERVER['PHP_SELF'])) : '';
+			$body .= 'Via: ' . $http_host . $php_self;
 
 			if(!mail($to,$subject,$body,$headers)) { // Email the message or error report
 				?><script>alert('EMAIL SEND FAILED');</script><?php
@@ -177,7 +179,6 @@ class eeHelper_Class {
 
 		// Check if a file was uploaded
 		if(empty($eeFile)) {
-			trigger_error('No file uploaded or an error occurred.');
 			return FALSE;
 		}
 
@@ -189,7 +190,6 @@ class eeHelper_Class {
 		// Ensure the directory exists, create if necessary
 		if (!is_dir($base_dir . '/' . $eePath)) {
 			if (!wp_mkdir_p($base_dir . '/' . $eePath)) {
-				trigger_error('Failed to create upload directory: ' . $base_dir . '/' . $eePath, E_USER_WARNING);
 				return FALSE;
 			}
 		}
@@ -198,7 +198,6 @@ class eeHelper_Class {
 		$given_path = $base_dir . '/' . $eePath; // Remove slashes to avoid double slashes
 		$resolved_path = realpath($base_dir . '/' . $eePath);
 		if($resolved_path === false || strpos($resolved_path, $given_path) !== 0) {
-			trigger_error('Invalid upload directory: ' . $resolved_path, E_USER_WARNING);
 			return FALSE;
 		}
 
@@ -209,14 +208,35 @@ class eeHelper_Class {
 		$file_type = pathinfo($file_name, PATHINFO_EXTENSION);
 
 		// Generate a unique file name
-		$unique_file_name = wp_unique_filename($eePath, $file_name);
+		$unique_file_name = wp_unique_filename($resolved_path, $file_name);
 		$file_destination = $resolved_path . '/' . $unique_file_name;
 
-		// Move file to upload directory
-		if(move_uploaded_file($file_tmp, $file_destination)) {
-			return str_replace($base_dir, $base_url, $file_destination); // Return the URL
+		// Use WordPress file handling instead of move_uploaded_file()
+		if (!function_exists('wp_handle_upload')) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+
+		// Prepare the file array for wp_handle_upload
+		$upload_file = array(
+			'name' => $unique_file_name,
+			'type' => $eeFile['type'],
+			'tmp_name' => $file_tmp,
+			'error' => $eeFile['error'],
+			'size' => $file_size
+		);
+
+		// Configure upload overrides
+		$upload_overrides = array(
+			'test_form' => false, // Skip form validation since this is programmatic
+			'upload_path' => $resolved_path // Custom upload path
+		);
+
+		// Handle the upload using WordPress
+		$uploaded_file = wp_handle_upload($upload_file, $upload_overrides);
+
+		if ($uploaded_file && !isset($uploaded_file['error'])) {
+			return $uploaded_file['url']; // Return the URL
 		} else {
-			trigger_error('Upload Process Failed');
 			return FALSE;
 		}
 	}

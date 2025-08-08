@@ -24,7 +24,7 @@ $eeOutput .= '
 	<br class="eeClearFix" />
 
 	<label for="eeMaxFileSize">How Big? (MB):</label>
-	<input type="number" min="1" max="' . $eeHelper->maxUploadLimit . '" step="1" name="eeMaxFileSize" value="' . $eeRSCF->formSettings['fileMaxSize'] . '" class="adminInput" id="eeMaxFileSize" />
+	<input type="number" min="1" max="' . esc_attr($eeHelper->maxUploadLimit) . '" step="1" name="eeMaxFileSize" value="' . esc_attr($eeRSCF->formSettings['fileMaxSize']) . '" class="adminInput" id="eeMaxFileSize" />
 
 	<br class="eeClearFix" />
 		<p class="eeNote">Your hosting limits the maximum file upload size to <strong>' . $eeHelper->maxUploadLimit . ' MB</strong>.</p>

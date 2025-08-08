@@ -1,7 +1,6 @@
 <?php
 
 if (!defined('ABSPATH')) exit; // Exit if accessed directly
-if (!wp_verify_nonce($eeRSCF_Nonce, 'eeRSCF_Nonce')) exit('That is Noncense!'); // Exit if nonce fails
 
 function eeRSCF_Settings() {
 
@@ -10,7 +9,28 @@ function eeRSCF_Settings() {
 	$eeRSCF->formID = 1;
 	$eeRSCF->log['notices'][] = 'eeRSCF Settings Page Loaded';
 
-	// Process if POST
+	// Ensure form settings are loaded
+	if(empty($eeRSCF->formSettings)) {
+		$eeRSCF->formSettings = get_option('eeRSCF_Settings');
+		$eeRSCF->confirm = get_option('eeRSCF_Confirm');
+
+		// If still empty, force plugin update to create defaults
+		if(empty($eeRSCF->formSettings)) {
+			// Force update/install
+			include_once(plugin_dir_path(__FILE__) . 'ee-functions.php');
+			eeRSCF_UpdatePlugin();
+
+			// Reload after update
+			$eeRSCF->formSettings = get_option('eeRSCF_Settings');
+			$eeRSCF->confirm = get_option('eeRSCF_Confirm');
+
+			// Final fallback
+			if(empty($eeRSCF->formSettings)) {
+				$eeRSCF->formSettings = $eeRSCF->contactFormDefault;
+				$eeRSCF->confirm = home_url();
+			}
+		}
+	}	// Process if POST
 	if (isset($_POST['eeRSCF_Settings']) && check_admin_referer('ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 		$eeRSCF_Log[] = 'Updating Settings...';
 		$eeRSCF->eeRSCF_AdminSettingsProcess();
@@ -19,15 +39,23 @@ function eeRSCF_Settings() {
 	// Security nonce
 	$eeRSCF_Nonce = wp_create_nonce('ee_include_page');
 
-	// Determine the active tab
-	$active_tab = isset($_REQUEST['tab']) ? $_REQUEST['tab'] : 'settings';
+	// Determine the active tab with proper validation
+	$active_tab = 'form_settings'; // Default tab
+	if (isset($_REQUEST['tab'])) {
+		$tab = sanitize_text_field(wp_unslash($_REQUEST['tab']));
+		// Validate tab is one of the allowed values
+		$allowed_tabs = array('form_settings', 'file_settings', 'spam_settings', 'email_settings');
+		if (in_array($tab, $allowed_tabs, true)) {
+			$active_tab = $tab;
+		}
+	}
 	$eeRSCF_Page = 'rock-solid-contact-form';
 
 	// Output page header and tabs
 	$eeOutput = '
 	<header id="eeRSCF_Header">
 		<div class="eeRSCF_ShortcodeWrapper">
-			<input id="eeRSCF_shortCode" type="text" name="eeRSCF_shortCode" value="[rock-solid-contact]" />
+			<input id="eeRSCF_shortCode" type="text" name="eeRSCF_shortCode" value="[rock-solid-contact]" readonly />
 			<button class="eeRSCF_copyToClipboard">Copy</button>
 		</div>
 		<h1>' . __('Rock Solid Contact Form', 'rock-solid-contact-form') . '</h1>
@@ -50,7 +78,7 @@ function eeRSCF_Settings() {
 
 	$eeOutput .= '</h2></div>'; // End Tabs
 
-	// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
+	echo '<pre>DEBUG: formSettings = '; print_r($eeRSCF->formSettings); echo '</pre>';  // Temporary debug
 
 
 	$eeOutput .= $eeHelper->eeRSCF_ResultsNotification();
@@ -81,8 +109,8 @@ function eeRSCF_Settings() {
 		$eeOutput .= eeDevOutput($eeRSCF->log);
 	}
 
-	// Dump the HTML buffer
-	echo $eeOutput;
+	// Dump the HTML buffer - Note: $eeOutput contains trusted HTML built by this plugin
+	echo wp_kses_post($eeOutput);
 }
 
 ?>

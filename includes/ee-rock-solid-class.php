@@ -103,6 +103,13 @@ class eeRSCF_Class {
 
 		$this->log['notices'][] = 'Processing the post...';
 
+		// Verify nonce before processing POST data
+		$nonce = isset($_POST['ee-rock-solid-nonce']) ? sanitize_text_field(wp_unslash($_POST['ee-rock-solid-nonce'])) : '';
+		if (empty($nonce) || !wp_verify_nonce($nonce, 'ee-rock-solid')) {
+			$this->log['errors'][] = 'Security verification failed.';
+			return false;
+		}
+
 		$eeIgnore = ['eeRSCF', 'eeRSCF_ID', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER'];
 
 		foreach ($_POST as $eeKey => $eeValue) {
@@ -111,7 +118,8 @@ class eeRSCF_Class {
 				continue;
 			}
 
-			// SECURITY: Comprehensive input validation and sanitization
+			// SECURITY: First unslash the data, then sanitize
+			$eeValue = wp_unslash($eeValue);
 			$originalValue = $eeValue;
 
 			// Sanitize and validate specific fields
@@ -273,6 +281,13 @@ class eeRSCF_Class {
 		$this->log['notices'][] = 'Form Spam Check...';
 		$this->log['catch'] = array();
 
+		// Verify nonce before processing POST data
+		$nonce = isset($_POST['ee-rock-solid-nonce']) ? sanitize_text_field(wp_unslash($_POST['ee-rock-solid-nonce'])) : '';
+		if (empty($nonce) || !wp_verify_nonce($nonce, 'ee-rock-solid')) {
+			$this->log['errors'][] = 'Security verification failed during spam check.';
+			return true; // Treat as spam if nonce fails
+		}
+
 		$tamper = FALSE;
 		$entries = array();
 
@@ -282,7 +297,9 @@ class eeRSCF_Class {
 		// Spam Bots
 		if($this->formSettings['spamBlockBots'] == 'YES') {
 
-			if($this->formSettings['spamBlock'] AND $_POST[ $this->formSettings['spamHoneypot'] ]) { // Honeypot. This field should never be completed.
+			$honeypot_field = $this->formSettings['spamHoneypot'];
+			$honeypot_value = isset($_POST[$honeypot_field]) ? sanitize_text_field(wp_unslash($_POST[$honeypot_field])) : '';
+			if($this->formSettings['spamBlock'] AND !empty($honeypot_value)) { // Honeypot. This field should never be completed.
 				$this->log['catch'][] = 'Spambot Catch: Honeypot Field Completed.';
 			}
 		}
@@ -325,7 +342,7 @@ class eeRSCF_Class {
 					$this->log['catch'][] = "Form Tampering";
 				}
 
-				if(strlen(strip_tags($eeValue)) != strlen($eeValue) ) {
+				if(strlen(wp_strip_all_tags($eeValue)) != strlen($eeValue) ) {
 					$this->log['catch'][] = "HTML Tags Found";
 				}
 			}
@@ -379,9 +396,13 @@ class eeRSCF_Class {
 			}
 			$eeBody .= PHP_EOL . "Attacker" . PHP_EOL;
 			$eeBody .= "-----------------------------------" . PHP_EOL;
-			$eeBody .= "User Agent: " . (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Not Available') . PHP_EOL;
-			$eeBody .= "User IP: " . (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'Not Available') . PHP_EOL;
-			$eeBody .= "Came From: " . (isset($_POST['SCRIPT_REFERER']) ? $_POST['SCRIPT_REFERER'] : '') . (isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '') . PHP_EOL;
+			$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : 'Not Available';
+			$remote_addr = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : 'Not Available';
+			$script_referer = isset($_POST['SCRIPT_REFERER']) ? sanitize_text_field(wp_unslash($_POST['SCRIPT_REFERER'])) : '';
+			$query_string = isset($_SERVER['QUERY_STRING']) ? sanitize_text_field(wp_unslash($_SERVER['QUERY_STRING'])) : '';
+			$eeBody .= "User Agent: " . $user_agent . PHP_EOL;
+			$eeBody .= "User IP: " . $remote_addr . PHP_EOL;
+			$eeBody .= "Came From: " . $script_referer . $query_string . PHP_EOL;
 			$eeBody .= "Attacker Message" . PHP_EOL . "-----------------------------------" . PHP_EOL;
 			$eeBody .= implode("\n\n", $this->eeRSCF_PostProcess($_POST)) . PHP_EOL . PHP_EOL .
 				  "-----------------------------------" . PHP_EOL;
@@ -555,11 +576,11 @@ class eeRSCF_Class {
 		</div>';
 
 		// Log to the browser console
-		if(eeRSCF_DevMode) {
-			$this->theFormOutput .= eeDevOutput($this->log); // Output to console
-			$this->theFormOutput .= '<pre>LOG: ' . print_r($this->log, TRUE) . '</pre>';
-			$this->theFormOutput .= '<pre>SETTINGS: ' . print_r($this->formSettings, TRUE) . '</pre>';
-		}
+		// if(eeRSCF_DevMode === TRUE) {
+		// 	$this->theFormOutput .= eeDevOutput($this->log); // Output to console
+		// 	$this->theFormOutput .= '<pre>LOG: ' . print_r($this->log, TRUE) . '</pre>';
+		// 	$this->theFormOutput .= '<pre>SETTINGS: ' . print_r($this->formSettings, TRUE) . '</pre>';
+		// }
 
 		return $this->theFormOutput;
 	}
@@ -584,7 +605,8 @@ class eeRSCF_Class {
 		}
 
 		// Check referrer is from same site.
-		if(!wp_verify_nonce($_REQUEST['ee-rock-solid-nonce'], 'ee-rock-solid')) {
+		$nonce = isset($_REQUEST['ee-rock-solid-nonce']) ? sanitize_text_field(wp_unslash($_REQUEST['ee-rock-solid-nonce'])) : '';
+		if(empty($nonce) || !wp_verify_nonce($nonce, 'ee-rock-solid')) {
 			$this->log['errors'][] =  "Submission is not from this website";
 			return FALSE;
 		}
@@ -600,19 +622,39 @@ class eeRSCF_Class {
 		$eeFileURL = FALSE;
 		if(!empty($_FILES['file']) AND $this->formSettings['fields']['attachments']['show'] == 'YES') {
 
-			$formatsArray = explode(',', $this->formSettings['fileFormats']);
-			$formatsArray = array_filter(array_map('trim', $formatsArray));
-			$fileExt = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
-			$max_size = $this->formSettings['fileMaxSize'] * 1048576; // Convert MB to Bytes
+			// Validate and sanitize file data
+			$file_name = isset($_FILES['file']['name']) ? sanitize_file_name($_FILES['file']['name']) : '';
+			$file_size = isset($_FILES['file']['size']) ? (int) $_FILES['file']['size'] : 0;
+			$file_error = isset($_FILES['file']['error']) ? (int) $_FILES['file']['error'] : UPLOAD_ERR_NO_FILE;
 
-			if( $_FILES['file']['size'] <= $max_size ) {
-				if( in_array($fileExt,$formatsArray) ) {
-					$eeFileURL = $eeHelper->eeUploader($_FILES['file'],  'ee-contact'  );
-				} else {
-					$this->log['errors'][] = 'FileType ' . $fileExt . ' Not Allowed';
-				}
+			// Check for upload errors
+			if ($file_error !== UPLOAD_ERR_OK) {
+				$this->log['errors'][] = 'File upload error: ' . $file_error;
+			} elseif (empty($file_name)) {
+				$this->log['errors'][] = 'Invalid file name';
 			} else {
-				$this->log['errors'][] = 'File size of ' . $this->eeBytesToSize($_FILES['file']['size']) . ' is too large. Maximum allowed is ' . $this->formSettings['fileMaxSize'] . 'MB';
+				$formatsArray = explode(',', $this->formSettings['fileFormats']);
+				$formatsArray = array_filter(array_map('trim', $formatsArray));
+				$fileExt = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+				$max_size = $this->formSettings['fileMaxSize'] * 1048576; // Convert MB to Bytes
+
+				if( $file_size <= $max_size ) {
+					if( in_array($fileExt,$formatsArray) ) {
+						// Create sanitized file array for upload
+						$sanitized_file = array(
+							'name' => $file_name,
+							'type' => isset($_FILES['file']['type']) ? sanitize_mime_type($_FILES['file']['type']) : '',
+							'tmp_name' => isset($_FILES['file']['tmp_name']) ? sanitize_text_field($_FILES['file']['tmp_name']) : '',
+							'error' => $file_error,
+							'size' => $file_size
+						);
+						$eeFileURL = $eeHelper->eeUploader($sanitized_file,  'ee-contact'  );
+					} else {
+						$this->log['errors'][] = 'FileType ' . esc_html($fileExt) . ' Not Allowed';
+					}
+				} else {
+					$this->log['errors'][] = 'File size of ' . $this->eeBytesToSize($file_size) . ' is too large. Maximum allowed is ' . $this->formSettings['fileMaxSize'] . 'MB';
+				}
 			}
 		}
 
@@ -639,7 +681,10 @@ class eeRSCF_Class {
 			if(empty($eeSubject)) { $eeSubject = 'Contact Form Message (' . basename(home_url()) . ')'; }
 
 			// Email assembly
-			if(empty($this->formSettings['email'])) { $this->formSettings['email'] = 'mail@' . $_SERVER['HTTP_HOST']; } // Fallback
+			if(empty($this->formSettings['email'])) {
+				$http_host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : 'localhost';
+				$this->formSettings['email'] = 'mail@' . $http_host; // Fallback
+			}
 			$eeHeaders = "From: " . get_bloginfo('name') . ' <' . $this->formSettings['email'] . ">" . PHP_EOL;
 			if($this->formSettings['cc']) { $eeHeaders .= "CC: " . $this->formSettings['cc'] . PHP_EOL; }
 			if($this->formSettings['bcc']) { $eeHeaders .= "BCC: " . $this->formSettings['bcc'] . PHP_EOL; }
@@ -656,7 +701,7 @@ class eeRSCF_Class {
 			$eeBody .=  PHP_EOL . PHP_EOL . 'This message was sent via the contact form located at ' . home_url() . '/' . PHP_EOL . PHP_EOL;
 
 			$eeBody = stripslashes($eeBody);
-			$eeBody = strip_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
+			$eeBody = wp_strip_all_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
 
 			// wp_die(print_r($this->formSettings));
 
@@ -701,19 +746,19 @@ class eeRSCF_Class {
 					foreach ($value as $value2) {
 						if(is_array($value2)) {
 							foreach ($value2 as $value3) {
-								echo "<li>$value3</li>\n";
+								echo "<li>" . esc_html($value3) . "</li>\n";
 							}
 						} else {
-							echo "<li>$value2</li>\n";
+							echo "<li>" . esc_html($value2) . "</li>\n";
 						}
 					}
 				} else {
-					echo "<li>$value</li>\n";
+					echo "<li>" . esc_html($value) . "</li>\n";
 				}
 			}
 			echo "</ul></div>\n\n";
 		} else {
-			echo '<p>' . $messages . '</p>';
+			echo '<p>' . esc_html($messages) . '</p>';
 		}
 	}
 
@@ -727,9 +772,16 @@ class eeRSCF_Class {
 
 		$this->log['notices'][] = 'Processing Form Settings';
 
-		if($_POST AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
+		// Verify nonce before checking $_POST
+		if(!empty($_POST) && isset($_POST['ee-rock-solid-settings-nonce']) && check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 
 			global $wpdb, $eeRSCF, $eeHelper;
+
+			// Additional nonce verification for plugin checker
+			$nonce = isset($_POST['ee-rock-solid-settings-nonce']) ? sanitize_text_field(wp_unslash($_POST['ee-rock-solid-settings-nonce'])) : '';
+			if (!wp_verify_nonce($nonce, 'ee-rock-solid-settings')) {
+				return;
+			}
 
 			// Contact Form Fields and Destinations
 			if( isset($_POST['eeRSCF_formSettings']) ) {
@@ -739,14 +791,14 @@ class eeRSCF_Class {
 
 				// ID
 				if(isset($_POST['eeRSCF_ID'])) {
-					$this->formID = filter_var($_POST['eeRSCF_ID'], FILTER_SANITIZE_NUMBER_INT);
+					$this->formID = filter_var(wp_unslash($_POST['eeRSCF_ID']), FILTER_SANITIZE_NUMBER_INT);
 				} else {
 					$this->formID = 1;
 				}
 
 				// Name
 				if(isset($_POST['eeRSCF_formName'])) {
-					$eeRSCF->formSettings['formName'] = htmlspecialchars($_POST['eeRSCF_formName']);
+					$eeRSCF->formSettings['formName'] = sanitize_text_field(wp_unslash($_POST['eeRSCF_formName']));
 				} else {
 					$eeArray['name'] = 'Contact Form';
 				}
@@ -762,7 +814,7 @@ class eeRSCF_Class {
 
 						if( isset($_POST['eeRSCF_form_' . $to ]) ) {
 
-							$eeString = htmlspecialchars($_POST['eeRSCF_form_' . $to ]);
+							$eeString = sanitize_text_field(wp_unslash($_POST['eeRSCF_form_' . $to ]));
 
 							if(strpos($eeString, ',')) { // More than one address
 
@@ -789,7 +841,7 @@ class eeRSCF_Class {
 									$this->log['notices'][] = 'Single address for ' . $to . ' field.';
 									$eeSet .= $eeString;
 								} else {
-									$this->log['errors'][] = 'Bad ' . $to . ' Address: ' . $_POST['eeAdmin' . $to];
+									$this->log['errors'][] = 'Bad ' . $to . ' Address: ' . esc_html($eeString);
 								}
 							}
 
@@ -803,9 +855,13 @@ class eeRSCF_Class {
 
 				}
 
-				$fieldsArray = $_POST['eeRSCF_fields'];
+				// Validate and process fields array
+				$fieldsArray = array();
+				if (isset($_POST['eeRSCF_fields']) && is_array($_POST['eeRSCF_fields'])) {
+					$fieldsArray = array_map('sanitize_text_field', wp_unslash($_POST['eeRSCF_fields']));
+				}
 
-				if( is_array($fieldsArray) ) {
+				if( is_array($fieldsArray) && !empty($fieldsArray) ) {
 
 					foreach($fieldsArray as $thisName => $thisFieldArray) {
 
@@ -830,7 +886,7 @@ class eeRSCF_Class {
 
 				// Results Page
 				if(!empty($_POST['eeRSCF_Confirm'])) {
-					$eeRSCF->confirm = filter_var($_POST['eeRSCF_Confirm'], FILTER_VALIDATE_URL);
+					$eeRSCF->confirm = filter_var(wp_unslash($_POST['eeRSCF_Confirm']), FILTER_VALIDATE_URL);
 					if(empty($eeRSCF->confirm)) { $eeRSCF->confirm = home_url(); }
 				} else { $eeRSCF->confirm = home_url(); }
 				update_option('eeRSCF_Confirm', $eeRSCF->confirm);
@@ -844,7 +900,7 @@ class eeRSCF_Class {
 				AND isset($_POST['eeRSCF_FileSettings']) ) {
 
 				// This must be a number
-				$uploadMaxSize = (int) $_POST['eeMaxFileSize'];
+				$uploadMaxSize = isset($_POST['eeMaxFileSize']) ? (int) sanitize_text_field(wp_unslash($_POST['eeMaxFileSize'])) : $eeHelper->maxUploadLimit;
 
 				// Can't be more than the system allows.
 				if(!$uploadMaxSize OR $uploadMaxSize > $eeHelper->maxUploadLimit) {
@@ -853,7 +909,10 @@ class eeRSCF_Class {
 				$eeRSCF->formSettings['fileMaxSize'] = $uploadMaxSize; // Update the database
 
 				// Strip all but what we need for the comma list of file extensions
-				$formats = preg_replace("/[^a-z0-9,]/i", "", $_POST['eeFormats']);
+				$formats = '';
+				if (isset($_POST['eeFormats'])) {
+					$formats = preg_replace("/[^a-z0-9,]/i", "", sanitize_text_field(wp_unslash($_POST['eeFormats'])));
+				}
 				if(!$formats) { $formats = $this->fileFormats; } // Go with default if none.
 				$eeRSCF->formSettings['fileFormats'] = $formats; // Update the database
 			}
@@ -864,53 +923,74 @@ class eeRSCF_Class {
 			if( isset($_POST['eeRSCF_SpamSettings']) ) {
 
 				// Validate and sanitize the spamBlock field
-				if (isset($_POST['spamBlock']) && ($_POST['spamBlock'] == 'YES' || $_POST['spamBlock'] == 'NO')) {
-					$eeRSCF->formSettings['spamBlock'] = $_POST['spamBlock'];
+				if (isset($_POST['spamBlock'])) {
+					$spam_block = sanitize_text_field(wp_unslash($_POST['spamBlock']));
+					if ($spam_block == 'YES' || $spam_block == 'NO') {
+						$eeRSCF->formSettings['spamBlock'] = $spam_block;
+					}
 				}
 
 				// Validate and sanitize the spamBlockBots field
-				if (isset($_POST['spamBlockBots']) && ($_POST['spamBlockBots'] == 'YES' || $_POST['spamBlockBots'] == 'NO')) {
-					$eeRSCF->formSettings['spamBlockBots'] = $_POST['spamBlockBots'];
+				if (isset($_POST['spamBlockBots'])) {
+					$spam_block_bots = sanitize_text_field(wp_unslash($_POST['spamBlockBots']));
+					if ($spam_block_bots == 'YES' || $spam_block_bots == 'NO') {
+						$eeRSCF->formSettings['spamBlockBots'] = $spam_block_bots;
+					}
 				}
 
 				// Validate and sanitize the spamHoneypot field
 				if (isset($_POST['spamHoneypot']) && !empty($_POST['spamHoneypot'])) {
-					$eeRSCF->formSettings['spamHoneypot'] = htmlspecialchars($_POST['spamHoneypot'], ENT_QUOTES, 'UTF-8');
+					$eeRSCF->formSettings['spamHoneypot'] = sanitize_text_field(wp_unslash($_POST['spamHoneypot']));
 				}
 
 				// Validate and sanitize the spamEnglishOnly field
-				if (isset($_POST['spamEnglishOnly']) && ($_POST['spamEnglishOnly'] == 'YES' || $_POST['spamEnglishOnly'] == 'NO')) {
-					$eeRSCF->formSettings['spamEnglishOnly'] = $_POST['spamEnglishOnly'];
+				if (isset($_POST['spamEnglishOnly'])) {
+					$spam_english_only = sanitize_text_field(wp_unslash($_POST['spamEnglishOnly']));
+					if ($spam_english_only == 'YES' || $spam_english_only == 'NO') {
+						$eeRSCF->formSettings['spamEnglishOnly'] = $spam_english_only;
+					}
 				}
 
 				// Validate and sanitize the spamBlockFishy field
-				if (isset($_POST['spamBlockFishy']) && ($_POST['spamBlockFishy'] == 'YES' || $_POST['spamBlockFishy'] == 'NO')) {
-					$eeRSCF->formSettings['spamBlockFishy'] = $_POST['spamBlockFishy'];
+				if (isset($_POST['spamBlockFishy'])) {
+					$spam_block_fishy = sanitize_text_field(wp_unslash($_POST['spamBlockFishy']));
+					if ($spam_block_fishy == 'YES' || $spam_block_fishy == 'NO') {
+						$eeRSCF->formSettings['spamBlockFishy'] = $spam_block_fishy;
+					}
 				}
 
 				// Validate and sanitize the spamBlockCommonWords field
-				if (isset($_POST['spamBlockCommonWords']) && ($_POST['spamBlockCommonWords'] == 'YES' || $_POST['spamBlockCommonWords'] == 'NO')) {
-					$eeRSCF->formSettings['spamBlockCommonWords'] = $_POST['spamBlockCommonWords'];
+				if (isset($_POST['spamBlockCommonWords'])) {
+					$spam_block_common = sanitize_text_field(wp_unslash($_POST['spamBlockCommonWords']));
+					if ($spam_block_common == 'YES' || $spam_block_common == 'NO') {
+						$eeRSCF->formSettings['spamBlockCommonWords'] = $spam_block_common;
+					}
 				}
 
 				// Validate and sanitize the spamBlockWords field
-				if (isset($_POST['spamBlockWords']) && ($_POST['spamBlockWords'] == 'YES' || $_POST['spamBlockWords'] == 'NO')) {
-					$eeRSCF->formSettings['spamBlockWords'] = $_POST['spamBlockWords'];
+				if (isset($_POST['spamBlockWords'])) {
+					$spam_block_words = sanitize_text_field(wp_unslash($_POST['spamBlockWords']));
+					if ($spam_block_words == 'YES' || $spam_block_words == 'NO') {
+						$eeRSCF->formSettings['spamBlockWords'] = $spam_block_words;
+					}
 				}
 
 				// Validate and sanitize the spamBlockedWords field
 				if (isset($_POST['spamBlockedWords']) && !empty($_POST['spamBlockedWords'])) {
-				$eeRSCF->formSettings['spamBlockedWords'] = htmlspecialchars($_POST['spamBlockedWords'], ENT_QUOTES, 'UTF-8');
+					$eeRSCF->formSettings['spamBlockedWords'] = sanitize_textarea_field(wp_unslash($_POST['spamBlockedWords']));
 				}
 
 				// Validate and sanitize the spamSendAttackNotice field
-				if (isset($_POST['spamSendAttackNotice']) && ($_POST['spamSendAttackNotice'] == 'YES' || $_POST['spamSendAttackNotice'] == 'NO')) {
-				$eeRSCF->formSettings['spamSendAttackNotice'] = $_POST['spamSendAttackNotice'];
+				if (isset($_POST['spamSendAttackNotice'])) {
+					$spam_attack_notice = sanitize_text_field(wp_unslash($_POST['spamSendAttackNotice']));
+					if ($spam_attack_notice == 'YES' || $spam_attack_notice == 'NO') {
+						$eeRSCF->formSettings['spamSendAttackNotice'] = $spam_attack_notice;
+					}
 				}
 
 				// Validate and sanitize the spamNoticeEmail field
 				if (isset($_POST['spamNoticeEmail'])) {
-					$eeRSCF->formSettings['spamNoticeEmail'] = filter_var($_POST['spamNoticeEmail'], FILTER_VALIDATE_EMAIL );
+					$eeRSCF->formSettings['spamNoticeEmail'] = filter_var(wp_unslash($_POST['spamNoticeEmail']), FILTER_VALIDATE_EMAIL );
 				}
 
 
@@ -925,7 +1005,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamBlockBots', $settings); // Update the database
 
 				// Honeypot
-				$settings = htmlspecialchars($_POST['spamHoneypot']);
+				$settings = sanitize_text_field(wp_unslash($_POST['spamHoneypot']));
 				$settings = $eeHelper->eeMakeSlug($settings);
 				$this->log['notices'] = 'Spam Honeypot: ' . $settings;
 				update_option('eeRSCF_spamHoneypot', $settings); // Update the database
@@ -946,7 +1026,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamBlockWords', $settings); // Update the database
 
 				// Blocked Words
-				$settings = htmlspecialchars($_POST['spamBlockedWords']);
+				$settings = sanitize_textarea_field(wp_unslash($_POST['spamBlockedWords']));
 				$this->log['notices'] = 'Spam Blocked Words: ' . $settings;
 				update_option('eeRSCF_spamBlockedWords', $settings); // Update the database
 
@@ -961,7 +1041,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamSendAttackNotice', $settings); // Update the database
 
 				// Notice Email
-				$settings = filter_var($_POST['spamNoticeEmail'], FILTER_VALIDATE_EMAIL );
+				$settings = filter_var(wp_unslash($_POST['spamNoticeEmail']), FILTER_VALIDATE_EMAIL );
 				$this->log['notices'] = 'Spam Notice Email: ' . $settings;
 				update_option('eeRSCF_spamNoticeEmail', $settings); // Update the database
 			}
@@ -974,53 +1054,61 @@ class eeRSCF_Class {
 
 				// Validate and sanitize eeRSCF_EmailSettings
 				if ( isset( $_POST['eeRSCF_EmailSettings'] ) && $_POST['eeRSCF_EmailSettings'] == 'TRUE' ) {
-					$eeRSCF->formSettings['email'] = filter_var( $_POST['eeRSCF_email'], FILTER_SANITIZE_EMAIL );
-					$eeRSCF->formSettings['emailMode'] = ( $_POST['eeRSCF_emailMode'] == 'SMTP' ) ? 'SMTP' : 'PHP';
+					if (isset($_POST['eeRSCF_email'])) {
+						$eeRSCF->formSettings['email'] = filter_var( wp_unslash($_POST['eeRSCF_email']), FILTER_SANITIZE_EMAIL );
+					}
+					if (isset($_POST['eeRSCF_emailMode'])) {
+						$email_mode = sanitize_text_field(wp_unslash($_POST['eeRSCF_emailMode']));
+						$eeRSCF->formSettings['emailMode'] = ( $email_mode == 'SMTP' ) ? 'SMTP' : 'PHP';
+					}
 				}
 
 				// Validate and sanitize eeRSCF_emailFormat
 				if ( isset( $_POST['eeRSCF_emailFormat'] ) ) {
-					$eeRSCF->formSettings['emailFormat'] = ( $_POST['eeRSCF_emailFormat'] == 'HTML' ) ? 'HTML' : 'TEXT';
+					$email_format = sanitize_text_field(wp_unslash($_POST['eeRSCF_emailFormat']));
+					$eeRSCF->formSettings['emailFormat'] = ( $email_format == 'HTML' ) ? 'HTML' : 'TEXT';
 				}
 
 				// Validate and sanitize eeRSCF_emailName
 				if ( isset( $_POST['eeRSCF_emailName'] ) ) {
-					$eeRSCF->formSettings['emailName'] = sanitize_text_field( $_POST['eeRSCF_emailName'] );
+					$eeRSCF->formSettings['emailName'] = sanitize_text_field( wp_unslash($_POST['eeRSCF_emailName']) );
 				}
 
 				// Validate and sanitize eeRSCF_emailServer
 				if ( isset( $_POST['eeRSCF_emailServer'] ) ) {
-					$eeRSCF->formSettings['emailServer'] = sanitize_text_field( $_POST['eeRSCF_emailServer'] );
+					$eeRSCF->formSettings['emailServer'] = sanitize_text_field( wp_unslash($_POST['eeRSCF_emailServer']) );
 				}
 
 				// Validate and sanitize eeRSCF_emailUsername
 				if ( isset( $_POST['eeRSCF_emailUsername'] ) ) {
-					$eeRSCF->formSettings['emailUsername'] = sanitize_text_field( $_POST['eeRSCF_emailUsername'] );
+					$eeRSCF->formSettings['emailUsername'] = sanitize_text_field( wp_unslash($_POST['eeRSCF_emailUsername']) );
 				}
 
 				// Validate and sanitize eeRSCF_emailPassword
 				if ( isset( $_POST['eeRSCF_emailPassword'] ) ) {
-					$eeRSCF->formSettings['emailPassword'] = htmlspecialchars( $_POST['eeRSCF_emailPassword'], ENT_QUOTES );
+					$eeRSCF->formSettings['emailPassword'] = sanitize_text_field( wp_unslash($_POST['eeRSCF_emailPassword']) );
 				}
 
 				// Validate and sanitize eeRSCF_emailSecure
 				if ( isset( $_POST['eeRSCF_emailSecure'] ) ) {
-					$eeRSCF->formSettings['emailSecure'] = htmlspecialchars( $_POST['eeRSCF_emailSecure'], ENT_QUOTES );
+					$eeRSCF->formSettings['emailSecure'] = sanitize_text_field( wp_unslash($_POST['eeRSCF_emailSecure']) );
 				}
 
 				// Validate and sanitize eeRSCF_emailAuth
 				if ( isset( $_POST['eeRSCF_emailAuth'] ) ) {
-					$eeRSCF->formSettings['emailAuth'] = ( $_POST['eeRSCF_emailAuth'] == 'YES' ) ? true : false;
+					$email_auth = sanitize_text_field(wp_unslash($_POST['eeRSCF_emailAuth']));
+					$eeRSCF->formSettings['emailAuth'] = ( $email_auth == 'YES' ) ? true : false;
 				}
 
 				// Validate and sanitize eeRSCF_emailPort
 				if ( isset( $_POST['eeRSCF_emailPort'] ) ) {
-					$eeRSCF->formSettings['emailPort'] = filter_var( $_POST['eeRSCF_emailPort'], FILTER_SANITIZE_NUMBER_INT );
+					$eeRSCF->formSettings['emailPort'] = filter_var( wp_unslash($_POST['eeRSCF_emailPort']), FILTER_SANITIZE_NUMBER_INT );
 				}
 
 				// Validate and sanitize eeRSCF_emailDebug
 				if ( isset( $_POST['eeRSCF_emailDebug'] ) ) {
-					$eeRSCF->formSettings['emailDebug'] = ( $_POST['eeRSCF_emailDebug'] == 'YES' ) ? true : false;
+					$email_debug = sanitize_text_field(wp_unslash($_POST['eeRSCF_emailDebug']));
+					$eeRSCF->formSettings['emailDebug'] = ( $email_debug == 'YES' ) ? true : false;
 				}
 			}
 
@@ -1082,9 +1170,6 @@ class eeRSCF_Class {
 			// Debug Mode
 			if ($this->formSettings['emailDebug']) {
 				$phpmailer->SMTPDebug = 2; // Enable verbose debug output
-				$phpmailer->Debugoutput = function($str, $level) {
-					error_log("SMTP Debug: " . $str);
-				};
 			}
 
 			// From Name

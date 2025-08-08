@@ -26,15 +26,27 @@ Therefore, a rock solid contact form needs to have an email address to send from
 <label for="eeRSCF_email">The Form\'s Email</label>
 	<input type="email" name="eeRSCF_email" value="';
 
-if($eeRSCF->formSettings['email']) { $eeOutput .= $eeRSCF->formSettings['email']; } else { echo get_option('eeRSCF_email'); }
+if($eeRSCF->formSettings['email']) { $eeOutput .= esc_attr($eeRSCF->formSettings['email']); } else { $eeOutput .= esc_attr(get_option('eeRSCF_email')); }
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_email" size="64" />';
 
 if($eeRSCF->formSettings['emailMode'] != 'SMTP') {
 
+	// Validate and sanitize HTTP_HOST
+	$server_host = '';
+	if (isset($_SERVER['HTTP_HOST'])) {
+		$server_host = sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST']));
+		// Additional validation to ensure it's a valid hostname
+		if (!preg_match('/^[a-zA-Z0-9.-]+$/', $server_host)) {
+			$server_host = wp_parse_url(home_url(), PHP_URL_HOST);
+		}
+	} else {
+		$server_host = wp_parse_url(home_url(), PHP_URL_HOST);
+	}
+
 	$eeOutput .= '
 
-	<p class="eeNote">To improve deliverability, the form\'s email address should be a working address on this web server, such as <strong><em>mail@' . $_SERVER['HTTP_HOST'] . '</em></strong>.</p>';
+	<p class="eeNote">To improve deliverability, the form\'s email address should be a working address on this web server, such as <strong><em>mail@' . esc_html($server_host) . '</em></strong>.</p>';
 }
 
 
