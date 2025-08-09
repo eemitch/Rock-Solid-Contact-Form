@@ -1,6 +1,7 @@
 <?php
 
-if (!defined('ABSPATH')) exit; // Exit if accessed directly
+// Security First
+if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly
 if (!wp_verify_nonce($eeRSCF_Nonce, 'eeRSCF_Nonce')) exit('That is Noncense!'); // Exit if nonce fails
 
 function eeRSCF_Settings() {

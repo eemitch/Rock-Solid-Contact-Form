@@ -7,9 +7,9 @@
  * @author Mitchell Bennis - Element Engage, LLC
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
-}
+// Security First
+if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly
+
 
 // Shortcode - Usage: [rock-solid-contact]
 function eeRSCF_FrontEnd($atts, $content = null) {

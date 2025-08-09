@@ -7,9 +7,9 @@
  * @author Mitchell Bennis - Element Engage, LLC
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
-}
+// Security First
+if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly
+
 
 class eeHelper_Class {
 

@@ -39,30 +39,34 @@ function eeRSCF_Setup() {
 	global $eeRSCF, $eeHelper;
 	$eeVersion = get_option('eeRSCF_Version');
 
-	$eeRSCF_Nonce = wp_create_nonce('eeRSCF_Nonce'); // Security
+	// Nonce Security
+	$eeRSCF_Nonce = wp_create_nonce('eeRSCF_Nonce'); // Used on included pages
+
+	// Includes
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-functions.php'); // General Functions
-
-	// Initiate the Class
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-rock-solid-class.php');
-	$eeRSCF = new eeRSCF_Class();
-
-	// Get the helper class
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-helper-class.php');
+
+	// Initialize Classes
+	$eeRSCF = new eeRSCF_Class();
 	$eeHelper = new eeHelper_Class();
 
-	// Check for Install or Update
-	$eeReturn = eeRSCF_UpdatePlugin();
+	// Check for new install or needs update
+	eeRSCF_UpdatePlugin();
 
+	// Get our settings
 	if(empty($eeRSCF->formSettings)) {
 		$eeRSCF->formSettings = get_option('eeRSCF_Settings');
 		$eeRSCF->confirm = get_option('eeRSCF_Confirm');
 	}
 
+	// Add Actions
 	add_action( 'admin_menu', 'eeRSCF_BackEnd' );
 	add_action( 'admin_enqueue_scripts', 'eeRSCF_AdminEnqueue' );
 	add_action( 'wp_enqueue_scripts', 'eeRSCF_Enqueue' );
 	add_shortcode( 'rock-solid-contact', 'eeRSCF_FrontEnd' );
 
+	// Process the Contact Form Submission
 	if(isset($_POST['ee-rock-solid-nonce'])) { add_action('wp_loaded', 'eeRSCF_ContactProcess'); }
 
 	return TRUE;
@@ -72,7 +76,7 @@ add_action('init', 'eeRSCF_Setup');
 
 
 function eeRSCF_Activate() {
-	return true;
+	return TRUE;
 }
 register_activation_hook(__FILE__, 'eeRSCF_Activate');
 

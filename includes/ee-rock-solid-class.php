@@ -7,16 +7,11 @@
  * @author Mitchell Bennis - Element Engage, LLC
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
-}
-
-// NOTES -------
-
-// Select all relevant database options
-// SELECT * FROM `wp_options` WHERE option_name LIKE 'eeRSCF_%' ORDER BY option_name
+// Security First
+if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly
 
 
+// Our Main Class
 class eeRSCF_Class {
 
 	// General Properties

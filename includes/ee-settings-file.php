@@ -6,9 +6,9 @@
  * @since 2.1.2
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
-}
+// Security First
+if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly
+if (!wp_verify_nonce($eeRSCF_Nonce, 'ee_include_page')) exit('Nonce verification failed!');
 
 $eeOutput .= '
 
