@@ -472,8 +472,8 @@ class eeRSCF_Class {
 					<label for="' . $eeFieldArray['show'] . '">';
 
 					if($eeFieldArray['label']) {
-						$this->theFormOutput .= stripslashes($eeFieldArray['label']); }
-							else { $this->theFormOutput .= $eeHelper->eeUnSlug($eeField); }
+						$this->theFormOutput .= esc_html(stripslashes($eeFieldArray['label'])); }
+							else { $this->theFormOutput .= esc_html($eeHelper->eeUnSlug($eeField)); }
 
 					$this->theFormOutput .= '</label>';
 
@@ -486,16 +486,16 @@ class eeRSCF_Class {
 
 					// Check for custom label
 					if($eeFieldArray['label']) {
-						$this->theFormOutput .= $eeHelper->eeMakeSlug($eeFieldArray['label']);
+						$this->theFormOutput .= esc_attr($eeHelper->eeMakeSlug($eeFieldArray['label']));
 					} else {
 
-						$this->theFormOutput .= $eeField;
+						$this->theFormOutput .= esc_attr($eeField);
 					}
 
 					$this->theFormOutput .= '"';
 
 					$this->theFormOutput .= ' id="';
-					$this->theFormOutput .= $eeField . '"';
+					$this->theFormOutput .= esc_attr($eeField) . '"';
 
 					$this->theFormOutput .= ' type="';
 
@@ -526,7 +526,7 @@ class eeRSCF_Class {
 				<label for="eeRSCF_files">Attachment</label>
 				<input type="file" name="file" id="eeRSCF_files" accept="';
 
-				$this->theFormOutput .= $this->formSettings['fileFormats'] . '" />';
+				$this->theFormOutput .= esc_attr($this->formSettings['fileFormats']) . '" />';
 
 				$this->theFormOutput .= '
 				</div>';
@@ -555,10 +555,10 @@ class eeRSCF_Class {
 		</div>';
 
 		// Log to the browser console
-		if(eeRSCF_DevMode) {
+		if(eeRSCF_DevMode && defined('WP_DEBUG') && WP_DEBUG) {
 			$this->theFormOutput .= eeDevOutput($this->log); // Output to console
-			$this->theFormOutput .= '<pre>LOG: ' . print_r($this->log, TRUE) . '</pre>';
-			$this->theFormOutput .= '<pre>SETTINGS: ' . print_r($this->formSettings, TRUE) . '</pre>';
+			$this->theFormOutput .= '<pre>LOG: ' . esc_html(print_r($this->log, TRUE)) . '</pre>';
+			$this->theFormOutput .= '<pre>SETTINGS: ' . esc_html(print_r($this->formSettings, TRUE)) . '</pre>';
 		}
 
 		return $this->theFormOutput;
@@ -701,19 +701,19 @@ class eeRSCF_Class {
 					foreach ($value as $value2) {
 						if(is_array($value2)) {
 							foreach ($value2 as $value3) {
-								echo "<li>$value3</li>\n";
+								echo "<li>" . esc_html($value3) . "</li>\n";
 							}
 						} else {
-							echo "<li>$value2</li>\n";
+							echo "<li>" . esc_html($value2) . "</li>\n";
 						}
 					}
 				} else {
-					echo "<li>$value</li>\n";
+					echo "<li>" . esc_html($value) . "</li>\n";
 				}
 			}
 			echo "</ul></div>\n\n";
 		} else {
-			echo '<p>' . $messages . '</p>';
+			echo '<p>' . esc_html($messages) . '</p>';
 		}
 	}
 
@@ -1080,10 +1080,10 @@ class eeRSCF_Class {
 			}
 
 			// Debug Mode
-			if ($this->formSettings['emailDebug']) {
+			if ($this->formSettings['emailDebug'] && defined('WP_DEBUG') && WP_DEBUG) {
 				$phpmailer->SMTPDebug = 2; // Enable verbose debug output
 				$phpmailer->Debugoutput = function($str, $level) {
-					error_log("SMTP Debug: " . $str);
+					error_log("RSCF SMTP Debug: " . sanitize_text_field($str));
 				};
 			}
 
