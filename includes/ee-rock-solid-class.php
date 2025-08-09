@@ -374,9 +374,9 @@ class eeRSCF_Class {
 			}
 			$eeBody .= PHP_EOL . "Attacker" . PHP_EOL;
 			$eeBody .= "-----------------------------------" . PHP_EOL;
-			$eeBody .= "User Agent: " . (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Not Available') . PHP_EOL;
-			$eeBody .= "User IP: " . (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'Not Available') . PHP_EOL;
-			$eeBody .= "Came From: " . (isset($_POST['SCRIPT_REFERER']) ? $_POST['SCRIPT_REFERER'] : '') . (isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '') . PHP_EOL;
+			$eeBody .= "User Agent: " . sanitize_text_field($_SERVER['HTTP_USER_AGENT'] ?? 'Not Available') . PHP_EOL;
+			$eeBody .= "User IP: " . sanitize_text_field($_SERVER['REMOTE_ADDR'] ?? 'Not Available') . PHP_EOL;
+			$eeBody .= "Came From: " . sanitize_text_field($_POST['SCRIPT_REFERER'] ?? '') . sanitize_text_field($_SERVER['QUERY_STRING'] ?? '') . PHP_EOL;
 			$eeBody .= "Attacker Message" . PHP_EOL . "-----------------------------------" . PHP_EOL;
 			$eeBody .= implode("\n\n", $this->eeRSCF_PostProcess($_POST)) . PHP_EOL . PHP_EOL .
 				  "-----------------------------------" . PHP_EOL;
@@ -634,7 +634,10 @@ class eeRSCF_Class {
 			if(empty($eeSubject)) { $eeSubject = 'Contact Form Message (' . basename(home_url()) . ')'; }
 
 			// Email assembly
-			if(empty($this->formSettings['email'])) { $this->formSettings['email'] = 'mail@' . $_SERVER['HTTP_HOST']; } // Fallback
+			if(empty($this->formSettings['email'])) {
+				$host = sanitize_text_field($_SERVER['HTTP_HOST'] ?? 'localhost');
+				$this->formSettings['email'] = 'mail@' . $host;
+			} // Fallback
 			$eeHeaders = "From: " . get_bloginfo('name') . ' <' . $this->formSettings['email'] . ">" . PHP_EOL;
 			if($this->formSettings['cc']) { $eeHeaders .= "CC: " . $this->formSettings['cc'] . PHP_EOL; }
 			if($this->formSettings['bcc']) { $eeHeaders .= "BCC: " . $this->formSettings['bcc'] . PHP_EOL; }
@@ -741,7 +744,7 @@ class eeRSCF_Class {
 
 				// Name
 				if(isset($_POST['eeRSCF_formName'])) {
-					$eeRSCF->formSettings['formName'] = htmlspecialchars($_POST['eeRSCF_formName']);
+					$eeRSCF->formSettings['formName'] = sanitize_text_field($_POST['eeRSCF_formName']);
 				} else {
 					$eeArray['name'] = 'Contact Form';
 				}
@@ -757,7 +760,7 @@ class eeRSCF_Class {
 
 						if( isset($_POST['eeRSCF_form_' . $to ]) ) {
 
-							$eeString = htmlspecialchars($_POST['eeRSCF_form_' . $to ]);
+							$eeString = sanitize_text_field($_POST['eeRSCF_form_' . $to ]);
 
 							if(strpos($eeString, ',')) { // More than one address
 
@@ -798,9 +801,11 @@ class eeRSCF_Class {
 
 				}
 
-				$fieldsArray = $_POST['eeRSCF_fields'];
+				$fieldsArray = isset($_POST['eeRSCF_fields']) && is_array($_POST['eeRSCF_fields'])
+					? $_POST['eeRSCF_fields']
+					: array();
 
-				if( is_array($fieldsArray) ) {
+				if( !empty($fieldsArray) ) {
 
 					foreach($fieldsArray as $thisName => $thisFieldArray) {
 
@@ -870,7 +875,7 @@ class eeRSCF_Class {
 
 				// Validate and sanitize the spamHoneypot field
 				if (isset($_POST['spamHoneypot']) && !empty($_POST['spamHoneypot'])) {
-					$eeRSCF->formSettings['spamHoneypot'] = htmlspecialchars($_POST['spamHoneypot'], ENT_QUOTES, 'UTF-8');
+					$eeRSCF->formSettings['spamHoneypot'] = sanitize_text_field($_POST['spamHoneypot']);
 				}
 
 				// Validate and sanitize the spamEnglishOnly field
@@ -895,7 +900,7 @@ class eeRSCF_Class {
 
 				// Validate and sanitize the spamBlockedWords field
 				if (isset($_POST['spamBlockedWords']) && !empty($_POST['spamBlockedWords'])) {
-				$eeRSCF->formSettings['spamBlockedWords'] = htmlspecialchars($_POST['spamBlockedWords'], ENT_QUOTES, 'UTF-8');
+				$eeRSCF->formSettings['spamBlockedWords'] = sanitize_textarea_field($_POST['spamBlockedWords']);
 				}
 
 				// Validate and sanitize the spamSendAttackNotice field
@@ -920,7 +925,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamBlockBots', $settings); // Update the database
 
 				// Honeypot
-				$settings = htmlspecialchars($_POST['spamHoneypot']);
+				$settings = sanitize_text_field($_POST['spamHoneypot']);
 				$settings = $eeHelper->eeMakeSlug($settings);
 				$this->log['notices'] = 'Spam Honeypot: ' . $settings;
 				update_option('eeRSCF_spamHoneypot', $settings); // Update the database
@@ -941,7 +946,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamBlockWords', $settings); // Update the database
 
 				// Blocked Words
-				$settings = htmlspecialchars($_POST['spamBlockedWords']);
+				$settings = sanitize_textarea_field($_POST['spamBlockedWords']);
 				$this->log['notices'] = 'Spam Blocked Words: ' . $settings;
 				update_option('eeRSCF_spamBlockedWords', $settings); // Update the database
 
@@ -995,12 +1000,12 @@ class eeRSCF_Class {
 
 				// Validate and sanitize eeRSCF_emailPassword
 				if ( isset( $_POST['eeRSCF_emailPassword'] ) ) {
-					$eeRSCF->formSettings['emailPassword'] = htmlspecialchars( $_POST['eeRSCF_emailPassword'], ENT_QUOTES );
+					$eeRSCF->formSettings['emailPassword'] = sanitize_text_field( $_POST['eeRSCF_emailPassword'] );
 				}
 
 				// Validate and sanitize eeRSCF_emailSecure
 				if ( isset( $_POST['eeRSCF_emailSecure'] ) ) {
-					$eeRSCF->formSettings['emailSecure'] = htmlspecialchars( $_POST['eeRSCF_emailSecure'], ENT_QUOTES );
+					$eeRSCF->formSettings['emailSecure'] = sanitize_text_field( $_POST['eeRSCF_emailSecure'] );
 				}
 
 				// Validate and sanitize eeRSCF_emailAuth
