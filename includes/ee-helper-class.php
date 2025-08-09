@@ -61,11 +61,11 @@ class eeHelper_Class {
 					if(is_array($eeValue)) {
 						foreach ($eeValue as $eeValue2) {
 							$eeOutput .= '
-							<li>' . $eeValue2 . '</li>' . PHP_EOL;
+							<li>' . esc_html($eeValue2) . '</li>' . PHP_EOL;
 						}
 					} else {
 						$eeOutput .= '
-						<li>' . $eeValue . '</li>' . PHP_EOL;
+						<li>' . esc_html($eeValue) . '</li>' . PHP_EOL;
 					}
 				}
 				$eeOutput .= '
@@ -95,17 +95,17 @@ class eeHelper_Class {
 				foreach ($messages as $value) {
 					if(is_array($value)) {
 						foreach ($value as $value2) {
-							$body .= $value2 . "\n\n";
+							$body .= sanitize_text_field($value2) . "\n\n";
 						}
 					} else {
-						$body .= $value . "\n\n";
+						$body .= sanitize_text_field($value) . "\n\n";
 					}
 				}
 			} else {
-				$body = $messages . "\n\n";
+				$body = sanitize_text_field($messages) . "\n\n";
 			}
 
-			$body .= 'Via: ' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+			$body .= 'Via: ' . sanitize_text_field($_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
 
 			if(!mail($to,$subject,$body,$headers)) { // Email the message or error report
 				?><script>alert('EMAIL SEND FAILED');</script><?php
@@ -175,13 +175,13 @@ class eeHelper_Class {
 	// File Uploader
 	function eeUploader($eeFile, $eePath = '') { // File Object, Path Relative to wp-content/uploads
 
-		// Check if a file was uploaded
-		if(empty($eeFile)) {
-			trigger_error('No file uploaded or an error occurred.');
-			return FALSE;
+	// Check if a file was uploaded
+	if(empty($eeFile)) {
+		if (defined('WP_DEBUG') && WP_DEBUG) {
+			error_log('RSCF: No file uploaded or an error occurred.');
 		}
-
-		// Get upload directory info
+		return FALSE;
+	}		// Get upload directory info
 		$upload_dir = wp_upload_dir();
 		$base_dir = $upload_dir['basedir']; // Absolute base directory
 		$base_url = $upload_dir['baseurl']; // Base URL
@@ -189,7 +189,9 @@ class eeHelper_Class {
 		// Ensure the directory exists, create if necessary
 		if (!is_dir($base_dir . '/' . $eePath)) {
 			if (!wp_mkdir_p($base_dir . '/' . $eePath)) {
-				trigger_error('Failed to create upload directory: ' . $base_dir . '/' . $eePath, E_USER_WARNING);
+				if (defined('WP_DEBUG') && WP_DEBUG) {
+					error_log('RSCF: Failed to create upload directory: ' . esc_html($base_dir . '/' . $eePath));
+				}
 				return FALSE;
 			}
 		}
@@ -198,7 +200,9 @@ class eeHelper_Class {
 		$given_path = $base_dir . '/' . $eePath; // Remove slashes to avoid double slashes
 		$resolved_path = realpath($base_dir . '/' . $eePath);
 		if($resolved_path === false || strpos($resolved_path, $given_path) !== 0) {
-			trigger_error('Invalid upload directory: ' . $resolved_path, E_USER_WARNING);
+			if (defined('WP_DEBUG') && WP_DEBUG) {
+				error_log('RSCF: Invalid upload directory: ' . esc_html($resolved_path));
+			}
 			return FALSE;
 		}
 
@@ -216,7 +220,9 @@ class eeHelper_Class {
 		if(move_uploaded_file($file_tmp, $file_destination)) {
 			return str_replace($base_dir, $base_url, $file_destination); // Return the URL
 		} else {
-			trigger_error('Upload Process Failed');
+			if (defined('WP_DEBUG') && WP_DEBUG) {
+				error_log('RSCF: Upload Process Failed');
+			}
 			return FALSE;
 		}
 	}

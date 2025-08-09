@@ -217,4 +217,75 @@ function eeRSCF_WriteLogFile($eeLog) {
 
 
 
+// Update or Install New
+function eeRSCF_UpdatePlugin() {
+
+	global $eeRSCF;
+
+	$eeRSCF->formSettings = get_option('eeRSCF_Settings_1');
+	$eeVersion = get_option('eeRSCF_Version');
+	if($eeVersion == eeRSCF_Version) { return TRUE; } // Return if we're good.
+
+	if($eeRSCF->formSettings OR $eeVersion) { // Installed
+
+		if(version_compare($eeVersion, eeRSCF_Version, '<') ) {
+
+			$eeRSCF->formSettings = get_option('eeRSCF_Settings_1');
+
+			if(!empty($eeRSCF->formSettings)) {
+
+				// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
+
+				// Move the confirmation URL to its own option
+				if($eeRSCF->formSettings['confirm']) {
+					$eeRSCF->confirm = $eeRSCF->formSettings['confirm'];
+				}
+
+				// Complete missing FROM address if needed
+				if(empty($eeRSCF->formSettings['email'])) {
+					$eeRSCF->formSettings['email'] = get_option('admin_emial');
+				}
+
+				// Get rid of dots in file types
+				$formats = $eeRSCF->formSettings['fileFormats'];
+				$formats = preg_replace('/\s*\.([a-z0-9]+)/i', ' $1', $formats);
+				$formats = trim($formats);
+
+				$eeRSCF->formSettings['fileFormats'] = $formats;
+
+				// Out with the Old...
+				global $wpdb;
+				$wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'eeRSCF_%'");
+				unset($eeRSCF->formSettings['name']);
+				unset($eeRSCF->formSettings['confirm']);
+
+				// In with the New
+				update_option('eeRSCF_Version' , eeRSCF_Version);
+				update_option('eeRSCF_Settings', $eeRSCF->formSettings); // In with the New
+				update_option('eeRSCF_Confirm', $eeRSCF->confirm);
+
+				return TRUE;
+			}
+		}
+
+	} else { // New Installation
+
+		// Install Settings
+		if(empty($eeRSCF->formSettings)) {
+			$eeRSCF->contactFormDefault['to'] = get_option('admin_email');
+			$eeRSCF->contactFormDefault['email'] = get_option('admin_email');
+			update_option('eeRSCF_Settings', $eeRSCF->contactFormDefault);
+			$eeRSCF->confirm = home_url();
+			update_option('eeRSCF_Confirm', $eeRSCF->confirm);
+			$eeRSCF->formSettings = $eeRSCF->contactFormDefault;
+			update_option('eeRSCF_Version' , eeRSCF_Version);
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+
+
 ?>
