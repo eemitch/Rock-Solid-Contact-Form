@@ -63,7 +63,7 @@ $eeOutput .= '
 	<label for="eeRSCF_spamHoneypot">Honeypot</label>
 	<input type="text" name="spamHoneypot" value="';
 
-	if($eeRSCF->formSettings['spamHoneypot']) { $eeOutput .= $eeRSCF->formSettings['spamHoneypot']; } else { $eeOutput .= 'link'; }
+	if($eeRSCF->formSettings['spamHoneypot']) { $eeOutput .= esc_attr($eeRSCF->formSettings['spamHoneypot']); } else { $eeOutput .= 'link'; }
 
 	$eeOutput .= '" class="adminInput" id="eeRSCF_spamHoneypot" size="64" />
 
@@ -144,7 +144,7 @@ $eeOutput .= '
 	<p class="eeNote">Block messages containing any words or phrases you define below. Separate phrases with a comma.</p>
 	<label for="eeRSCF_spamBlockedWords">Added Words</label>
 	<textarea name="spamBlockedWords" id="eeRSCF_spamBlockedWords" >';
-	if($eeRSCF->formSettings['spamBlockedWords']) { $eeOutput .= $eeRSCF->formSettings['spamBlockedWords']; }
+	if($eeRSCF->formSettings['spamBlockedWords']) { $eeOutput .= esc_textarea($eeRSCF->formSettings['spamBlockedWords']); }
 	$eeOutput .= '</textarea>
 	<p class="eeNote">Add your words and phrases here to improve spam filtering.</p>';
 
@@ -173,7 +173,7 @@ $eeOutput .= '
 	<label for="eeRSCF_spamNoticeEmail">Notice Email</label>
 	<input type="text" name="spamNoticeEmail" value="';
 
-	if($eeRSCF->formSettings['spamNoticeEmail']) { $eeOutput .= $eeRSCF->formSettings['spamNoticeEmail']; }
+	if($eeRSCF->formSettings['spamNoticeEmail']) { $eeOutput .= esc_attr($eeRSCF->formSettings['spamNoticeEmail']); }
 
 	$eeOutput .= '" class="adminInput" id="eeRSCF_spamNoticeEmail" size="64" />
 

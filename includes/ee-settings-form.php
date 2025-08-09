@@ -15,7 +15,7 @@ $eeOutput .= '
 	<h2>Form Configuration</h2>
 
 	<input type="hidden" name="eeRSCF_formSettings" value="TRUE" />
-	<input type="hidden" name="eeRSCF_ID" value="' . $eeRSCF->formID . '" />
+	<input type="hidden" name="eeRSCF_ID" value="' . esc_attr($eeRSCF->formID) . '" />
 		<input type="hidden" name="tab" value="form_settings" />
 
 	<fieldset id="eeRSCF_formSettings">
@@ -32,7 +32,7 @@ $eeOutput .= '
 				<label for="eeRSCF_formTO">TO</label>
 				<input type="text" name="eeRSCF_form_to" value="';
 
-			if(!empty($eeRSCF->formSettings['to'])) { $eeOutput .= $eeRSCF->formSettings['to']; }
+			if(!empty($eeRSCF->formSettings['to'])) { $eeOutput .= esc_attr($eeRSCF->formSettings['to']); }
 					// else { $eeOutput .= get_option('admin_email'); }
 
 			$eeOutput .= '" class="adminInput" id="eeRSCF_formTO" size="64" />
@@ -40,14 +40,14 @@ $eeOutput .= '
 				<label for="eeRSCF_formCC">CC</label>
 				<input type="text" name="eeRSCF_form_cc" value="';
 
-			if(!empty($eeRSCF->formSettings['cc'])) { $eeOutput .= $eeRSCF->formSettings['cc']; }
+			if(!empty($eeRSCF->formSettings['cc'])) { $eeOutput .= esc_attr($eeRSCF->formSettings['cc']); }
 
 			$eeOutput .= '" class="adminInput" id="eeRSCF_formCC" size="64" />
 
 				<label for="eeRSCF_formBCC">BCC</label>
 				<input type="text" name="eeRSCF_form_bcc" value="';
 
-			if(!empty($eeRSCF->formSettings['bcc'])) { $eeOutput .= $eeRSCF->formSettings['bcc']; }
+			if(!empty($eeRSCF->formSettings['bcc'])) { $eeOutput .= esc_attr($eeRSCF->formSettings['bcc']); }
 
 			$eeOutput .= '" class="adminInput" id="eeRSCF_formBCC" size="64" />
 
@@ -87,7 +87,7 @@ $eeOutput .= '
 
 				<td><input type="text" name="eeRSCF_fields[' . $eeFieldName . '][' . $field . ']" value="';
 
-				if($value) { $eeOutput .= stripslashes($value); } else { $eeOutput .= $eeHelper->eeUnSlug($field); }
+				if($value) { $eeOutput .= esc_attr(stripslashes($value)); } else { $eeOutput .= esc_attr($eeHelper->eeUnSlug($field)); }
 
 				$eeOutput .= '" size="32" /></td>';
 
@@ -117,7 +117,7 @@ $eeOutput .= '
 
 		<p>This is the page that will load after the form has been submitted. If no page is defined, the contact form page will be loaded again.</p>
 
-		<input class="eeFullWidth" type="url" name="eeRSCF_Confirm" value="' . $eeRSCF->confirm . '" size="128" />
+		<input class="eeFullWidth" type="url" name="eeRSCF_Confirm" value="' . esc_attr($eeRSCF->confirm) . '" size="128" />
 
 	</fieldset>
 
@@ -125,10 +125,7 @@ $eeOutput .= '
 
 </fieldset>
 
-<!-- <a id="eeRSCF_deleteForm" href="admin.php?page=rock-solid-contact-form&subtab=form_settings&eeRSCF_deleteForm=' . $eeRSCF->formID . '">Delete This Form</a> -->
-
 ';
-
 
 
 ?>

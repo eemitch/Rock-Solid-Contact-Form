@@ -26,7 +26,7 @@ Therefore, a rock solid contact form needs to have an email address to send from
 <label for="eeRSCF_email">The Form\'s Email</label>
 	<input type="email" name="eeRSCF_email" value="';
 
-if($eeRSCF->formSettings['email']) { $eeOutput .= $eeRSCF->formSettings['email']; } else { echo get_option('eeRSCF_email'); }
+if($eeRSCF->formSettings['email']) { $eeOutput .= esc_attr($eeRSCF->formSettings['email']); } else { $eeOutput .= esc_attr(get_option('eeRSCF_email')); }
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_email" size="64" />';
 
@@ -34,7 +34,7 @@ if($eeRSCF->formSettings['emailMode'] != 'SMTP') {
 
 	$eeOutput .= '
 
-	<p class="eeNote">To improve deliverability, the form\'s email address should be a working address on this web server, such as <strong><em>mail@' . $_SERVER['HTTP_HOST'] . '</em></strong>.</p>';
+	<p class="eeNote">To improve deliverability, the form\'s email address should be a working address on this web server, such as <strong><em>mail@' . esc_html($_SERVER['HTTP_HOST']) . '</em></strong>.</p>';
 }
 
 
@@ -100,7 +100,7 @@ $eeOutput .= '>HTML</option>
 <label for="eeRSCF_emailName">The Form Name</label>
 <input type="text" name="eeRSCF_emailName" value="';
 
-if($eeRSCF->formSettings['emailName']) { $eeOutput .= $eeRSCF->formSettings['emailName']; } else { $eeOutput .= 'Rock Solid Contact Form'; }
+if($eeRSCF->formSettings['emailName']) { $eeOutput .= esc_attr($eeRSCF->formSettings['emailName']); } else { $eeOutput .= 'Rock Solid Contact Form'; }
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailName" size="64" />
 
@@ -114,7 +114,7 @@ $eeOutput .= '" class="adminInput" id="eeRSCF_emailName" size="64" />
 
 
 
-if($eeRSCF->formSettings['emailServer']) { $eeOutput .= $eeRSCF->formSettings['emailServer']; }
+if($eeRSCF->formSettings['emailServer']) { $eeOutput .= esc_attr($eeRSCF->formSettings['emailServer']); }
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailServer" size="64" />
 
@@ -127,7 +127,7 @@ $eeOutput .= '" class="adminInput" id="eeRSCF_emailServer" size="64" />
 <input type="text" name="eeRSCF_emailUsername" value="';
 
 if($eeRSCF->formSettings['emailUsername']) {
-	if( strlen($eeRSCF->formSettings['emailUsername']) > 1 ) { $eeOutput .= $eeRSCF->formSettings['emailUsername']; } else {  $eeOutput .= 'mail@' . basename( get_site_url() ); }
+	if( strlen($eeRSCF->formSettings['emailUsername']) > 1 ) { $eeOutput .= esc_attr($eeRSCF->formSettings['emailUsername']); } else {  $eeOutput .= esc_attr('mail@' . basename( get_site_url() )); }
 }
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailUsername" size="64" />
@@ -140,7 +140,7 @@ $eeOutput .= '" class="adminInput" id="eeRSCF_emailUsername" size="64" />
 <label for="eeRSCF_emailPassword">Mail Account Password</label>
 <input type="text" name="eeRSCF_emailPassword" value="';
 
-if($eeRSCF->formSettings['emailPassword']) { $eeOutput .= $eeRSCF->formSettings['emailPassword']; }
+if($eeRSCF->formSettings['emailPassword']) { $eeOutput .= esc_attr($eeRSCF->formSettings['emailPassword']); }
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailPassword" size="64" />
 
@@ -202,7 +202,7 @@ $eeOutput .= '>No Authorization</option>
 <label for="eeRSCF_emailPort">Port</label>
 <input type="text" name="eeRSCF_emailPort" value="';
 
-if($eeRSCF->formSettings['emailPort']) { $eeOutput .= $eeRSCF->formSettings['emailPort']; } else { $eeOutput .= '25'; }
+if($eeRSCF->formSettings['emailPort']) { $eeOutput .= esc_attr($eeRSCF->formSettings['emailPort']); } else { $eeOutput .= '25'; }
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailPort" size="64" />
 
