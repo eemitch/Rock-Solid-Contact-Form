@@ -142,20 +142,14 @@ function eeDevOutput($eeArray) {
 
 
 
-// Get Common Words from EE Server
+// Get Common Words from EE Server using WordPress HTTP API
 function eeGetRemoteSpamWords($eeUrl) {
 
-  // Try to get the content using file_get_contents()
-  $eeContent = @file_get_contents($eeUrl);
+  // Initialize the WordPress File API wrapper
+  $file_handler = new eeFile_Class();
 
-  // If file_get_contents() fails, try to get the content using curl
-  if (!$eeContent) {
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_URL, $eeUrl);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	$eeContent = curl_exec($ch);
-	curl_close($ch);
-  }
+  // Use the secure remote content method
+  $eeContent = $file_handler->get_remote_content($eeUrl);
 
   return $eeContent;
 }
@@ -163,53 +157,39 @@ function eeGetRemoteSpamWords($eeUrl) {
 
 
 
-// Write log file
+// Write log file using WordPress File API
 function eeRSCF_WriteLogFile($eeLog) {
 
 	if($eeLog) {
 
-		$eeLogFile = plugin_dir_path( __FILE__ ) . 'logs/eeLog.txt';
+		// Initialize the WordPress File API wrapper
+		$file_handler = new eeFile_Class();
 
-		// File Size Management
-		$eeLimit = 262144; // 262144 = 256kb  1048576 = 1 MB
-		$eeSize = @filesize($eeLogFile);
+		// Prepare log content
+		$log_content = 'Date: ' . date("Y-m-d H:i:s") . "\n";
 
-		if(@filesize($eeLogFile) AND $eeSize > $eeLimit) {
-			unlink($eeLogFile); // Delete the file. Start Anew.
-		}
+		foreach($eeLog as $key => $logEntry){
 
-		// Write the Log Entry
-		if($handle = @fopen($eeLogFile, "a+")) {
+			if(is_array($logEntry)) {
 
-			if(@is_writable($eeLogFile)) {
-
-				fwrite($handle, 'Date: ' . date("Y-m-d H:i:s") . "\n");
-
-			    foreach($eeLog as $key => $logEntry){
-
-			    	if(is_array($logEntry)) {
-
-				    	foreach($logEntry as $key2 => $logEntry2){
-					    	fwrite($handle, '(' . $key2 . ') ' . $logEntry2 . "\n");
-					    }
-
-				    } else {
-					    fwrite($handle, '(' . $key . ') ' . $logEntry . "\n");
-				    }
-			    }
-
-			    fwrite($handle, "\n\n\n---------------------------------------\n\n\n"); // Separator
-
-			    fclose($handle);
-
-			    return TRUE;
+				foreach($logEntry as $key2 => $logEntry2){
+					$log_content .= '(' . $key2 . ') ' . $logEntry2 . "\n";
+				}
 
 			} else {
-			    return FALSE;
+				$log_content .= '(' . $key . ') ' . $logEntry . "\n";
 			}
+		}
+
+		$log_content .= "\n\n\n---------------------------------------\n\n\n"; // Separator
+
+		// Use the secure write log method
+		if ($file_handler->write_log($log_content, 'eeLog.txt')) {
+			return TRUE;
 		} else {
 			return FALSE;
 		}
+
 	} else {
 		return FALSE;
 	}
@@ -255,7 +235,7 @@ function eeRSCF_UpdatePlugin() {
 
 				// Out with the Old...
 				global $wpdb;
-				$wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'eeRSCF_%'");
+				$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", 'eeRSCF_%'));
 				unset($eeRSCF->formSettings['name']);
 				unset($eeRSCF->formSettings['confirm']);
 

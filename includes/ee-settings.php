@@ -2,7 +2,7 @@
 
 // Security First
 if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly
-if (!wp_verify_nonce($eeRSCF_Nonce, 'eeRSCF_Nonce')) exit('That is Noncense!'); // Exit if nonce fails
+if (!wp_verify_nonce(eeRSCF_Nonce, 'eeRSCF_Nonce')) exit('That is Noncense!'); // Exit if nonce fails
 
 function eeRSCF_Settings() {
 
@@ -16,9 +16,6 @@ function eeRSCF_Settings() {
 		$eeRSCF_Log[] = 'Updating Settings...';
 		$eeRSCF->eeRSCF_AdminSettingsProcess();
 	}
-
-	// Security nonce
-	$eeRSCF_Nonce = wp_create_nonce('ee_include_page');
 
 	// Determine the active tab
 	$active_tab = isset($_REQUEST['tab']) ? $_REQUEST['tab'] : 'settings';

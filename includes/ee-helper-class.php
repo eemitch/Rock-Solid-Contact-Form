@@ -10,6 +10,9 @@
 // Security First
 if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly
 
+// Include the WordPress File API wrapper
+require_once plugin_dir_path( __FILE__ ) . 'ee-file-class.php';
+
 
 class eeHelper_Class {
 
@@ -172,56 +175,28 @@ class eeHelper_Class {
 
 
 
-	// File Uploader
+	// File Uploader using WordPress File API
 	function eeUploader($eeFile, $eePath = '') { // File Object, Path Relative to wp-content/uploads
 
-	// Check if a file was uploaded
-	if(empty($eeFile)) {
-		if (defined('WP_DEBUG') && WP_DEBUG) {
-			error_log('RSCF: No file uploaded or an error occurred.');
-		}
-		return FALSE;
-	}		// Get upload directory info
-		$upload_dir = wp_upload_dir();
-		$base_dir = $upload_dir['basedir']; // Absolute base directory
-		$base_url = $upload_dir['baseurl']; // Base URL
-
-		// Ensure the directory exists, create if necessary
-		if (!is_dir($base_dir . '/' . $eePath)) {
-			if (!wp_mkdir_p($base_dir . '/' . $eePath)) {
-				if (defined('WP_DEBUG') && WP_DEBUG) {
-					error_log('RSCF: Failed to create upload directory: ' . esc_html($base_dir . '/' . $eePath));
-				}
-				return FALSE;
-			}
-		}
-
-		// Prevent directory traversal
-		$given_path = $base_dir . '/' . $eePath; // Remove slashes to avoid double slashes
-		$resolved_path = realpath($base_dir . '/' . $eePath);
-		if($resolved_path === false || strpos($resolved_path, $given_path) !== 0) {
+		// Check if a file was uploaded
+		if(empty($eeFile)) {
 			if (defined('WP_DEBUG') && WP_DEBUG) {
-				error_log('RSCF: Invalid upload directory: ' . esc_html($resolved_path));
+				error_log('RSCF: No file uploaded or an error occurred.');
 			}
 			return FALSE;
 		}
 
-		// Get file details
-		$file_name = sanitize_file_name($eeFile['name']);
-		$file_tmp = $eeFile['tmp_name'];
-		$file_size = $eeFile['size'];
-		$file_type = pathinfo($file_name, PATHINFO_EXTENSION);
+		// Initialize the WordPress File API wrapper
+		$file_handler = new eeFile_Class();
 
-		// Generate a unique file name
-		$unique_file_name = wp_unique_filename($eePath, $file_name);
-		$file_destination = $resolved_path . '/' . $unique_file_name;
+		// Use the secure upload method
+		$uploaded_url = $file_handler->handle_upload($eeFile, 'contact');
 
-		// Move file to upload directory
-		if(move_uploaded_file($file_tmp, $file_destination)) {
-			return str_replace($base_dir, $base_url, $file_destination); // Return the URL
+		if ($uploaded_url) {
+			return $uploaded_url;
 		} else {
 			if (defined('WP_DEBUG') && WP_DEBUG) {
-				error_log('RSCF: Upload Process Failed');
+				error_log('RSCF: Upload Process Failed using WordPress File API');
 			}
 			return FALSE;
 		}

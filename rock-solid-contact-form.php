@@ -18,7 +18,7 @@ Domain Path: /languages
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // DEV MODE  --> When TRUE, the log file is written onto the page.
-define('eeRSCF_DevMode', TRUE); // Enables extended reporting
+define('eeRSCF_DevMode', FALSE); // Enables extended reporting
 
 // This Plugin
 define('eeRSCF_SLUG', 'rock-solid-contact-form');
@@ -29,23 +29,23 @@ define('eeRSCF_RemoteSpamWordsURL', 'http://eeserver1.net/ee-common-spam-words.t
 // IMPORTANT - This URL is over-ridden by a Cloudflare Worker Rule
 // https://ee-common-spam-words.element-engage.workers.dev/
 
-
 $eeRSCF = ''; // Our Main class
 $eeHelper = ''; // Our Helper class
 
 // Plugin Setup
 function eeRSCF_Setup() {
 
+	// Nonce Security
+	define('eeRSCF_Nonce', wp_create_nonce('eeRSCF_Nonce')); // Used on included pages
+
 	global $eeRSCF, $eeHelper;
 	$eeVersion = get_option('eeRSCF_Version');
-
-	// Nonce Security
-	$eeRSCF_Nonce = wp_create_nonce('eeRSCF_Nonce'); // Used on included pages
 
 	// Includes
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-functions.php'); // General Functions
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-rock-solid-class.php');
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-helper-class.php');
+	include_once(plugin_dir_path(__FILE__) . 'includes/ee-file-class.php');
 
 	// Initialize Classes
 	$eeRSCF = new eeRSCF_Class();
