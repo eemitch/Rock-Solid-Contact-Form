@@ -108,7 +108,9 @@ class eeHelper_Class {
 				$body = sanitize_text_field($messages) . "\n\n";
 			}
 
-			$body .= 'Via: ' . sanitize_text_field($_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
+			$http_host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+			$php_self = isset($_SERVER['PHP_SELF']) ? sanitize_text_field(wp_unslash($_SERVER['PHP_SELF'])) : '';
+			$body .= 'Via: ' . $http_host . $php_self;
 
 			if(!mail($to,$subject,$body,$headers)) { // Email the message or error report
 				?><script>alert('EMAIL SEND FAILED');</script><?php

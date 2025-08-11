@@ -806,7 +806,7 @@ class eeRSCF_Class {
 									$this->log['notices'][] = 'Single address for ' . $to . ' field.';
 									$eeSet .= $eeString;
 								} else {
-									$this->log['errors'][] = 'Bad ' . $to . ' Address: ' . $_POST['eeAdmin' . $to];
+									$this->log['errors'][] = 'Bad ' . $to . ' Address: ' . (isset($_POST['eeAdmin' . $to]) ? $_POST['eeAdmin' . $to] : '');
 								}
 							}
 
@@ -944,7 +944,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamBlockBots', $settings); // Update the database
 
 				// Honeypot
-				$settings = sanitize_text_field($_POST['spamHoneypot']);
+				$settings = sanitize_text_field(wp_unslash($_POST['spamHoneypot']));
 				$settings = $eeHelper->eeMakeSlug($settings);
 				$this->log['notices'] = 'Spam Honeypot: ' . $settings;
 				update_option('eeRSCF_spamHoneypot', $settings); // Update the database
@@ -965,7 +965,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamBlockWords', $settings); // Update the database
 
 				// Blocked Words
-				$settings = sanitize_textarea_field($_POST['spamBlockedWords']);
+				$settings = sanitize_textarea_field(wp_unslash($_POST['spamBlockedWords']));
 				$this->log['notices'] = 'Spam Blocked Words: ' . $settings;
 				update_option('eeRSCF_spamBlockedWords', $settings); // Update the database
 
@@ -980,7 +980,7 @@ class eeRSCF_Class {
 				update_option('eeRSCF_spamSendAttackNotice', $settings); // Update the database
 
 				// Notice Email
-				$settings = filter_var($_POST['spamNoticeEmail'], FILTER_VALIDATE_EMAIL );
+				$settings = filter_var(wp_unslash($_POST['spamNoticeEmail']), FILTER_VALIDATE_EMAIL );
 				$this->log['notices'] = 'Spam Notice Email: ' . $settings;
 				update_option('eeRSCF_spamNoticeEmail', $settings); // Update the database
 			}

@@ -18,7 +18,7 @@ function eeRSCF_Settings() {
 	}
 
 	// Determine the active tab
-	$active_tab = isset($_REQUEST['tab']) ? $_REQUEST['tab'] : 'settings';
+	$active_tab = isset($_REQUEST['tab']) ? sanitize_text_field(wp_unslash($_REQUEST['tab'])) : 'settings';
 	$eeRSCF_Page = 'rock-solid-contact-form';
 
 	// Output page header and tabs
