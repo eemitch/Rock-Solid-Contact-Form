@@ -97,7 +97,7 @@ class eeRSCF_Class {
 		global $eeHelper;
 
 		// Verify nonce for form processing security
-		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce($_POST['ee-rock-solid-nonce'], 'ee-rock-solid-form')) {
+		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce(wp_unslash($_POST['ee-rock-solid-nonce']), 'ee-rock-solid')) {
 			$this->log['catch'][] = 'Nonce verification failed';
 			return false;
 		}
@@ -272,7 +272,7 @@ class eeRSCF_Class {
 	private function eeRSCF_formSpamCheck() {
 
 		// Verify nonce for form processing security
-		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce($_POST['ee-rock-solid-nonce'], 'ee-rock-solid-form')) {
+		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce(wp_unslash($_POST['ee-rock-solid-nonce']), 'ee-rock-solid')) {
 			$this->log['catch'][] = 'Nonce verification failed';
 			return false;
 		}
@@ -289,7 +289,7 @@ class eeRSCF_Class {
 		// Spam Bots
 		if($this->formSettings['spamBlockBots'] == 'YES') {
 
-			if($this->formSettings['spamBlock'] AND isset($_POST[$this->formSettings['spamHoneypot']]) AND $_POST[$this->formSettings['spamHoneypot']]) { // Honeypot. This field should never be completed.
+			if($this->formSettings['spamBlock'] AND isset($_POST[$this->formSettings['spamHoneypot']]) AND wp_unslash($_POST[$this->formSettings['spamHoneypot']])) { // Honeypot. This field should never be completed.
 				$this->log['catch'][] = 'Spambot Catch: Honeypot Field Completed.';
 			}
 		}
@@ -386,9 +386,9 @@ class eeRSCF_Class {
 			}
 			$eeBody .= PHP_EOL . "Attacker" . PHP_EOL;
 			$eeBody .= "-----------------------------------" . PHP_EOL;
-			$eeBody .= "User Agent: " . sanitize_text_field($_SERVER['HTTP_USER_AGENT'] ?? 'Not Available') . PHP_EOL;
-			$eeBody .= "User IP: " . sanitize_text_field($_SERVER['REMOTE_ADDR'] ?? 'Not Available') . PHP_EOL;
-			$eeBody .= "Came From: " . sanitize_text_field($_POST['SCRIPT_REFERER'] ?? '') . sanitize_text_field($_SERVER['QUERY_STRING'] ?? '') . PHP_EOL;
+			$eeBody .= "User Agent: " . sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'] ?? 'Not Available')) . PHP_EOL;
+			$eeBody .= "User IP: " . sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'] ?? 'Not Available')) . PHP_EOL;
+			$eeBody .= "Came From: " . sanitize_text_field(wp_unslash($_POST['SCRIPT_REFERER'] ?? '')) . sanitize_text_field(wp_unslash($_SERVER['QUERY_STRING'] ?? '')) . PHP_EOL;
 			$eeBody .= "Attacker Message" . PHP_EOL . "-----------------------------------" . PHP_EOL;
 			$eeBody .= implode("\n\n", $this->eeRSCF_PostProcess($_POST)) . PHP_EOL . PHP_EOL .
 				  "-----------------------------------" . PHP_EOL;
@@ -591,7 +591,7 @@ class eeRSCF_Class {
 		}
 
 		// Check referrer is from same site.
-		if(!isset($_REQUEST['ee-rock-solid-nonce']) || !wp_verify_nonce($_REQUEST['ee-rock-solid-nonce'], 'ee-rock-solid')) {
+		if(!isset($_REQUEST['ee-rock-solid-nonce']) || !wp_verify_nonce(wp_unslash($_REQUEST['ee-rock-solid-nonce']), 'ee-rock-solid')) {
 			$this->log['errors'][] =  "Submission is not from this website";
 			return FALSE;
 		}

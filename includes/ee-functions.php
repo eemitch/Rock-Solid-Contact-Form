@@ -28,7 +28,7 @@ function eeRSCF_ContactProcess() {
 	global $eeRSCF, $eeHelper;
 
 	// Validate nonce before processing
-	if ( ! isset( $_POST['ee-rock-solid-nonce'] ) || ! wp_verify_nonce( $_POST['ee-rock-solid-nonce'], 'ee-rock-solid' ) ) {
+	if ( ! isset( $_POST['ee-rock-solid-nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['ee-rock-solid-nonce'] ), 'ee-rock-solid' ) ) {
 		wp_die( 'Security check failed. Please try again.', 'Security Error', array( 'response' => 403 ) );
 	}
 
