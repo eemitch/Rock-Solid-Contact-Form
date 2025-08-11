@@ -97,7 +97,7 @@ class eeRSCF_Class {
 		global $eeHelper;
 
 		// Verify nonce for form processing security
-		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce(wp_unslash($_POST['ee-rock-solid-nonce']), 'ee-rock-solid')) {
+		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['ee-rock-solid-nonce'])), 'ee-rock-solid')) {
 			$this->log['catch'][] = 'Nonce verification failed';
 			return false;
 		}
@@ -272,7 +272,7 @@ class eeRSCF_Class {
 	private function eeRSCF_formSpamCheck() {
 
 		// Verify nonce for form processing security
-		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce(wp_unslash($_POST['ee-rock-solid-nonce']), 'ee-rock-solid')) {
+		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['ee-rock-solid-nonce'])), 'ee-rock-solid')) {
 			$this->log['catch'][] = 'Nonce verification failed';
 			return false;
 		}
@@ -289,7 +289,7 @@ class eeRSCF_Class {
 		// Spam Bots
 		if($this->formSettings['spamBlockBots'] == 'YES') {
 
-			if($this->formSettings['spamBlock'] AND isset($_POST[$this->formSettings['spamHoneypot']]) AND wp_unslash($_POST[$this->formSettings['spamHoneypot']])) { // Honeypot. This field should never be completed.
+			if($this->formSettings['spamBlock'] AND isset($_POST[$this->formSettings['spamHoneypot']]) AND sanitize_text_field(wp_unslash($_POST[$this->formSettings['spamHoneypot']]))) { // Honeypot. This field should never be completed.
 				$this->log['catch'][] = 'Spambot Catch: Honeypot Field Completed.';
 			}
 		}
@@ -564,8 +564,9 @@ class eeRSCF_Class {
 		// Log to the browser console
 		if(eeRSCF_DevMode && defined('WP_DEBUG') && WP_DEBUG) {
 			$this->theFormOutput .= eeDevOutput($this->log); // Output to console
-			$this->theFormOutput .= '<pre>LOG: ' . esc_html(print_r($this->log, TRUE)) . '</pre>';
-			$this->theFormOutput .= '<pre>SETTINGS: ' . esc_html(print_r($this->formSettings, TRUE)) . '</pre>';
+			// Debug output disabled for production
+			// $this->theFormOutput .= '<pre>LOG: ' . esc_html(print_r($this->log, TRUE)) . '</pre>';
+			// $this->theFormOutput .= '<pre>SETTINGS: ' . esc_html(print_r($this->formSettings, TRUE)) . '</pre>';
 		}
 
 		return $this->theFormOutput;
@@ -591,7 +592,7 @@ class eeRSCF_Class {
 		}
 
 		// Check referrer is from same site.
-		if(!isset($_REQUEST['ee-rock-solid-nonce']) || !wp_verify_nonce(wp_unslash($_REQUEST['ee-rock-solid-nonce']), 'ee-rock-solid')) {
+		if(!isset($_REQUEST['ee-rock-solid-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['ee-rock-solid-nonce'])), 'ee-rock-solid')) {
 			$this->log['errors'][] =  "Submission is not from this website";
 			return FALSE;
 		}
@@ -612,7 +613,7 @@ class eeRSCF_Class {
 
 			// Validate file data exists before accessing
 			if (isset($_FILES['file']['name']) && isset($_FILES['file']['size'])) {
-				$fileExt = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+				$fileExt = strtolower(pathinfo(sanitize_file_name($_FILES['file']['name']), PATHINFO_EXTENSION));
 				$max_size = $this->formSettings['fileMaxSize'] * 1048576; // Convert MB to Bytes
 
 				if( $_FILES['file']['size'] <= $max_size ) {
