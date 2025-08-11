@@ -36,6 +36,9 @@ class eeRSCF_Class {
 	public $bcc = '';
 	public $adminTo = '';
 
+	// Mail processing class
+	public $mailClass = null;
+
 	// Messaging
 	public $log = array(
 		'notices' => array(),
@@ -90,68 +93,18 @@ class eeRSCF_Class {
 		'emailDebug' => FALSE
 	);
 
-
-
-	private function eeRSCF_PostProcess() {
-
-		global $eeHelper;
-
-		// Verify nonce for form processing security
-		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['ee-rock-solid-nonce'])), 'ee-rock-solid')) {
-			$this->log['catch'][] = 'Nonce verification failed';
-			return false;
-		}
-
-		$this->log['notices'][] = 'Processing the post...';
-
-		$eeIgnore = ['eeRSCF', 'eeRSCF_ID', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER'];
-
-		foreach ($_POST as $eeKey => $eeValue) {
-
-			if (in_array($eeKey, $eeIgnore) || empty($eeValue)) {
-				continue;
-			}
-
-			// SECURITY: Comprehensive input validation and sanitization
-			$originalValue = $eeValue;
-
-			// Sanitize and validate specific fields
-			switch (true) {
-				case strpos($eeKey, 'mail') !== false:
-					$eeValue = sanitize_email($eeValue);
-					if (!is_email($eeValue)) {
-						$this->log['errors'][] = 'Your email address is not correct.';
-						continue 2; // Skip to the next $_POST item
-					}
-					$this->sender = strtolower($eeValue);
-					break;
-				case strpos($eeKey, 'ebsite') !== false:
-					$eeValue = esc_url_raw($eeValue, ['http', 'https']);
-					if (empty($eeValue)) {
-						$this->log['errors'][] = 'Your website address is not correct.';
-						continue 2; // Skip to the next $_POST item
-					}
-					break;
-				default:
-					// SECURITY: Enhanced sanitization for all other fields
-					$eeValue = $this->eeRSCF_SecureSanitize($eeValue, $eeKey);
-
-					// SECURITY: Reject if sanitization changed the content significantly
-					if ($this->eeRSCF_SecurityCheck($originalValue, $eeValue, $eeKey)) {
-						$this->log['errors'][] = 'Invalid content detected in ' . $eeHelper->eeUnSlug($eeKey) . ' field. Please remove any scripts, HTML tags, or suspicious characters.';
-						continue 2; // Skip to the next $_POST item
-					}
-					break;
-			}
-
-			$eeField = $eeHelper->eeUnSlug($eeKey);
-			$this->thePost[] = $eeField . ': ' . $eeValue;
-		}
-
-		$this->log['notices'][] = $this->thePost;
-
-		return $this->thePost;
+	/**
+	 * Constructor - Initialize the mail class
+	 */
+	public function __construct() {
+		// Initialize the mail class
+		require_once(dirname(__FILE__) . '/ee-mail-class.php');
+		$this->mailClass = new eeRSCF_Mail_Class($this);
 	}
+
+
+
+
 
 	/**
 	 * SECURITY: Comprehensive sanitization function
@@ -573,137 +526,6 @@ class eeRSCF_Class {
 	}
 
 
-
-
-
-	public function eeRSCF_SendEmail() {
-
-		global $eeHelper; // Get Upload Class
-
-		// $this->formID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
-
-		// echo '<pre>'; print_r($this->formSettings); echo '</pre>'; exit;
-
-		// Are we Blocking SPAM?
-		if($this->formSettings['spamBlock'] == 'YES') {
-			if( $this->eeRSCF_formSpamCheck() === TRUE ) { // This is SPAM
-				wp_die('Sorry, there was a problem with your message content. Please go back and try again.');
-			}
-		}
-
-		// Check referrer is from same site.
-		if(!isset($_REQUEST['ee-rock-solid-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['ee-rock-solid-nonce'])), 'ee-rock-solid')) {
-			$this->log['errors'][] =  "Submission is not from this website";
-			return FALSE;
-		}
-
-		$this->log['notices'][] = 'Sending the Email...';
-
-		$this->eeRSCF_PostProcess();
-
-		// echo '<pre>'; print_r($this->thePost); echo '</pre>'; exit;
-
-
-		// File Attachment
-		$eeFileURL = FALSE;
-		if(!empty($_FILES['file']) AND $this->formSettings['fields']['attachments']['show'] == 'YES') {
-
-			$formatsArray = explode(',', $this->formSettings['fileFormats']);
-			$formatsArray = array_filter(array_map('trim', $formatsArray));
-
-			// Validate file data exists before accessing
-			if (isset($_FILES['file']['name']) && isset($_FILES['file']['size'])) {
-				$fileExt = strtolower(pathinfo(sanitize_file_name($_FILES['file']['name']), PATHINFO_EXTENSION));
-				$max_size = $this->formSettings['fileMaxSize'] * 1048576; // Convert MB to Bytes
-
-				if( $_FILES['file']['size'] <= $max_size ) {
-					if( in_array($fileExt,$formatsArray) ) {
-						$eeFileURL = $eeHelper->eeUploader($_FILES['file'],  'ee-contact'  );
-					} else {
-						$this->log['errors'][] = 'FileType ' . $fileExt . ' Not Allowed';
-					}
-				} else {
-					$this->log['errors'][] = 'File Too Large';
-				}
-			} else {
-				$this->log['errors'][] = 'Invalid file upload data';
-			}
-		}
-
-		if(!$this->log['errors'] AND !empty($this->thePost)) {
-
-			$this->log['notices'][] = 'Preparing the Email...';
-
-			// Configure SMTP if enabled
-			if ($this->formSettings['emailMode'] == 'SMTP') {
-				add_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
-				$this->log['notices'][] = 'SMTP Mode Enabled';
-			} else {
-				$this->log['notices'][] = 'Using WordPress Default Mailer';
-			}
-
-			// Loop through and see if we have a Subject field
-			foreach($this->thePost as $eeValue){
-				$eeField = explode(':', $eeValue);
-					if(strpos($eeField[0], 'ubject')) {
-						$eeSubject = html_entity_decode($eeField[1], ENT_QUOTES);
-						$eeSubject = stripslashes($eeSubject);
-					}
-			}
-			if(empty($eeSubject)) { $eeSubject = 'Contact Form Message (' . basename(home_url()) . ')'; }
-
-			// Email assembly
-			if(empty($this->formSettings['email'])) {
-				$host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : 'localhost';
-				$this->formSettings['email'] = 'mail@' . $host;
-			} // Fallback
-			$eeHeaders = "From: " . get_bloginfo('name') . ' <' . $this->formSettings['email'] . ">" . PHP_EOL;
-			if($this->formSettings['cc']) { $eeHeaders .= "CC: " . $this->formSettings['cc'] . PHP_EOL; }
-			if($this->formSettings['bcc']) { $eeHeaders .= "BCC: " . $this->formSettings['bcc'] . PHP_EOL; }
-			$eeHeaders .= "Return-Path: " . $this->formSettings['email'] . PHP_EOL . "Reply-To: " . $this->sender . PHP_EOL;
-
-			$eeBody = '';
-
-			foreach ($this->thePost as $value) {
-				$eeBody .= $value . PHP_EOL . PHP_EOL;
-			}
-
-			if($eeFileURL) { $eeBody .= 'File: ' . $eeFileURL . PHP_EOL . PHP_EOL; }
-
-			$eeBody .=  PHP_EOL . PHP_EOL . 'This message was sent via the contact form located at ' . home_url() . '/' . PHP_EOL . PHP_EOL;
-
-			$eeBody = stripslashes($eeBody);
-			$eeBody = wp_strip_all_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
-
-			// wp_die(print_r($this->formSettings));
-
-			if( wp_mail($this->formSettings['to'], $eeSubject, $eeBody, $eeHeaders) ) {
-
-				$this->log['notices'][] = 'WP Mail Sent';
-
-				// Remove SMTP hook to prevent affecting other emails
-				if ($this->formSettings['emailMode'] == 'SMTP') {
-					remove_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
-				}
-
-				wp_redirect($this->confirm);
-
-				exit;
-
-			} else {
-
-				$this->log['errors'][] = 'PHP Message Failed to Send.';
-
-				// Remove SMTP hook even on failure
-				if ($this->formSettings['emailMode'] == 'SMTP') {
-					remove_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
-				}
-			}
-
-		} else {
-			$this->log['errors'][] = 'Message not sent. Please try again.';
-		}
-	}
 
 
 
