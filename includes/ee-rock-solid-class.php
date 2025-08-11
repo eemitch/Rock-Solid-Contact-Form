@@ -1102,7 +1102,7 @@ class eeRSCF_Class {
 			if ($this->formSettings['emailDebug'] && defined('WP_DEBUG') && WP_DEBUG) {
 				$phpmailer->SMTPDebug = 2; // Enable verbose debug output
 				$phpmailer->Debugoutput = function($str, $level) {
-					error_log("RSCF SMTP Debug: " . sanitize_text_field($str));
+					// error_log("RSCF SMTP Debug: " . sanitize_text_field($str));
 				};
 			}
 

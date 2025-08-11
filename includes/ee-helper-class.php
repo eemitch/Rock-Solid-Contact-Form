@@ -181,7 +181,7 @@ class eeHelper_Class {
 		// Check if a file was uploaded
 		if(empty($eeFile)) {
 			if (defined('WP_DEBUG') && WP_DEBUG) {
-				error_log('RSCF: No file uploaded or an error occurred.');
+				// error_log('RSCF: No file uploaded or an error occurred.');
 			}
 			return FALSE;
 		}
@@ -196,7 +196,7 @@ class eeHelper_Class {
 			return $uploaded_url;
 		} else {
 			if (defined('WP_DEBUG') && WP_DEBUG) {
-				error_log('RSCF: Upload Process Failed using WordPress File API');
+				// error_log('RSCF: Upload Process Failed using WordPress File API');
 			}
 			return FALSE;
 		}

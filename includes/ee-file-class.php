@@ -89,7 +89,7 @@ class eeFile_Class {
         $filename = sanitize_file_name( $file['name'] );
 
         // Add timestamp prefix to avoid conflicts
-        $timestamp = date( 'Y-m-d_H-i-s' );
+        $timestamp = gmdate( 'Y-m-d_H-i-s' );
         $new_filename = $prefix . '_' . $timestamp . '_' . $filename;
 
         // Use WordPress upload directory
@@ -184,7 +184,7 @@ class eeFile_Class {
         }
 
         // Prepare content with timestamp
-        $timestamp = date( "Y-m-d H:i:s" );
+        $timestamp = gmdate( "Y-m-d H:i:s" );
         $log_content = "\n" . $timestamp . " - " . $content . "\n";
 
         // Append to log file
