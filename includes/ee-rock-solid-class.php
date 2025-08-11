@@ -289,7 +289,7 @@ class eeRSCF_Class {
 		// Spam Bots
 		if($this->formSettings['spamBlockBots'] == 'YES') {
 
-			if($this->formSettings['spamBlock'] AND $_POST[ $this->formSettings['spamHoneypot'] ]) { // Honeypot. This field should never be completed.
+			if($this->formSettings['spamBlock'] AND isset($_POST[$this->formSettings['spamHoneypot']]) AND $_POST[$this->formSettings['spamHoneypot']]) { // Honeypot. This field should never be completed.
 				$this->log['catch'][] = 'Spambot Catch: Honeypot Field Completed.';
 			}
 		}
@@ -591,7 +591,7 @@ class eeRSCF_Class {
 		}
 
 		// Check referrer is from same site.
-		if(!wp_verify_nonce($_REQUEST['ee-rock-solid-nonce'], 'ee-rock-solid')) {
+		if(!isset($_REQUEST['ee-rock-solid-nonce']) || !wp_verify_nonce($_REQUEST['ee-rock-solid-nonce'], 'ee-rock-solid')) {
 			$this->log['errors'][] =  "Submission is not from this website";
 			return FALSE;
 		}
@@ -609,17 +609,23 @@ class eeRSCF_Class {
 
 			$formatsArray = explode(',', $this->formSettings['fileFormats']);
 			$formatsArray = array_filter(array_map('trim', $formatsArray));
-			$fileExt = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
-			$max_size = $this->formSettings['fileMaxSize'] * 1048576; // Convert MB to Bytes
 
-			if( $_FILES['file']['size'] <= $max_size ) {
-				if( in_array($fileExt,$formatsArray) ) {
-					$eeFileURL = $eeHelper->eeUploader($_FILES['file'],  'ee-contact'  );
+			// Validate file data exists before accessing
+			if (isset($_FILES['file']['name']) && isset($_FILES['file']['size'])) {
+				$fileExt = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+				$max_size = $this->formSettings['fileMaxSize'] * 1048576; // Convert MB to Bytes
+
+				if( $_FILES['file']['size'] <= $max_size ) {
+					if( in_array($fileExt,$formatsArray) ) {
+						$eeFileURL = $eeHelper->eeUploader($_FILES['file'],  'ee-contact'  );
+					} else {
+						$this->log['errors'][] = 'FileType ' . $fileExt . ' Not Allowed';
+					}
 				} else {
-					$this->log['errors'][] = 'FileType ' . $fileExt . ' Not Allowed';
+					$this->log['errors'][] = 'File Too Large';
 				}
 			} else {
-				$this->log['errors'][] = 'File size of ' . $this->eeBytesToSize($_FILES['file']['size']) . ' is too large. Maximum allowed is ' . $this->formSettings['fileMaxSize'] . 'MB';
+				$this->log['errors'][] = 'Invalid file upload data';
 			}
 		}
 
