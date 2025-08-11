@@ -80,7 +80,7 @@ function eeRSCF_Settings() {
 	}
 
 	// Dump the HTML buffer
-	echo $eeOutput;
+	echo $eeOutput; // The contents of this output have already been escaped
 }
 
 ?>

@@ -96,6 +96,12 @@ class eeRSCF_Class {
 
 		global $eeHelper;
 
+		// Verify nonce for form processing security
+		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce($_POST['ee-rock-solid-nonce'], 'ee-rock-solid-form')) {
+			$this->log['catch'][] = 'Nonce verification failed';
+			return false;
+		}
+
 		$this->log['notices'][] = 'Processing the post...';
 
 		$eeIgnore = ['eeRSCF', 'eeRSCF_ID', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER'];
@@ -265,6 +271,12 @@ class eeRSCF_Class {
 
 	private function eeRSCF_formSpamCheck() {
 
+		// Verify nonce for form processing security
+		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce($_POST['ee-rock-solid-nonce'], 'ee-rock-solid-form')) {
+			$this->log['catch'][] = 'Nonce verification failed';
+			return false;
+		}
+
 		$this->log['notices'][] = 'Form Spam Check...';
 		$this->log['catch'] = array();
 
@@ -320,7 +332,7 @@ class eeRSCF_Class {
 					$this->log['catch'][] = "Form Tampering";
 				}
 
-				if(strlen(strip_tags($eeValue)) != strlen($eeValue) ) {
+				if(strlen(wp_strip_all_tags($eeValue)) != strlen($eeValue) ) {
 					$this->log['catch'][] = "HTML Tags Found";
 				}
 			}
@@ -654,7 +666,7 @@ class eeRSCF_Class {
 			$eeBody .=  PHP_EOL . PHP_EOL . 'This message was sent via the contact form located at ' . home_url() . '/' . PHP_EOL . PHP_EOL;
 
 			$eeBody = stripslashes($eeBody);
-			$eeBody = strip_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
+			$eeBody = wp_strip_all_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
 
 			// wp_die(print_r($this->formSettings));
 

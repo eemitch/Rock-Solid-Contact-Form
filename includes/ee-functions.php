@@ -166,7 +166,7 @@ function eeRSCF_WriteLogFile($eeLog) {
 		$file_handler = new eeFile_Class();
 
 		// Prepare log content
-		$log_content = 'Date: ' . date("Y-m-d H:i:s") . "\n";
+		$log_content = 'Date: ' . gmdate("Y-m-d H:i:s") . "\n";
 
 		foreach($eeLog as $key => $logEntry){
 
