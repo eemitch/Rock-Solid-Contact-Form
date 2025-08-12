@@ -6,7 +6,7 @@ if (!wp_verify_nonce(eeRSCF_Nonce, 'eeRSCF_Nonce')) exit('That is Noncense!'); /
 
 function eeRSCF_Settings() {
 
-	global $eeRSCF, $eeHelper;
+	global $eeRSCF;
 
 	$eeRSCF->formID = 1;
 	$eeRSCF->log['notices'][] = 'eeRSCF Settings Page Loaded';
@@ -54,7 +54,7 @@ function eeRSCF_Settings() {
 		// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
 
 
-	$eeOutput .= $eeHelper->eeRSCF_ResultsNotification();
+	$eeOutput .= $eeRSCF->eeRSCF_ResultsNotification();
 	$eeOutput .= '<form action="' . admin_url() . '/admin.php?page=rock-solid-contact-form" method="POST" id="eeRSCF_Settings">
 		<input type="hidden" name="eeRSCF_Settings" value="TRUE" />';
 	$eeOutput .= wp_nonce_field('ee-rock-solid-settings', 'ee-rock-solid-settings-nonce', TRUE, FALSE);

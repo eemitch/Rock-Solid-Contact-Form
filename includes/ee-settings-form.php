@@ -86,7 +86,7 @@ $eeOutput .= '
 
 				<td><input type="text" name="eeRSCF_fields[' . $eeFieldName . '][' . $field . ']" value="';
 
-				if($value) { $eeOutput .= esc_attr(stripslashes($value)); } else { $eeOutput .= esc_attr($eeHelper->eeUnSlug($field)); }
+				if($value) { $eeOutput .= esc_attr(stripslashes($value)); } else { $eeOutput .= esc_attr($eeRSCF->eeUnSlug($field)); }
 
 				$eeOutput .= '" size="32" /></td>';
 

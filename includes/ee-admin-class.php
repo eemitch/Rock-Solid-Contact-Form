@@ -40,9 +40,9 @@ class eeRSCF_AdminClass {
 
 		$this->log['notices'][] = 'Processing Form Settings';
 
-		if($_POST AND isset($_POST['ee-rock-solid-settings-nonce']) AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
+		if(!empty($_POST) AND isset($_POST['ee-rock-solid-settings-nonce']) AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 
-			global $wpdb, $eeRSCF, $eeHelper;
+			global $wpdb, $eeRSCF, $eeFileClass;
 
 			// Contact Form Fields and Destinations
 			if( isset($_POST['eeRSCF_formSettings']) ) {
@@ -113,9 +113,9 @@ class eeRSCF_AdminClass {
 
 				}
 
-				$fieldsArray = isset($_POST['eeRSCF_fields']) && is_array(wp_unslash($_POST['eeRSCF_fields']))
-					? wp_unslash($_POST['eeRSCF_fields'])
-					: array();
+				// Sanitize and check for fields array
+				$posted_fields = isset($_POST['eeRSCF_fields']) ? map_deep(wp_unslash($_POST['eeRSCF_fields']), 'sanitize_text_field') : array();
+				$fieldsArray = is_array($posted_fields) ? $posted_fields : array();
 
 				if( !empty($fieldsArray) ) {
 
@@ -158,9 +158,12 @@ class eeRSCF_AdminClass {
 				// This must be a number
 				$uploadMaxSize = isset($_POST['eeMaxFileSize']) ? (int) sanitize_text_field(wp_unslash($_POST['eeMaxFileSize'])) : 0;
 
+				// Detect system upload limits
+				$systemMaxUpload = $eeFileClass->eeDetectUploadLimit();
+
 				// Can't be more than the system allows.
-				if(!$uploadMaxSize OR $uploadMaxSize > $eeHelper->maxUploadLimit) {
-					$uploadMaxSize = $eeHelper->maxUploadLimit;
+				if(!$uploadMaxSize OR $uploadMaxSize > $systemMaxUpload) {
+					$uploadMaxSize = $systemMaxUpload;
 				}
 				$eeRSCF->formSettings['fileMaxSize'] = $uploadMaxSize; // Update the database
 
@@ -240,7 +243,7 @@ class eeRSCF_AdminClass {
 
 				// Honeypot
 				$spamHoneypot = isset($_POST['spamHoneypot']) ? sanitize_text_field(wp_unslash($_POST['spamHoneypot'])) : '';
-				$settings = $eeHelper->eeMakeSlug($spamHoneypot);
+				$settings = $eeRSCF->eeMakeSlug($spamHoneypot);
 				$this->log['notices'] = 'Spam Honeypot: ' . $settings;
 				update_option('eeRSCF_spamHoneypot', $settings); // Update the database
 

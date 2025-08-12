@@ -30,7 +30,6 @@ define('eeRSCF_RemoteSpamWordsURL', 'http://eeserver1.net/ee-common-spam-words.t
 // https://ee-common-spam-words.element-engage.workers.dev/
 
 $eeRSCF = ''; // Our Main class
-$eeHelper = ''; // Our Helper class
 $eeMailClass = ''; // Our Mail class
 $eeAdminClass = ''; // Our Admin class
 $eeFileClass = ''; // Our File class
@@ -41,20 +40,18 @@ function eeRSCF_Setup() {
 	// Nonce Security
 	define('eeRSCF_Nonce', wp_create_nonce('eeRSCF_Nonce')); // Used on included pages
 
-	global $eeRSCF, $eeHelper, $eeMailClass, $eeAdminClass, $eeFileClass;
+	global $eeRSCF, $eeMailClass, $eeAdminClass, $eeFileClass;
 	$eeVersion = get_option('eeRSCF_Version');
 
 	// Includes
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-functions.php'); // General Functions
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-rock-solid-class.php'); //Display and general methods
-	include_once(plugin_dir_path(__FILE__) . 'includes/ee-helper-class.php'); // Might be rolled into the main class?
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-mail-class.php'); // Anything to do with contact form processing and sending mail
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-admin-class.php'); // Back-end UI and form processing
 	include_once(plugin_dir_path(__FILE__) . 'includes/ee-file-class.php'); // File uploads
 
 	// Initialize Classes
 	$eeRSCF = new eeRSCF_Class();
-	$eeHelper = new eeHelper_Class();
 
 	// Check for new install or needs update
 	eeRSCF_UpdatePlugin();

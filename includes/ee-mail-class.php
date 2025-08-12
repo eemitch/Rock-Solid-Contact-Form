@@ -51,7 +51,7 @@ class eeRSCF_MailClass {
 
     private function eeRSCF_PostProcess() {
 
-		global $eeHelper;
+		global $eeRSCF;
 
 		// Verify nonce for form processing security
 		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['ee-rock-solid-nonce'])), 'ee-rock-solid')) {
@@ -95,13 +95,13 @@ class eeRSCF_MailClass {
 
 					// SECURITY: Reject if sanitization changed the content significantly
 					if ($this->mainClass->eeRSCF_SecurityCheck($originalValue, $eeValue, $eeKey)) {
-						$this->log['errors'][] = 'Invalid content detected in ' . $eeHelper->eeUnSlug($eeKey) . ' field. Please remove any scripts, HTML tags, or suspicious characters.';
+						$this->log['errors'][] = 'Invalid content detected in ' . $eeRSCF->eeUnSlug($eeKey) . ' field. Please remove any scripts, HTML tags, or suspicious characters.';
 						continue 2; // Skip to the next $_POST item
 					}
 					break;
 			}
 
-			$eeField = $eeHelper->eeUnSlug($eeKey);
+			$eeField = $eeRSCF->eeUnSlug($eeKey);
 			$this->thePost[] = $eeField . ': ' . $eeValue;
 		}
 
@@ -115,7 +115,7 @@ class eeRSCF_MailClass {
 
     public function eeRSCF_SendEmail() {
 
-		global $eeHelper; // Get Upload Class
+		global $eeFileClass; // Get File Upload Class
 
 		// $this->formID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
 
@@ -151,7 +151,7 @@ class eeRSCF_MailClass {
 				if( $_FILES['file']['size'] <= $max_size ) {
 					if( in_array($fileExt,$formatsArray) ) {
 						// $_FILES is passed to WordPress secure upload handler
-						$eeFileURL = $eeHelper->eeUploader($_FILES['file'],  'ee-contact'  ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+						$eeFileURL = $eeFileClass->eeUploader($_FILES['file'],  'ee-contact'  ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 					} else {
 						$this->log['errors'][] = 'FileType ' . $fileExt . ' Not Allowed';
 					}

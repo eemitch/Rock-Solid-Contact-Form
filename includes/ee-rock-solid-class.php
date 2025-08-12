@@ -211,8 +211,6 @@ class eeRSCF_Class {
 
 	public function eeRSCF_formDisplay() {
 
-		global $eeHelper;
-
 		$this->log['notices'][] = 'Displaying the Form...';
 
 		if($this->log['errors']) {
@@ -247,7 +245,7 @@ class eeRSCF_Class {
 
 					if($eeFieldArray['label']) {
 						$this->theFormOutput .= esc_html(stripslashes($eeFieldArray['label'])); }
-							else { $this->theFormOutput .= esc_html($eeHelper->eeUnSlug($eeField)); }
+							else { $this->theFormOutput .= esc_html($this->eeUnSlug($eeField)); }
 
 					$this->theFormOutput .= '</label>';
 
@@ -260,7 +258,7 @@ class eeRSCF_Class {
 
 					// Check for custom label
 					if($eeFieldArray['label']) {
-						$this->theFormOutput .= esc_attr($eeHelper->eeMakeSlug($eeFieldArray['label']));
+						$this->theFormOutput .= esc_attr($this->eeMakeSlug($eeFieldArray['label']));
 					} else {
 
 						$this->theFormOutput .= esc_attr($eeField);
@@ -364,6 +362,70 @@ class eeRSCF_Class {
 		} else {
 			echo '<p>' . esc_html($messages) . '</p>';
 		}
+	}
+
+
+	// UTILITY METHODS -------------
+
+	// Create a slug
+	public function eeMakeSlug($string){
+		$slug = preg_replace('/[^A-Za-z0-9-]+/', '-', $string);
+		$slug = strtolower($slug);
+		return $slug;
+	}
+
+	// Undo a Slug
+	public function eeUnSlug($slug){
+		$string = str_replace('-', ' ', $slug);
+		$string = ucwords($string);
+		return $string;
+	}
+
+	// Results Notice Display
+	public function eeRSCF_ResultsNotification() {
+
+		$eeOutput = '';
+
+		$eeLogParts = array('errors' => 'error', 'warnings' => 'warning', 'messages' => 'success');
+
+		foreach($eeLogParts as $eePart => $eeType) {
+
+			if(!empty($this->log[$eePart])) {
+
+				$eeOutput .= '<div class="';
+
+				if( is_admin() ) {
+					$eeOutput .=  'notice notice-' . $eeType . ' is-dismissible';
+				} else {
+					$eeOutput .= 'eeResultsNotification eeResultsNotification_' . $eeType;
+				}
+
+				$eeOutput .= '">
+				<ul>';
+
+				foreach($this->log[$eePart] as $eeValue) { // We can go two-deep arrays
+
+					if(is_array($eeValue)) {
+						foreach ($eeValue as $eeValue2) {
+							$eeOutput .= '
+							<li>' . esc_html($eeValue2) . '</li>' . PHP_EOL;
+						}
+					} else {
+						$eeOutput .= '
+						<li>' . esc_html($eeValue) . '</li>' . PHP_EOL;
+					}
+				}
+				$eeOutput .= '
+				</ul>
+				</div>';
+
+				$this->log[$eePart] = array(); // Clear this part fo the array
+
+			}
+		}
+
+		return $eeOutput;
+
 	}
 
 

@@ -300,6 +300,92 @@ class eeRSCF_FileClass {
 
         return $this->wp_filesystem->size( $file_path );
     }
+
+    /**
+     * Upload limit detection and management
+     */
+    public $maxUploadLimit = 8;
+
+    /**
+     * Detect max upload size from server configuration
+     *
+     * @return int Maximum upload size in MB
+     */
+    public function eeDetectUploadLimit() {
+
+        $upload_max_filesize = substr(ini_get('upload_max_filesize'), 0, -1); // Strip off the "M".
+        $post_max_size = substr(ini_get('post_max_size'), 0, -1); // Strip off the "M".
+        if ($upload_max_filesize <= $post_max_size) { // Check which is smaller, upload size or post size.
+            $this->maxUploadLimit = $upload_max_filesize;
+        } else {
+            $this->maxUploadLimit = $post_max_size;
+        }
+
+        return $this->maxUploadLimit;
+    }
+
+    /**
+     * Convert bytes to human readable size format
+     *
+     * @param int $bytes Size in bytes
+     * @param int $precision Decimal precision
+     * @return string Formatted size string
+     */
+    private function eeBytesToSize($bytes, $precision = 2) {
+
+        $kilobyte = 1024;
+        $megabyte = $kilobyte * 1024;
+        $gigabyte = $megabyte * 1024;
+        $terabyte = $gigabyte * 1024;
+
+        if (($bytes >= 0) && ($bytes < $kilobyte)) {
+            return $bytes . ' B';
+
+        } elseif (($bytes >= $kilobyte) && ($bytes < $megabyte)) {
+            return round($bytes / $kilobyte, $precision) . ' KB';
+
+        } elseif (($bytes >= $megabyte) && ($bytes < $gigabyte)) {
+            return round($bytes / $megabyte, $precision) . ' MB';
+
+        } elseif (($bytes >= $gigabyte) && ($bytes < $terabyte)) {
+            return round($bytes / $gigabyte, $precision) . ' GB';
+
+        } elseif ($bytes >= $terabyte) {
+            return round($bytes / $terabyte, $precision) . ' TB';
+        } else {
+            return $bytes . ' B';
+        }
+    }
+
+    /**
+     * File Uploader using WordPress File API (legacy method for compatibility)
+     *
+     * @param array $eeFile File object from $_FILES
+     * @param string $eePath Path relative to wp-content/uploads (unused in new implementation)
+     * @return string|false URL of uploaded file or false on failure
+     */
+    function eeUploader($eeFile, $eePath = '') {
+
+        // Check if a file was uploaded
+        if(empty($eeFile)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                // error_log('RSCF: No file uploaded or an error occurred.');
+            }
+            return FALSE;
+        }
+
+        // Use the secure upload method
+        $uploaded_url = $this->handle_upload($eeFile, 'contact');
+
+        if ($uploaded_url) {
+            return $uploaded_url;
+        } else {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                // error_log('RSCF: Upload Process Failed using WordPress File API');
+            }
+            return FALSE;
+        }
+    }
 }
 
 
