@@ -83,7 +83,7 @@ function eeRSCF_Setup() {
 
 	// Now initialize the other classes that depend on settings
 	$eeMailClass = new eeRSCF_MailClass();
-	$eeAdminClass = new eeRSCF_AdminClass();
+	$eeAdminClass = new eeRSCF_AdminClass($eeRSCF);
 	$eeFileClass = new eeRSCF_FileClass();
 
 	// Sync settings to dependent classes

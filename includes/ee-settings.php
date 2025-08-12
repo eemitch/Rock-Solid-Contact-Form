@@ -51,7 +51,7 @@ function eeRSCF_Settings() {
 
 	$eeOutput .= '</h2></div>'; // End Tabs
 
-	// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
+		// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
 
 
 	$eeOutput .= $eeHelper->eeRSCF_ResultsNotification();

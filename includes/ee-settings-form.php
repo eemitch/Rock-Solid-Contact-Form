@@ -73,8 +73,6 @@ $eeOutput .= '
 
 	$eeFields = $eeRSCF->formSettings['fields'];
 
-	// echo '<pre>'; print_r($eeFields); echo '</pre>'; exit;
-
 	// Loop-de-doop
 	foreach($eeFields as $eeFieldName => $fieldArray) {  // Field name and settings array
 

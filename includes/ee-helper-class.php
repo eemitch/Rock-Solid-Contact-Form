@@ -85,47 +85,6 @@ class eeHelper_Class {
 	}
 
 
-	// Notice Email
-	function eeRSCF_NoticeEmail($messages, $to, $from, $name = '') {
-
-		if($messages AND $to AND $from) {
-
-			$body = '';
-			$headers = "From: $from";
-			$subject = $name . " Admin Notice";
-
-			if(is_array($messages)) {
-				foreach ($messages as $value) {
-					if(is_array($value)) {
-						foreach ($value as $value2) {
-							$body .= sanitize_text_field($value2) . "\n\n";
-						}
-					} else {
-						$body .= sanitize_text_field($value) . "\n\n";
-					}
-				}
-			} else {
-				$body = sanitize_text_field($messages) . "\n\n";
-			}
-
-			$http_host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
-			$php_self = isset($_SERVER['PHP_SELF']) ? sanitize_text_field(wp_unslash($_SERVER['PHP_SELF'])) : '';
-			$body .= 'Via: ' . $http_host . $php_self;
-
-			if(!mail($to,$subject,$body,$headers)) { // Email the message or error report
-				?><script>alert('EMAIL SEND FAILED');</script><?php
-			}
-
-		} else {
-			?><script>alert('EMAIL SEND FAILED');</script><?php
-		}
-
-		return FALSE;
-	}
-
-
-
-
 	// FILE UPLOADS ------------------------------------------------------------------------
 	public $maxUploadLimit = 8;
 
@@ -189,7 +148,7 @@ class eeHelper_Class {
 		}
 
 		// Initialize the WordPress File API wrapper
-		$file_handler = new eeFile_Class();
+		$file_handler = new eeRSCF_FileClass();
 
 		// Use the secure upload method
 		$uploaded_url = $file_handler->handle_upload($eeFile, 'contact');

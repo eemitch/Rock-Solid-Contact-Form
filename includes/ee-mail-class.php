@@ -119,8 +119,6 @@ class eeRSCF_MailClass {
 
 		// $this->formID = filter_var($_POST['eeRSCF_ID'], FILTER_VALIDATE_INT);
 
-		// echo '<pre>'; print_r($this->formSettings); echo '</pre>'; exit;
-
 		// Are we Blocking SPAM?
 		if($this->formSettings['spamBlock'] == 'YES') {
 			if( $this->eeRSCF_formSpamCheck() === TRUE ) { // This is SPAM
@@ -137,9 +135,6 @@ class eeRSCF_MailClass {
 		$this->log['notices'][] = 'Sending the Email...';
 
 		$this->eeRSCF_PostProcess();
-
-		// echo '<pre>'; print_r($this->thePost); echo '</pre>'; exit;
-
 
 		// File Attachment
 		$eeFileURL = FALSE;
@@ -207,27 +202,19 @@ class eeRSCF_MailClass {
 
 			if($eeFileURL) { $eeBody .= 'File: ' . $eeFileURL . PHP_EOL . PHP_EOL; }
 
-			$eeBody .=  PHP_EOL . PHP_EOL . 'This message was sent via the contact form located at ' . home_url() . '/' . PHP_EOL . PHP_EOL;
+		$eeBody .=  PHP_EOL . PHP_EOL . 'This message was sent via the contact form located at ' . home_url() . '/' . PHP_EOL . PHP_EOL;
 
-			$eeBody = stripslashes($eeBody);
-			$eeBody = wp_strip_all_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
+		$eeBody = stripslashes($eeBody);
+		$eeBody = wp_strip_all_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));
 
-			// DEBUG: Log email parameters before sending
-			error_log('RSCF DEBUG - Email To: ' . ($this->formSettings['to'] ?? 'EMPTY'));
-			error_log('RSCF DEBUG - Email Subject: ' . $eeSubject);
-			error_log('RSCF DEBUG - Form Settings: ' . print_r($this->formSettings, true));
+		// Ensure we have a valid 'to' address
+		if (empty($this->formSettings['to'])) {
+			$this->formSettings['to'] = get_option('admin_email');
+		}
 
-			// Ensure we have a valid 'to' address
-			if (empty($this->formSettings['to'])) {
-				$this->formSettings['to'] = get_option('admin_email');
-				error_log('RSCF DEBUG - Using admin email as fallback: ' . $this->formSettings['to']);
-			}
+		if( wp_mail($this->formSettings['to'], $eeSubject, $eeBody, $eeHeaders) ) {
 
-			if( wp_mail($this->formSettings['to'], $eeSubject, $eeBody, $eeHeaders) ) {
-
-				$this->log['notices'][] = 'WP Mail Sent';
-
-				// Remove SMTP hook to prevent affecting other emails
+			$this->log['notices'][] = 'WP Mail Sent';				// Remove SMTP hook to prevent affecting other emails
 				if ($this->formSettings['emailMode'] == 'SMTP') {
 					remove_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
 				}
@@ -486,6 +473,62 @@ class eeRSCF_MailClass {
 
 			$this->log['notices'][] = 'Spam Check OKAY!';
 			return FALSE; // Seems okay...
+		}
+	}
+
+
+	// Notice Email
+	public function eeRSCF_NoticeEmail($messages, $to, $from, $name = '') {
+
+		if($messages AND $to AND $from) {
+
+			$body = '';
+			$headers = "From: $from";
+			$subject = $name . " Admin Notice";
+
+			if(is_array($messages)) {
+				foreach ($messages as $value) {
+					if(is_array($value)) {
+						foreach ($value as $value2) {
+							$body .= sanitize_text_field($value2) . "\n\n";
+						}
+					} else {
+						$body .= sanitize_text_field($value) . "\n\n";
+					}
+				}
+			} else {
+				$body = sanitize_text_field($messages) . "\n\n";
+			}
+
+			$http_host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+			$php_self = isset($_SERVER['PHP_SELF']) ? sanitize_text_field(wp_unslash($_SERVER['PHP_SELF'])) : '';
+			$body .= 'Via: ' . $http_host . $php_self;
+
+			// Use WordPress mail function with SMTP support if configured
+			$headers_array = array('From: ' . $from);
+
+			// Configure SMTP if enabled
+			if ($this->formSettings['emailMode'] == 'SMTP') {
+				add_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
+			}
+
+			$mail_sent = wp_mail($to, $subject, $body, $headers_array);
+
+			// Remove SMTP hook after sending
+			if ($this->formSettings['emailMode'] == 'SMTP') {
+				remove_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
+			}
+
+			if (!$mail_sent) {
+				$this->log['errors'][] = 'Notice email failed to send';
+				return FALSE;
+			}
+
+			return TRUE;
+
+		} else {
+			$this->log['errors'][] = 'Notice email missing required parameters';
+			return FALSE;
 		}
 	}
 

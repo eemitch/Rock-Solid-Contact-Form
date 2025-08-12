@@ -23,6 +23,17 @@ class eeRSCF_AdminClass {
 	);
 
 	public $formID = 1;
+	public $formSettings = array();
+	public $mainClass;
+	public $fileFormats = 'jpg,jpeg,png,gif,pdf,doc,docx,txt,rtf,odt';
+
+	// Constructor
+	public function __construct($mainClass = null) {
+		$this->mainClass = $mainClass;
+		if ($mainClass && isset($mainClass->formSettings)) {
+			$this->formSettings = $mainClass->formSettings;
+		}
+	}
 
     // Process Admin Settings
 	public function eeRSCF_AdminSettingsProcess()	{
@@ -35,9 +46,6 @@ class eeRSCF_AdminClass {
 
 			// Contact Form Fields and Destinations
 			if( isset($_POST['eeRSCF_formSettings']) ) {
-
-				// echo '<pre>'; print_r($_POST); echo '</pre>'; exit;
-				// $eeArray = array();
 
 				// ID
 				if(isset($_POST['eeRSCF_ID'])) {
@@ -273,8 +281,6 @@ class eeRSCF_AdminClass {
 
 			// Email Settings
 			if(isset($_POST['eeRSCF_EmailSettings'])) {
-
-				// echo '<pre>'; print_r($_POST); echo '</pre>'; exit;
 
 				// Validate and sanitize eeRSCF_EmailSettings
 				if ( isset( $_POST['eeRSCF_EmailSettings'] ) && wp_unslash($_POST['eeRSCF_EmailSettings']) == 'TRUE' ) {

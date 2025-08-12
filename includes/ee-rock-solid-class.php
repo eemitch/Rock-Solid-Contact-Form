@@ -235,11 +235,7 @@ class eeRSCF_Class {
 
 		if( is_array($this->formSettings['fields']) ) {
 
-			// echo '<pre>'; print_r($this->formSettings['fields']); echo '</pre>'; exit;
-
 			foreach($this->formSettings['fields'] as $eeField => $eeFieldArray) {
-
-				// echo '<pre>' . $eeField; print_r($eeArray); echo '</pre>'; exit;
 
 				if($eeFieldArray['show'] == 'YES') {
 

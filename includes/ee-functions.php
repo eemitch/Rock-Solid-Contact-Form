@@ -152,7 +152,7 @@ function eeDevOutput($eeArray) {
 function eeGetRemoteSpamWords($eeUrl) {
 
   // Initialize the WordPress File API wrapper
-  $file_handler = new eeFile_Class();
+  $file_handler = new eeRSCF_FileClass();
 
   // Use the secure remote content method
   $eeContent = $file_handler->get_remote_content($eeUrl);
@@ -169,7 +169,7 @@ function eeRSCF_WriteLogFile($eeLog) {
 	if($eeLog) {
 
 		// Initialize the WordPress File API wrapper
-		$file_handler = new eeFile_Class();
+		$file_handler = new eeRSCF_FileClass();
 
 		// Prepare log content
 		$log_content = 'Date: ' . gmdate("Y-m-d H:i:s") . "\n";
@@ -218,16 +218,12 @@ function eeRSCF_UpdatePlugin() {
 
 			$eeRSCF->formSettings = get_option('eeRSCF_Settings_1');
 
-			if(!empty($eeRSCF->formSettings)) {
+		if(!empty($eeRSCF->formSettings)) {
 
-				// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
-
-				// Move the confirmation URL to its own option
-				if($eeRSCF->formSettings['confirm']) {
-					$eeRSCF->confirm = $eeRSCF->formSettings['confirm'];
-				}
-
-				// Complete missing FROM address if needed
+			// Move the confirmation URL to its own option
+			if($eeRSCF->formSettings['confirm']) {
+				$eeRSCF->confirm = $eeRSCF->formSettings['confirm'];
+			}				// Complete missing FROM address if needed
 				if(empty($eeRSCF->formSettings['email'])) {
 					$eeRSCF->formSettings['email'] = get_option('admin_emial');
 				}

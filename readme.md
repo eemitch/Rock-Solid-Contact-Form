@@ -18,10 +18,21 @@ Rock Solid Contact Form is a WordPress plugin designed with security, spam preve
 - **Reliability**: Built for high-traffic, production WordPress environments
 - **Deliverability**: Email optimization for improved message delivery
 
+### Version 2.1.2 - New 4-Class Architecture
+
+The plugin has been reorganized into four focused classes for improved maintainability and security:
+
+1. **eeRSCF_Class** - Frontend form display and rendering
+2. **eeRSCF_MailClass** - Email processing and delivery
+3. **eeRSCF_AdminClass** - Backend administration and settings
+4. **eeRSCF_FileClass** - File operations and uploads
+
+For detailed architecture documentation, see `PLUGIN-ARCHITECTURE.md`.
+
 ### File Structure
 ```
 rock-solid-contact-form/
-├── rock-solid-contact-form.php    # Main plugin file
+├── rock-solid-contact-form.php    # Main plugin file & initialization
 ├── css/
 │   ├── style.css                  # Frontend styles
 │   └── style-admin.css           # Admin interface styles
@@ -32,22 +43,48 @@ rock-solid-contact-form/
 ├── includes/
 │   ├── ee-functions.php          # Core utility functions
 │   ├── ee-helper-class.php       # Helper utilities and notifications
-│   ├── ee-rock-solid-class.php   # Main plugin class
+│   ├── ee-rock-solid-class.php   # Main display class
+│   ├── ee-mail-class.php         # Email processing class
+│   ├── ee-admin-class.php        # Admin interface class
+│   ├── ee-file-class.php         # File operations class
 │   ├── ee-settings-*.php         # Admin settings modules
 │   └── images/                   # Admin interface assets
-└── images/
-    └── RSCF-Logo-Full.webp       # Plugin branding
+├── images/
+│   └── RSCF-Logo-Full.webp       # Plugin branding
+├── playwright/                   # Automated testing framework
+└── PLUGIN-ARCHITECTURE.md        # Detailed architecture documentation
 ```
 
 ## Core Components
 
-### 1. Main Plugin Class (`eeRSCF_Class`)
+### 1. Display Class (`eeRSCF_Class`)
 
 **Primary Properties:**
 - `$formSettings`: Configuration array for form behavior
 - `$thePost`: Sanitized form submission data
 - `$log`: Multi-level logging system (notices, warnings, errors)
 - `$theFormOutput`: Generated HTML for form display
+
+### 2. Mail Processing Class (`eeRSCF_MailClass`)
+
+**Primary Properties:**
+- `$formSettings`: Synchronized settings from main class
+- `$sender`: Email composition and sending functionality
+- `$log`: Email-specific logging and debugging
+
+### 3. Admin Interface Class (`eeRSCF_AdminClass`)
+
+**Primary Properties:**
+- `$formSettings`: Admin settings management
+- `$log`: Admin operation logging
+- `$mainClass`: Reference to main class for coordination
+
+### 4. File Operations Class (`eeRSCF_FileClass`)
+
+**Primary Properties:**
+- Secure file upload handling
+- Remote content fetching with security validation
+- WordPress file API integration
 
 **Key Methods:**
 - `eeRSCF_formDisplay()`: Generates secure HTML form
