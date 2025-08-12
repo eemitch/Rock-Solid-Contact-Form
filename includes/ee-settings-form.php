@@ -13,7 +13,7 @@ if (!wp_verify_nonce(eeRSCF_Nonce, 'eeRSCF_Nonce')) exit('Nonce verification fai
 
 $eeOutput .= '
 
-	<h2>Form Configuration</h2>
+	<h2>' . esc_html__('Form Configuration', 'rock-solid-contact-form') . '</h2>
 
 	<input type="hidden" name="eeRSCF_formSettings" value="TRUE" />
 	<input type="hidden" name="eeRSCF_ID" value="' . esc_attr($eeRSCF->formID) . '" />
@@ -21,38 +21,37 @@ $eeOutput .= '
 
 	<fieldset id="eeRSCF_formSettings">
 
-	<p>Select the contact form fields to display. Also select if the field should be required. Change the text for each label as required. A text input box for the message will be provided automatically.</p>
+	<p>' . esc_html__('Select the contact form fields to display. Also select if the field should be required. Change the text for each label as required. A text input box for the message will be provided automatically.', 'rock-solid-contact-form') . '</p>
 
 	';
 
 	$eeOutput .= '
 	<fieldset id="eeRSCF_delivery">
 
-		<h3>Delivery</h3>
+		<h3>' . esc_html__('Delivery', 'rock-solid-contact-form') . '</h3>
 
-				<label for="eeRSCF_formTO">TO</label>
+				<label for="eeRSCF_formTO">' . esc_html__('TO', 'rock-solid-contact-form') . '</label>
 				<input type="text" name="eeRSCF_form_to" value="';
 
 			if(!empty($eeRSCF->formSettings['to'])) { $eeOutput .= esc_attr($eeRSCF->formSettings['to']); }
-					// else { $eeOutput .= get_option('admin_email'); }
 
 			$eeOutput .= '" class="adminInput" id="eeRSCF_formTO" size="64" />
 
-				<label for="eeRSCF_formCC">CC</label>
+				<label for="eeRSCF_formCC">' . esc_html__('CC', 'rock-solid-contact-form') . '</label>
 				<input type="text" name="eeRSCF_form_cc" value="';
 
 			if(!empty($eeRSCF->formSettings['cc'])) { $eeOutput .= esc_attr($eeRSCF->formSettings['cc']); }
 
 			$eeOutput .= '" class="adminInput" id="eeRSCF_formCC" size="64" />
 
-				<label for="eeRSCF_formBCC">BCC</label>
+				<label for="eeRSCF_formBCC">' . esc_html__('BCC', 'rock-solid-contact-form') . '</label>
 				<input type="text" name="eeRSCF_form_bcc" value="';
 
 			if(!empty($eeRSCF->formSettings['bcc'])) { $eeOutput .= esc_attr($eeRSCF->formSettings['bcc']); }
 
 			$eeOutput .= '" class="adminInput" id="eeRSCF_formBCC" size="64" />
 
-				<p class="eeNote">You can add more than one address per field by separating them using a comma.</p>
+				<p class="eeNote">' . esc_html__('You can add more than one address per field by separating them using a comma.', 'rock-solid-contact-form') . '</p>
 
 				<br class="eeClearFix" />';
 
@@ -60,14 +59,14 @@ $eeOutput .= '
 
 	<fieldset>
 
-		<h3>Form Fields</h3>
+		<h3>' . esc_html__('Form Fields', 'rock-solid-contact-form') . '</h3>
 
 
 	<table class="eeRSCF_formFields">
 		<tr>
-			<th>Show</th>
-			<th>Require</th>
-			<th>Label</th>
+			<th>' . esc_html__('Show', 'rock-solid-contact-form') . '</th>
+			<th>' . esc_html__('Require', 'rock-solid-contact-form') . '</th>
+			<th>' . esc_html__('Label', 'rock-solid-contact-form') . '</th>
 		</tr>';
 
 
@@ -112,9 +111,9 @@ $eeOutput .= '
 
 	<fieldset>
 
-		<h3>Confirmation Page</h3>
+		<h3>' . esc_html__('Confirmation Page', 'rock-solid-contact-form') . '</h3>
 
-		<p>This is the page that will load after the form has been submitted. If no page is defined, the contact form page will be loaded again.</p>
+		<p>' . esc_html__('This is the page that will load after the form has been submitted. If no page is defined, the contact form page will be loaded again.', 'rock-solid-contact-form') . '</p>
 
 		<input class="eeFullWidth" type="url" name="eeRSCF_Confirm" value="' . esc_attr($eeRSCF->confirm) . '" size="128" />
 

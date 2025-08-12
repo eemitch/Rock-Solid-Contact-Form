@@ -77,7 +77,7 @@ class eeRSCF_MailClass {
 				case strpos($eeKey, 'mail') !== false:
 					$eeValue = sanitize_email($eeValue);
 					if (!is_email($eeValue)) {
-						$this->log['errors'][] = 'Your email address is not correct.';
+						$this->log['errors'][] = __('Your email address is not correct.', 'rock-solid-contact-form');
 						continue 2; // Skip to the next $_POST item
 					}
 					$this->sender = strtolower($eeValue);
@@ -85,7 +85,7 @@ class eeRSCF_MailClass {
 				case strpos($eeKey, 'ebsite') !== false:
 					$eeValue = esc_url_raw($eeValue, ['http', 'https']);
 					if (empty($eeValue)) {
-						$this->log['errors'][] = 'Your website address is not correct.';
+						$this->log['errors'][] = __('Your website address is not correct.', 'rock-solid-contact-form');
 						continue 2; // Skip to the next $_POST item
 					}
 					break;
@@ -95,13 +95,13 @@ class eeRSCF_MailClass {
 
 					// SECURITY: Reject if sanitization changed the content significantly
 					if ($this->mainClass->eeRSCF_SecurityCheck($originalValue, $eeValue, $eeKey)) {
-						$this->log['errors'][] = 'Invalid content detected in ' . $eeRSCF->eeUnSlug($eeKey) . ' field. Please remove any scripts, HTML tags, or suspicious characters.';
+						$this->log['errors'][] = sprintf(__('Invalid content detected in %s field. Please remove any scripts, HTML tags, or suspicious characters.', 'rock-solid-contact-form'), esc_html($this->mainClass->eeUnSlug($eeKey)));
 						continue 2; // Skip to the next $_POST item
 					}
 					break;
 			}
 
-			$eeField = $eeRSCF->eeUnSlug($eeKey);
+			$eeField = $this->mainClass->eeUnSlug($eeKey);
 			$this->thePost[] = $eeField . ': ' . $eeValue;
 		}
 
@@ -122,7 +122,7 @@ class eeRSCF_MailClass {
 		// Are we Blocking SPAM?
 		if($this->formSettings['spamBlock'] == 'YES') {
 			if( $this->eeRSCF_formSpamCheck() === TRUE ) { // This is SPAM
-				wp_die('Sorry, there was a problem with your message content. Please go back and try again.');
+				wp_die(esc_html__('Sorry, there was a problem with your message content. Please go back and try again.', 'rock-solid-contact-form'));
 			}
 		}
 
@@ -153,13 +153,13 @@ class eeRSCF_MailClass {
 						// $_FILES is passed to WordPress secure upload handler
 						$eeFileURL = $eeFileClass->eeUploader($_FILES['file'],  'ee-contact'  ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 					} else {
-						$this->log['errors'][] = 'FileType ' . $fileExt . ' Not Allowed';
+						$this->log['errors'][] = sprintf(__('File type %s is not allowed', 'rock-solid-contact-form'), esc_html($fileExt));
 					}
 				} else {
-					$this->log['errors'][] = 'File Too Large';
+					$this->log['errors'][] = __('File is too large', 'rock-solid-contact-form');
 				}
 			} else {
-				$this->log['errors'][] = 'Invalid file upload data';
+				$this->log['errors'][] = __('Invalid file upload data', 'rock-solid-contact-form');
 			}
 		}
 
@@ -183,7 +183,7 @@ class eeRSCF_MailClass {
 						$eeSubject = stripslashes($eeSubject);
 					}
 			}
-			if(empty($eeSubject)) { $eeSubject = 'Contact Form Message (' . basename(home_url()) . ')'; }
+			if(empty($eeSubject)) { $eeSubject = sprintf(__('Contact Form Message (%s)', 'rock-solid-contact-form'), basename(home_url())); }
 
 			// Email assembly
 			if(empty($this->formSettings['email'])) {
@@ -201,9 +201,9 @@ class eeRSCF_MailClass {
 				$eeBody .= $value . PHP_EOL . PHP_EOL;
 			}
 
-			if($eeFileURL) { $eeBody .= 'File: ' . $eeFileURL . PHP_EOL . PHP_EOL; }
+			if($eeFileURL) { $eeBody .= __('File:', 'rock-solid-contact-form') . ' ' . $eeFileURL . PHP_EOL . PHP_EOL; }
 
-		$eeBody .=  PHP_EOL . PHP_EOL . 'This message was sent via the contact form located at ' . home_url() . '/' . PHP_EOL . PHP_EOL;
+		$eeBody .=  PHP_EOL . PHP_EOL . sprintf(__('This message was sent via the contact form located at %s', 'rock-solid-contact-form'), home_url() . '/') . PHP_EOL . PHP_EOL;
 
 		$eeBody = stripslashes($eeBody);
 		$eeBody = wp_strip_all_tags(htmlspecialchars_decode($eeBody, ENT_QUOTES));

@@ -12,18 +12,17 @@ if (!wp_verify_nonce(eeRSCF_Nonce, 'eeRSCF_Nonce')) exit('Nonce verification fai
 
 $eeOutput .= '
 
-<h2>Form Email Sender</h2>
+<h2>' . esc_html__('Form Email Sender', 'rock-solid-contact-form') . '</h2>
 
 <input type="hidden" name="eeRSCF_EmailSettings" value="TRUE" />
 <input type="hidden" name="tab" value="email_settings" />
 
 <fieldset>
 
-<p>The Contact Form sends an email message to you when someone submits the form.
-Therefore, a rock solid contact form needs to have an email address to send from.</p>
+<p>' . esc_html__('The Contact Form sends an email message to you when someone submits the form. Therefore, a rock solid contact form needs to have an email address to send from.', 'rock-solid-contact-form') . '</p>
 
 
-<label for="eeRSCF_email">The Form\'s Email</label>
+<label for="eeRSCF_email">' . esc_html__('The Form\'s Email', 'rock-solid-contact-form') . '</label>
 	<input type="email" name="eeRSCF_email" value="';
 
 if($eeRSCF->formSettings['email']) { $eeOutput .= esc_attr($eeRSCF->formSettings['email']); } else { $eeOutput .= esc_attr(get_option('eeRSCF_email')); }
@@ -35,30 +34,30 @@ if($eeRSCF->formSettings['emailMode'] != 'SMTP') {
 	$http_host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
 	$eeOutput .= '
 
-	<p class="eeNote">To improve deliverability, the form\'s email address should be a working address on this web server, such as <strong><em>mail@' . $http_host . '</em></strong>.</p>';
+	<p class="eeNote">' . sprintf(esc_html__('To improve deliverability, the form\'s email address should be a working address on this web server, such as %s.', 'rock-solid-contact-form'), '<strong><em>mail@' . $http_host . '</em></strong>') . '</p>';
 }
 
 
 
 $eeOutput .= '
 
-<h3>SMTP <small>(Optional)</small></h3>
+<h3>' . esc_html__('SMTP', 'rock-solid-contact-form') . ' <small>(' . esc_html__('Optional', 'rock-solid-contact-form') . ')</small></h3>
 
-<p>SMTP (Simple Mail Transfer Protocol) sends emails through your email provider\'s servers instead of your website\'s server. This dramatically improves email deliverability and reduces the chance of messages being marked as spam.</p>
+<p>' . esc_html__('SMTP (Simple Mail Transfer Protocol) sends emails through your email provider\'s servers instead of your website\'s server. This dramatically improves email deliverability and reduces the chance of messages being marked as spam.', 'rock-solid-contact-form') . '</p>
 
-<label for="eeRSCF_emailMode">SMTP Mailer</label>
+<label for="eeRSCF_emailMode">' . esc_html__('SMTP Mailer', 'rock-solid-contact-form') . '</label>
 
 <select name="eeRSCF_emailMode" id="eeRSCF_emailMode" class="">
 		<option value="PHP"';
 
 if($eeRSCF->formSettings['emailMode'] == 'PHP') { $eeOutput .= ' selected="selected"'; }
 
-$eeOutput .= '>OFF - Using Wordpress Mailer</option>
+$eeOutput .= '>' . esc_html__('OFF - Using Wordpress Mailer', 'rock-solid-contact-form') . '</option>
 		<option value="SMTP"';
 
 if($eeRSCF->formSettings['emailMode'] == 'SMTP') { $eeOutput .= ' selected="selected"'; }
 
-$eeOutput .= '>ON - Using SMTP (BETA)</option>
+$eeOutput .= '>' . esc_html__('ON - Using SMTP (BETA)', 'rock-solid-contact-form') . '</option>
 	</select>
 
 </fieldset>
@@ -72,45 +71,45 @@ $eeOutput .= '>
 
 <fieldset id="eeRSCF_emailModeSMTP">
 
-<h3>Configure an SMTP Email Account (BETA)</h3>
+<h3>' . esc_html__('Configure an SMTP Email Account (BETA)', 'rock-solid-contact-form') . '</h3>
 
-<p><strong>Need help finding these settings?</strong> Look for "SMTP Settings" or "Outgoing Mail" in your email provider\'s help documentation. Popular providers: <strong>Gmail</strong> (smtp.gmail.com:587), <strong>Outlook</strong> (smtp-mail.outlook.com:587), <strong>Yahoo</strong> (smtp.mail.yahoo.com:587).</p>
+<p>' . esc_html__('Need help finding these settings? Look for "SMTP Settings" or "Outgoing Mail" in your email provider\'s help documentation. Popular providers: Gmail (smtp.gmail.com:587), Outlook (smtp-mail.outlook.com:587), Yahoo (smtp.mail.yahoo.com:587).', 'rock-solid-contact-form') . '</p>
 
 
-<label for="eeRSCF_emailFormat">Message Format</label>
+<label for="eeRSCF_emailFormat">' . esc_html__('Message Format', 'rock-solid-contact-form') . '</label>
 
 <select name="eeRSCF_emailFormat" id="eeRSCF_emailFormat" class="">
 		<option value="TEXT"';
 
 if($eeRSCF->formSettings['emailFormat'] == 'TEXT') { $eeOutput .= ' selected="selected"'; }
 
-$eeOutput .= '>Text</option>
+$eeOutput .= '>' . esc_html__('Text', 'rock-solid-contact-form') . '</option>
 		<option value="HTML"';
 
 if($eeRSCF->formSettings['emailFormat'] == 'HTML') { $eeOutput .= ' selected="selected"'; }
 
 
-$eeOutput .= '>HTML</option>
+$eeOutput .= '>' . esc_html__('HTML', 'rock-solid-contact-form') . '</option>
 	</select>
 
-	<p class="eeNote">Choose <strong>HTML</strong> for rich formatting with links and styling, or <strong>Text</strong> for simple plain text messages. Most users prefer HTML.</p>
+	<p class="eeNote">' . esc_html__('Choose HTML for rich formatting with links and styling, or Text for simple plain text messages. Most users prefer HTML.', 'rock-solid-contact-form') . '</p>
 
 
 
 
-<label for="eeRSCF_emailName">The Form Name</label>
+<label for="eeRSCF_emailName">' . esc_html__('The Form Name', 'rock-solid-contact-form') . '</label>
 <input type="text" name="eeRSCF_emailName" value="';
 
 if($eeRSCF->formSettings['emailName']) { $eeOutput .= esc_attr($eeRSCF->formSettings['emailName']); } else { $eeOutput .= 'Rock Solid Contact Form'; }
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailName" size="64" />
 
-	<p class="eeNote">This display name appears as the sender in email notifications. Example: "Website Contact Form" or your business name.</p>
+	<p class="eeNote">' . esc_html__('This display name appears as the sender in email notifications. Example: "Website Contact Form" or your business name.', 'rock-solid-contact-form') . '</p>
 
 
 
 
-<label for="eeRSCF_emailServer">Mail Server Hostname</label>
+<label for="eeRSCF_emailServer">' . esc_html__('Mail Server Hostname', 'rock-solid-contact-form') . '</label>
 <input type="text" name="eeRSCF_emailServer" value="';
 
 
@@ -119,12 +118,12 @@ if($eeRSCF->formSettings['emailServer']) { $eeOutput .= esc_attr($eeRSCF->formSe
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailServer" size="64" />
 
-	<p class="eeNote">Your email provider\'s SMTP server address. Common examples: <strong>smtp.gmail.com</strong>, <strong>smtp.outlook.com</strong>, or <strong>mail.yourdomain.com</strong>. Check your email provider\'s help documentation for the correct hostname.</p>
+	<p class="eeNote">' . esc_html__('Your email provider\'s SMTP server address. Common examples: smtp.gmail.com, smtp.outlook.com, or mail.yourdomain.com. Check your email provider\'s help documentation for the correct hostname.', 'rock-solid-contact-form') . '</p>
 
 
 
 
-<label for="eeRSCF_emailUsername">Mail Account Username</label>
+<label for="eeRSCF_emailUsername">' . esc_html__('Mail Account Username', 'rock-solid-contact-form') . '</label>
 <input type="text" name="eeRSCF_emailUsername" value="';
 
 if($eeRSCF->formSettings['emailUsername']) {
@@ -133,24 +132,24 @@ if($eeRSCF->formSettings['emailUsername']) {
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailUsername" size="64" />
 
-	<p class="eeNote">Your complete email address for SMTP authentication. For Gmail/Outlook, use your full email address. For hosting providers, this might be just the username portion.</p>
+	<p class="eeNote">' . esc_html__('Your complete email address for SMTP authentication. For Gmail/Outlook, use your full email address. For hosting providers, this might be just the username portion.', 'rock-solid-contact-form') . '</p>
 
 
 
 
-<label for="eeRSCF_emailPassword">Mail Account Password</label>
+<label for="eeRSCF_emailPassword">' . esc_html__('Mail Account Password', 'rock-solid-contact-form') . '</label>
 <input type="text" name="eeRSCF_emailPassword" value="';
 
 if($eeRSCF->formSettings['emailPassword']) { $eeOutput .= esc_attr($eeRSCF->formSettings['emailPassword']); }
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailPassword" size="64" />
 
-	<p class="eeNote">The password for your email account. For Gmail/Outlook, you may need to generate an <strong>App Password</strong> instead of using your regular login password. Check your email provider\'s 2-factor authentication settings.</p>
+	<p class="eeNote">' . esc_html__('The password for your email account. For Gmail/Outlook, you may need to generate an App Password instead of using your regular login password. Check your email provider\'s 2-factor authentication settings.', 'rock-solid-contact-form') . '</p>
 
 
 
 
-<label for="eeRSCF_emailSecure">Mail Security</label>
+<label for="eeRSCF_emailSecure">' . esc_html__('Mail Security', 'rock-solid-contact-form') . '</label>
 
 <select name="eeRSCF_emailSecure" id="eeRSCF_emailSecure" class="">
 		<option value="SSL"';
@@ -158,77 +157,77 @@ $eeOutput .= '" class="adminInput" id="eeRSCF_emailPassword" size="64" />
 if($eeRSCF->formSettings['emailSecure'] == 'SSL') { $eeOutput .= ' selected="selected"'; }
 
 
-$eeOutput .= '>Use SSL</option>
+$eeOutput .= '>' . esc_html__('Use SSL', 'rock-solid-contact-form') . '</option>
 		<option value="TLS"';
 
 if($eeRSCF->formSettings['emailSecure'] == 'TLS') { $eeOutput .= ' selected="selected"'; }
 
 
-$eeOutput .= '>Use TLS</option>
+$eeOutput .= '>' . esc_html__('Use TLS', 'rock-solid-contact-form') . '</option>
 		<option value="NO"';
 
 if($eeRSCF->formSettings['emailSecure'] == 'NO') { $eeOutput .= ' selected="selected"'; }
 
-$eeOutput .= '>Unencrypted</option>
+$eeOutput .= '>' . esc_html__('Unencrypted', 'rock-solid-contact-form') . '</option>
 	</select>
 
-	<p class="eeNote">Encryption method for secure email transmission. <strong>TLS is recommended</strong> for most modern email providers. Use SSL for older systems or if TLS doesn\'t work. Only use Unencrypted if your email provider specifically requires it.</p>
+	<p class="eeNote">' . esc_html__('Encryption method for secure email transmission. TLS is recommended for most modern email providers. Use SSL for older systems or if TLS doesn\'t work. Only use Unencrypted if your email provider specifically requires it.', 'rock-solid-contact-form') . '</p>
 
 
 
 
 
-<label for="eeRSCF_emailAuth">Authentication</label>
+<label for="eeRSCF_emailAuth">' . esc_html__('Authentication', 'rock-solid-contact-form') . '</label>
 
 <select name="eeRSCF_emailAuth" id="eeRSCF_emailAuth" class="">
 		<option value="YES"';
 
 if($eeRSCF->formSettings['emailAuth'] == 'YES') { $eeOutput .= ' selected="selected"'; }
 
-$eeOutput .= '>Require authorization (Recommended)</option>
+$eeOutput .= '>' . esc_html__('Require authorization (Recommended)', 'rock-solid-contact-form') . '</option>
 		<option value="NO"';
 
 if($eeRSCF->formSettings['emailAuth'] == 'NO') { $eeOutput .= ' selected="selected"'; }
 
 
-$eeOutput .= '>No Authorization</option>
+$eeOutput .= '>' . esc_html__('No Authorization', 'rock-solid-contact-form') . '</option>
 	</select>
 
-	<p class="eeNote">Nearly all email providers require authentication. Choose <strong>"Require authorization"</strong> unless your hosting company specifically tells you otherwise.</p>
+	<p class="eeNote">' . esc_html__('Nearly all email providers require authentication. Choose "Require authorization" unless your hosting company specifically tells you otherwise.', 'rock-solid-contact-form') . '</p>
 
 
 
 
 
-<label for="eeRSCF_emailPort">Port</label>
+<label for="eeRSCF_emailPort">' . esc_html__('Port', 'rock-solid-contact-form') . '</label>
 <input type="text" name="eeRSCF_emailPort" value="';
 
 if($eeRSCF->formSettings['emailPort']) { $eeOutput .= esc_attr($eeRSCF->formSettings['emailPort']); } else { $eeOutput .= '25'; }
 
 $eeOutput .= '" class="adminInput" id="eeRSCF_emailPort" size="64" />
 
-	<p class="eeNote">SMTP port number for your email provider. <strong>Common combinations:</strong> TLS + Port 587, SSL + Port 465, Gmail uses 587, Outlook uses 587. If unsure, try 587 first.</p>
+	<p class="eeNote">' . esc_html__('SMTP port number for your email provider. Common combinations: TLS + Port 587, SSL + Port 465, Gmail uses 587, Outlook uses 587. If unsure, try 587 first.', 'rock-solid-contact-form') . '</p>
 
 
 
 
-<label for="eeRSCF_emailDebug">Debug Mode</label>
+<label for="eeRSCF_emailDebug">' . esc_html__('Debug Mode', 'rock-solid-contact-form') . '</label>
 
 <select name="eeRSCF_emailDebug" id="eeRSCF_emailDebug" class="">
 		<option value="NO"';
 
 if($eeRSCF->formSettings['emailDebug'] == 'NO') { $eeOutput .= ' selected="selected"'; }
 
-$eeOutput .= '>OFF</option>
+$eeOutput .= '>' . esc_html__('OFF', 'rock-solid-contact-form') . '</option>
 		<option value="YES"';
 
 if($eeRSCF->formSettings['emailDebug'] == 'YES') { $eeOutput .= ' selected="selected"'; }
 
 
-$eeOutput .= '>ON</option>
+$eeOutput .= '>' . esc_html__('ON', 'rock-solid-contact-form') . '</option>
 	</select>
 
-	<p class="eeNote">Enable this only when emails are not sending properly. Debug information will be written to your WordPress error log (usually wp-content/debug.log). <strong>Turn OFF</strong> once working to avoid log file bloat.</p>
+	<p class="eeNote">' . esc_html__('Enable this only when emails are not sending properly. Debug information will be written to your WordPress error log (usually wp-content/debug.log). Turn OFF once working to avoid log file bloat.', 'rock-solid-contact-form') . '</p>
 
 
 

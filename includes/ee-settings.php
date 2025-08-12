@@ -29,7 +29,7 @@ function eeRSCF_Settings() {
 	<header id="eeRSCF_Header">
 		<div class="eeRSCF_ShortcodeWrapper">
 			<input id="eeRSCF_shortCode" type="text" name="eeRSCF_shortCode" value="[rock-solid-contact]" />
-			<button class="eeRSCF_copyToClipboard">Copy</button>
+			<button class="eeRSCF_copyToClipboard">' . esc_html__('Copy', 'rock-solid-contact-form') . '</button>
 		</div>
 		<h1>' . __('Rock Solid Contact Form', 'rock-solid-contact-form') . '</h1>
 	</header>
@@ -51,9 +51,6 @@ function eeRSCF_Settings() {
 
 	$eeOutput .= '</h2></div>'; // End Tabs
 
-		// echo '<pre>'; print_r($eeRSCF->formSettings); echo '</pre>'; exit;
-
-
 	$eeOutput .= $eeRSCF->eeRSCF_ResultsNotification();
 	$eeOutput .= '<form action="' . admin_url() . '/admin.php?page=rock-solid-contact-form" method="POST" id="eeRSCF_Settings">
 		<input type="hidden" name="eeRSCF_Settings" value="TRUE" />';
@@ -71,7 +68,7 @@ function eeRSCF_Settings() {
 	}
 
 	// Submit Button & Footer
-	$eeOutput .= '<input id="eeRSCF_SAVE" type="submit" value="SAVE" /></form>';
+	$eeOutput .= '<input id="eeRSCF_SAVE" type="submit" value="' . esc_attr__('SAVE', 'rock-solid-contact-form') . '" /></form>';
 	$eeOutput .= '<div id="eeAdminFooter"><p><a href="' . $eeRSCF->websiteLink . '">' .
 		$eeRSCF->pluginName . ' &rarr; ' . __('Version', 'rock-solid-contact-form') . ' ' . eeRSCF_Version . '</a></p></div>';
 

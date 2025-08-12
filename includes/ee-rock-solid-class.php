@@ -216,7 +216,7 @@ class eeRSCF_Class {
 		if($this->log['errors']) {
 			$this->theFormOutput .= '
 			<div class="eeRSCF_Confirm">
-			<h2 class="eeError">Opps, we have a problem.</h2>';
+			<h2 class="eeError">' . esc_html__('Oops, we have a problem.', 'rock-solid-contact-form') . '</h2>';
 			$this->eeRSCF_MessageDisplay($this->log['errors']);
 			$this->theFormOutput .= '
 			</div>';
@@ -284,18 +284,18 @@ class eeRSCF_Class {
 
 			}
 		} else {
-			$this->theFormOutput .= 'ERROR - No Form Found';
+			$this->theFormOutput .= esc_html__('ERROR - No Form Found', 'rock-solid-contact-form');
 		}
 
 		$this->theFormOutput .= '<div class="eeRSCF_Row">
-			<label for="eeRSCF_email">Your Email</label>
+			<label for="eeRSCF_email">' . esc_html__('Your Email', 'rock-solid-contact-form') . '</label>
 			<input type="email" name="email" id="eeRSCF_email" value="" required /><span class="eeRSCF_Required">*</span>
 			</div>';
 
 		if($this->formSettings['fields']['attachments']['show'] == 'YES') {
 
 			$this->theFormOutput .= '<div class="eeRSCF_Row">
-				<label for="eeRSCF_files">Attachment</label>
+				<label for="eeRSCF_files">' . esc_html__('Attachment', 'rock-solid-contact-form') . '</label>
 				<input type="file" name="file" id="eeRSCF_files" accept="';
 
 				$this->theFormOutput .= esc_attr($this->formSettings['fileFormats']) . '" />';
@@ -307,7 +307,7 @@ class eeRSCF_Class {
 
 		$this->theFormOutput .= '
 		<div class="eeRSCF_Row">
-		<label for="eeRSCF_message">Message</label>
+		<label for="eeRSCF_message">' . esc_html__('Message', 'rock-solid-contact-form') . '</label>
 		<textarea required name="message" id="eeRSCF_message" cols="60" rows="6"></textarea>
 		<span class="eeRSCF_Required">*</span>
 		</div>
@@ -315,13 +315,13 @@ class eeRSCF_Class {
 		<br class="eeClearFix" />
 
 		<div class="eeRSCF_Roww">
-			<label for="eeRSCF_' . $this->formSettings['spamHoneypot'] . '">Link:</label><input type="text" name="' . $this->formSettings['spamHoneypot'] . '" value="" id="eeRSCF_' . $this->formSettings['spamHoneypot'] . '">
+			<label for="eeRSCF_' . $this->formSettings['spamHoneypot'] . '">' . esc_html__('Link:', 'rock-solid-contact-form') . '</label><input type="text" name="' . $this->formSettings['spamHoneypot'] . '" value="" id="eeRSCF_' . $this->formSettings['spamHoneypot'] . '">
 		</div>
 
-		<span id="eeRSCF_SubmitMessage"><img src="' . plugin_dir_url(__FILE__) . '/images/sending.gif" width="32" height="32" alt="Sending Icon" /> Sending Your Message</span>
+		<span id="eeRSCF_SubmitMessage"><img src="' . plugin_dir_url(__FILE__) . '/images/sending.gif" width="32" height="32" alt="' . esc_attr__('Sending Icon', 'rock-solid-contact-form') . '" /> ' . esc_html__('Sending Your Message', 'rock-solid-contact-form') . '</span>
 
 		</fieldset>
-		<input type="submit" id="eeRSCF_Submit" value="SEND">
+		<input type="submit" id="eeRSCF_Submit" value="' . esc_attr__('SEND', 'rock-solid-contact-form') . '">
 		</form>
 		<br class="eeClearFix" />
 		</div>';
