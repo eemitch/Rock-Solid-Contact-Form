@@ -7,3 +7,4 @@
 .nova/Artwork
 playwright
 playwright-results
+test-results/.last-run.json

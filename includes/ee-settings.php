@@ -6,7 +6,7 @@ if (!wp_verify_nonce(eeRSCF_Nonce, 'eeRSCF_Nonce')) exit('That is Noncense!'); /
 
 function eeRSCF_Settings() {
 
-	global $eeRSCF;
+	global $eeRSCF, $eeFileClass;
 
 	$eeRSCF->formID = 1;
 	$eeRSCF->log['notices'][] = 'eeRSCF Settings Page Loaded';
