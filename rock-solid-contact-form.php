@@ -96,7 +96,9 @@ function eeRSCF_Setup() {
 	add_shortcode( 'rock-solid-contact', 'eeRSCF_FrontEnd' );
 
 	// Process the Contact Form Submission
-	if(isset($_POST['ee-rock-solid-nonce'])) { add_action('wp_loaded', 'eeRSCF_ContactProcess'); }
+	if(isset($_POST['ee-rock-solid-nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['ee-rock-solid-nonce'])), 'ee-rock-solid')) {
+		add_action('wp_loaded', 'eeRSCF_ContactProcess');
+	}
 
 	return TRUE;
 }

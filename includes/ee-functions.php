@@ -235,9 +235,24 @@ function eeRSCF_UpdatePlugin() {
 
 				$eeRSCF->formSettings['fileFormats'] = $formats;
 
-				// Out with the Old...
-				global $wpdb;
-				$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", 'eeRSCF_%'));
+				// Out with the Old - Clean up legacy options using WordPress functions
+				$legacy_options = array(
+					'eeRSCF_spamBlock',
+					'eeRSCF_spamBlockBots',
+					'eeRSCF_spamHoneypot',
+					'eeRSCF_spamEnglishOnly',
+					'eeRSCF_spamBlockFishy',
+					'eeRSCF_spamBlockWords',
+					'eeRSCF_spamBlockedWords',
+					'eeRSCF_spamBlockCommonWords',
+					'eeRSCF_spamSendAttackNotice',
+					'eeRSCF_spamNoticeEmail'
+				);
+
+				foreach ($legacy_options as $option_name) {
+					delete_option($option_name);
+				}
+
 				unset($eeRSCF->formSettings['name']);
 				unset($eeRSCF->formSettings['confirm']);
 

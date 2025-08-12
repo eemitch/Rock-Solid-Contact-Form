@@ -32,7 +32,7 @@ $eeOutput .= '" class="adminInput" id="eeRSCF_email" size="64" />';
 
 if($eeRSCF->formSettings['emailMode'] != 'SMTP') {
 
-	$http_host = isset($_SERVER['HTTP_HOST']) ? esc_html(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+	$http_host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
 	$eeOutput .= '
 
 	<p class="eeNote">To improve deliverability, the form\'s email address should be a working address on this web server, such as <strong><em>mail@' . $http_host . '</em></strong>.</p>';

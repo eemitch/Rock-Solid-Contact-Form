@@ -150,7 +150,8 @@ class eeRSCF_MailClass {
 
 				if( $_FILES['file']['size'] <= $max_size ) {
 					if( in_array($fileExt,$formatsArray) ) {
-						$eeFileURL = $eeHelper->eeUploader($_FILES['file'],  'ee-contact'  );
+						// $_FILES is passed to WordPress secure upload handler
+						$eeFileURL = $eeHelper->eeUploader($_FILES['file'],  'ee-contact'  ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 					} else {
 						$this->log['errors'][] = 'FileType ' . $fileExt . ' Not Allowed';
 					}
