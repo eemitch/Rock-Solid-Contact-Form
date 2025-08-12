@@ -37,7 +37,12 @@ function eeRSCF_ContactProcess() {
 		wp_die( 'Contact form is temporarily unavailable.', 'Error', array( 'response' => 500 ) );
 	}
 
-	$eeRSCF->eeRSCF_SendEmail();
+	global $eeMailClass;
+	if ( ! isset( $eeMailClass ) || ! is_object( $eeMailClass ) ) {
+		wp_die( 'Mail service is temporarily unavailable.', 'Error', array( 'response' => 500 ) );
+	}
+
+	$eeMailClass->eeRSCF_SendEmail();
 }
 
 

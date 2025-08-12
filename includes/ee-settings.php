@@ -14,7 +14,10 @@ function eeRSCF_Settings() {
 	// Process if POST
 	if (isset($_POST['eeRSCF_Settings']) && check_admin_referer('ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 		$eeRSCF_Log[] = 'Updating Settings...';
-		$eeRSCF->eeRSCF_AdminSettingsProcess();
+		global $eeAdminClass;
+		if (isset($eeAdminClass) && is_object($eeAdminClass)) {
+			$eeAdminClass->eeRSCF_AdminSettingsProcess();
+		}
 	}
 
 	// Determine the active tab

@@ -13,7 +13,7 @@
 // Security First
 if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly
 
-class eeFile_Class {
+class eeRSCF_FileClass {
 
     /**
      * WordPress filesystem object
