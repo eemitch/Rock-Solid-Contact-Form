@@ -14,9 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly
 // Our Mail Class
 class eeRSCF_MailClass {
 
-	// Properties needed for mail processing
+	// Properties needed for mail processing (warnings and errors for user feedback only)
 	public $log = array(
-		'notices' => array(),
 		'messages' => array(),
 		'warnings' => array(),
 		'errors' => array(),
@@ -72,7 +71,10 @@ class eeRSCF_MailClass {
 			error_log('RSCF DEBUG [PostProcess]: Nonce verification passed');
 		}
 
-		$this->log['notices'][] = 'Processing the post...';
+		if (eeRSCF_Debug) {
+			echo "<!-- RSCF DEBUG: Processing the post... -->";
+			error_log('RSCF DEBUG [PostProcess]: Processing the post...');
+		}
 
 		$eeIgnore = ['eeRSCF', 'eeRSCF_ID', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER'];
 
@@ -165,8 +167,6 @@ class eeRSCF_MailClass {
 			}
 		}
 
-		$this->log['notices'][] = $this->thePost;
-
 		if (eeRSCF_Debug) {
 			error_log('RSCF DEBUG [PostProcess]: Processing completed. Total entries: ' . count($this->thePost));
 			error_log('RSCF DEBUG [PostProcess]: Final thePost array: ' . print_r($this->thePost, true));
@@ -198,7 +198,10 @@ class eeRSCF_MailClass {
 			return FALSE;
 		}
 
-		$this->log['notices'][] = 'Sending the Email...';
+		if (eeRSCF_Debug) {
+			echo "<!-- RSCF DEBUG: Sending the Email... -->";
+			error_log('RSCF DEBUG [SendEmail]: Sending the Email...');
+		}
 
 		$this->eeRSCF_PostProcess();
 
@@ -240,14 +243,23 @@ class eeRSCF_MailClass {
 
 		if(!$this->log['errors'] AND !empty($this->thePost)) {
 
-			$this->log['notices'][] = 'Preparing the Email...';
+			if (eeRSCF_Debug) {
+				echo "<!-- RSCF DEBUG: Preparing the Email... -->";
+				error_log('RSCF DEBUG [SendEmail]: Preparing the Email...');
+			}
 
 			// Configure SMTP if enabled
 			if ($this->formSettings['emailMode'] == 'SMTP') {
 				add_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
-				$this->log['notices'][] = 'SMTP Mode Enabled';
+				if (eeRSCF_Debug) {
+					echo "<!-- RSCF DEBUG: SMTP Mode Enabled -->";
+					error_log('RSCF DEBUG [SendEmail]: SMTP Mode Enabled');
+				}
 			} else {
-				$this->log['notices'][] = 'Using WordPress Default Mailer';
+				if (eeRSCF_Debug) {
+					echo "<!-- RSCF DEBUG: Using WordPress Default Mailer -->";
+					error_log('RSCF DEBUG [SendEmail]: Using WordPress Default Mailer');
+				}
 			}
 
 			// Loop through and see if we have a Subject field
@@ -290,7 +302,12 @@ class eeRSCF_MailClass {
 
 		if( wp_mail($this->formSettings['to'], $eeSubject, $eeBody, $eeHeaders) ) {
 
-			$this->log['notices'][] = 'WP Mail Sent';				// Remove SMTP hook to prevent affecting other emails
+			if (eeRSCF_Debug) {
+				echo "<!-- RSCF DEBUG: WP Mail Sent -->";
+				error_log('RSCF DEBUG [SendEmail]: WP Mail Sent successfully');
+			}
+
+			// Remove SMTP hook to prevent affecting other emails
 				if ($this->formSettings['emailMode'] == 'SMTP') {
 					remove_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
 				}
@@ -328,7 +345,10 @@ class eeRSCF_MailClass {
 		// Only configure SMTP if the setting is enabled
 		if ($this->formSettings['emailMode'] == 'SMTP') {
 
-			$this->log['notices'][] = 'Configuring SMTP...';
+			if (eeRSCF_Debug) {
+				echo "<!-- RSCF DEBUG: Configuring SMTP... -->";
+				error_log('RSCF DEBUG [SMTP]: Configuring SMTP...');
+			}
 
 			// Enable SMTP
 			$phpmailer->isSMTP();
@@ -385,7 +405,10 @@ class eeRSCF_MailClass {
 				$phpmailer->isHTML(false);
 			}
 
-			$this->log['notices'][] = 'SMTP Configuration Complete';
+			if (eeRSCF_Debug) {
+				echo "<!-- RSCF DEBUG: SMTP Configuration Complete -->";
+				error_log('RSCF DEBUG [SMTP]: SMTP Configuration Complete');
+			}
 		}
 	}
 
@@ -413,7 +436,11 @@ class eeRSCF_MailClass {
 			return false;
 		}
 
-		$this->log['notices'][] = 'Form Spam Check...';
+		if (eeRSCF_Debug) {
+			echo "<!-- RSCF DEBUG: Form Spam Check... -->";
+			error_log('RSCF DEBUG [SpamCheck]: Form Spam Check...');
+		}
+
 		$this->log['catch'] = array();
 
 		$tamper = FALSE;
@@ -620,8 +647,11 @@ class eeRSCF_MailClass {
 
 		if(count($this->log['catch']) >= 1) {
 
-			$this->log['notices'][] = 'Spam Check FAIL!';
-			$this->log['notices'][] = 'Spam triggers: ' . implode(', ', $this->log['catch']);
+			if (eeRSCF_Debug) {
+				echo "<!-- RSCF DEBUG: Spam Check FAIL! Triggers: " . esc_attr(implode(', ', $this->log['catch'])) . " -->";
+				error_log('RSCF DEBUG [SpamCheck]: Spam Check FAIL!');
+				error_log('RSCF DEBUG [SpamCheck]: Spam triggers: ' . implode(', ', $this->log['catch']));
+			}
 
 			// Log detailed debugging information for development
 			if (eeRSCF_Debug) {
@@ -632,7 +662,10 @@ class eeRSCF_MailClass {
 
 		} else {
 
-			$this->log['notices'][] = 'Spam Check OKAY!';
+			if (eeRSCF_Debug) {
+				echo "<!-- RSCF DEBUG: Spam Check OKAY! -->";
+				error_log('RSCF DEBUG [SpamCheck]: Spam Check OKAY!');
+			}
 			return FALSE; // Seems okay...
 		}
 	}

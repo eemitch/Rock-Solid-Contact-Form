@@ -9,7 +9,11 @@ function eeRSCF_Settings() {
 	global $eeRSCF, $eeFileClass;
 
 	$eeRSCF->formID = 1;
-	$eeRSCF->log['notices'][] = 'eeRSCF Settings Page Loaded';
+
+	if (eeRSCF_Debug) {
+		echo "<!-- RSCF DEBUG: eeRSCF Settings Page Loaded -->";
+		error_log('RSCF DEBUG [Settings]: eeRSCF Settings Page Loaded');
+	}
 
 	// Process if POST
 	if (isset($_POST['eeRSCF_Settings']) && check_admin_referer('ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {

@@ -36,9 +36,8 @@ class eeRSCF_Class {
 	public $bcc = '';
 	public $adminTo = '';
 
-	// Messaging
+	// Messaging - Used for User Feedback (warnings and errors only)
 	public $log = array(
-		'notices' => array(),
 		'messages' => array(),
 		'warnings' => array(),
 		'errors' => array()
@@ -211,7 +210,10 @@ class eeRSCF_Class {
 
 	public function eeRSCF_formDisplay() {
 
-		$this->log['notices'][] = 'Displaying the Form...';
+		if (eeRSCF_Debug) {
+			echo "<!-- RSCF DEBUG: Displaying the Form... -->";
+			error_log('RSCF DEBUG [FormDisplay]: Displaying the Form...');
+		}
 
 		if($this->log['errors']) {
 			$this->theFormOutput .= '
