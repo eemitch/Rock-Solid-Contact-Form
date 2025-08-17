@@ -388,7 +388,7 @@ $formSettings = [
 ## Development & Maintenance
 
 ### Development Mode
-When `eeRSCF_DevMode` is enabled:
+When `eeRSCF_Debug` is enabled:
 - Detailed logging to browser console and WordPress debug.log
 - Debug information display in admin interface
 - Settings array visualization for troubleshooting

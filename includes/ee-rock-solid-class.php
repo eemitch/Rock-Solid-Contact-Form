@@ -327,7 +327,7 @@ class eeRSCF_Class {
 		</div>';
 
 		// Log to the browser console
-		if(eeRSCF_DevMode && defined('WP_DEBUG') && WP_DEBUG) {
+		if(eeRSCF_Debug && defined('WP_DEBUG') && WP_DEBUG) {
 			$this->theFormOutput .= eeDevOutput($this->log); // Output to console
 			// Debug output disabled for production
 			// $this->theFormOutput .= '<pre>LOG: ' . esc_html(print_r($this->log, TRUE)) . '</pre>';

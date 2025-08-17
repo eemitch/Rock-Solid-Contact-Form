@@ -113,7 +113,7 @@ $eeOutput .= '
 
 		<h3>' . esc_html__('Confirmation Page', 'rock-solid-contact-form') . '</h3>
 
-		<p>' . esc_html__('This is the page that will load after the form has been submitted. If no page is defined, the contact form page will be loaded again.', 'rock-solid-contact-form') . '</p>
+		<p>' . esc_html__('This is the page that will load after the form has been submitted. If no page is defined, the home page will be loaded.', 'rock-solid-contact-form') . '</p>
 
 		<input class="eeFullWidth" type="url" name="eeRSCF_Confirm" value="' . esc_attr($eeRSCF->confirm) . '" size="128" />
 

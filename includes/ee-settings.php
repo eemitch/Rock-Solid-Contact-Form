@@ -75,7 +75,7 @@ function eeRSCF_Settings() {
 	$eeOutput .= '</div>'; // End wrap
 
 	// Debug Mode Output
-	if (eeRSCF_DevMode) {
+	if (eeRSCF_Debug) {
 		$eeOutput .= eeDevOutput($eeRSCF->log);
 	}
 
