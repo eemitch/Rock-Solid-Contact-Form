@@ -434,6 +434,7 @@ function eeRSCF_Debug_Log($message, $context = 'General') {
 
 	// Will only log errors if WordPress debugging and this plugin's debugging is set to TRUE
 	if (WP_DEBUG && eeRSCF_Debug) {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- This debug logging is intentionally controlled by WP_DEBUG and plugin debug constants, only active during development/troubleshooting
         error_log(sprintf('RSCF DEBUG [%s]: %s', $context, $message));
     }
 }

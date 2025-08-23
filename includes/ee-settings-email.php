@@ -34,7 +34,9 @@ if($eeRSCF->formSettings['emailMode'] != 'SMTP') {
 	$http_host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
 	$eeOutput .= '
 
-	<p class="eeNote">' . sprintf(esc_html__('To improve deliverability, the form\'s email address should be a working address on this web server, such as %s.', 'rock-solid-contact-form'), '<strong><em>mail@' . $http_host . '</em></strong>') . '</p>';
+	<p class="eeNote">' .
+	/* translators: %s is the suggested email address format using the current domain */
+	sprintf(esc_html__('To improve deliverability, the form\'s email address should be a working address on this web server, such as %s.', 'rock-solid-contact-form'), '<strong><em>mail@' . $http_host . '</em></strong>') . '</p>';
 }
 
 

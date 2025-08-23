@@ -81,6 +81,7 @@ function eeRSCF_Settings() {
 	}
 
 	// Dump the HTML buffer
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $eeOutput contains pre-escaped HTML content built throughout this file using esc_html(), esc_attr(), and other WordPress escaping functions
 	echo $eeOutput; // The contents of this output have already been escaped
 }
 

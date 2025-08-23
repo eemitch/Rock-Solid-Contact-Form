@@ -52,16 +52,16 @@ class eeRSCF_MailClass {
 
 		global $eeRSCF;
 
-		// DEBUG: Start of post processing
-		eeRSCF_Debug_Log('Starting post processing...', 'PostProcess');
-		eeRSCF_Debug_Log('POST data count: ' . count($_POST), 'PostProcess');
-
-		// Verify nonce for form processing security
+		// Verify nonce for form processing security FIRST
 		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['ee-rock-solid-nonce'])), 'ee-rock-solid')) {
 			$this->log['catch'][] = 'Nonce verification failed';
 			eeRSCF_Debug_Log('Nonce verification failed!', 'PostProcess');
 			return false;
 		}
+
+		// DEBUG: Start of post processing
+		eeRSCF_Debug_Log('Starting post processing...', 'PostProcess');
+		eeRSCF_Debug_Log('POST data count: ' . count($_POST), 'PostProcess');
 
 		eeRSCF_Debug_Log('Nonce verification passed', 'PostProcess');
 
@@ -168,7 +168,14 @@ class eeRSCF_MailClass {
 		eeRSCF_Debug_Log('File upload debug - $_FILES[file] isset: ' . (isset($_FILES['file']) ? 'YES' : 'NO'), 'SendEmail');
 		eeRSCF_Debug_Log('File upload debug - $_FILES[file] empty: ' . (empty($_FILES['file']) ? 'YES' : 'NO'), 'SendEmail');
 		if (isset($_FILES['file']) && is_array($_FILES['file'])) {
-			eeRSCF_Debug_Log('File upload debug - $_FILES[file] structure: ' . wp_json_encode($_FILES['file']), 'SendEmail');
+			// Sanitize file data for debug logging
+			$sanitized_file_data = array(
+				'name' => isset($_FILES['file']['name']) ? sanitize_file_name($_FILES['file']['name']) : '',
+				'type' => isset($_FILES['file']['type']) ? sanitize_text_field($_FILES['file']['type']) : '',
+				'size' => isset($_FILES['file']['size']) ? intval($_FILES['file']['size']) : 0,
+				'error' => isset($_FILES['file']['error']) ? intval($_FILES['file']['error']) : 0
+			);
+			eeRSCF_Debug_Log('File upload debug - $_FILES[file] structure: ' . wp_json_encode($sanitized_file_data), 'SendEmail');
 		}
 		eeRSCF_Debug_Log('File upload debug - attachments show: ' . ($this->formSettings['fields']['attachments']['show'] ?? 'NOT SET'), 'SendEmail');
 		eeRSCF_Debug_Log('File upload debug - attachments req: ' . ($this->formSettings['fields']['attachments']['req'] ?? 'NOT SET'), 'SendEmail');
@@ -243,6 +250,7 @@ class eeRSCF_MailClass {
 						$eeSubject = stripslashes($eeSubject);
 					}
 			}
+			// translators: %s is the website domain name for the default email subject
 			if(empty($eeSubject)) { $eeSubject = sprintf(__('Contact Form Message (%s)', 'rock-solid-contact-form'), basename(home_url())); }
 
 			// Email assembly
@@ -263,6 +271,7 @@ class eeRSCF_MailClass {
 
 			if($eeFileURL) { $eeBody .= __('File:', 'rock-solid-contact-form') . ' ' . $eeFileURL . PHP_EOL . PHP_EOL; }
 
+		// translators: %s is the website URL where the contact form is located
 		$eeBody .=  PHP_EOL . PHP_EOL . sprintf(__('This message was sent via the contact form located at %s', 'rock-solid-contact-form'), home_url() . '/') . PHP_EOL . PHP_EOL;
 
 		$eeBody = stripslashes($eeBody);

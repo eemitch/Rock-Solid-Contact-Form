@@ -3,7 +3,7 @@ Contributors: eemitch
 Requires at least: 5.0
 Requires PHP: 7.4
 Tested up to: 6.8
-Stable tag: 2.1.2
+Stable tag: 2.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -47,14 +47,20 @@ Yes, the settings allow you to enable/disable fields, adjust spam protection, an
 
 == Upgrade Notice ==
 
-= 2.1.2 =
-- Minor improvements
+= 2.2.1 =
+- Major Improvements
 
 == Changelog ==
 
-= 2.1.2 =
+= 2.2.1 =
+* WordPress Plugin Check compliance - improved code standards and security practices.
+* Enhanced input validation and sanitization for better security.
+* Added proper translator comments for internationalization support.
+* Fixed file upload validation and improved attachment field display.
+* Code quality improvements and debug logging enhancements.
 
-* Fixed an bug with allowed file upload types for first installers.
+= 2.1.2 =
+* Fixed a bug regarding allowed file upload types for first installers.
 
 
 = 2.1 =

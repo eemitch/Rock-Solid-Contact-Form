@@ -26,7 +26,9 @@ $eeOutput .= '
 	<input type="number" min="1" max="' . esc_attr($eeFileClass->eeDetectUploadLimit()) . '" step="1" name="eeMaxFileSize" value="' . esc_attr($eeRSCF->formSettings['fileMaxSize']) . '" class="adminInput" id="eeMaxFileSize" />
 
 	<br class="eeClearFix" />
-		<p class="eeNote">' . sprintf(esc_html__('Your hosting limits the maximum file upload size to %s MB.', 'rock-solid-contact-form'), '<strong>' . esc_html($eeFileClass->maxUploadLimit) . '</strong>') . '</p>
+		<p class="eeNote">' .
+		/* translators: %s is the maximum file upload size in MB allowed by the hosting server */
+		sprintf(esc_html__('Your hosting limits the maximum file upload size to %s MB.', 'rock-solid-contact-form'), '<strong>' . esc_html($eeFileClass->maxUploadLimit) . '</strong>') . '</p>
 
 
 	<br class="eeClearFix" />
