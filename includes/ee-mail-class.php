@@ -353,9 +353,7 @@ class eeRSCF_MailClass {
 			return false;
 		}
 
-		if (WP_DEBUG) {
-			error_log('RSCF DEBUG [SpamCheck]: Form Spam Check...');
-		}
+		eeRSCF_Debug_Log('Form Spam Check...', 'SpamCheck');
 
 		$this->log['catch'] = array();
 
@@ -366,39 +364,29 @@ class eeRSCF_MailClass {
 		$eeCount = count($eeArray); // How many filled in fields?
 
 		// DEBUG: Log current spam settings
-		if (WP_DEBUG) {
-			error_log('RSCF DEBUG [SpamCheck]: spamBlock = ' . ($this->formSettings['spamBlock'] ?? 'NOT SET'));
-			error_log('RSCF DEBUG [SpamCheck]: spamBlockBots = ' . ($this->formSettings['spamBlockBots'] ?? 'NOT SET'));
-			error_log('RSCF DEBUG [SpamCheck]: spamEnglishOnly = ' . ($this->formSettings['spamEnglishOnly'] ?? 'NOT SET'));
-			error_log('RSCF DEBUG [SpamCheck]: spamBlockFishy = ' . ($this->formSettings['spamBlockFishy'] ?? 'NOT SET'));
-			error_log('RSCF DEBUG [SpamCheck]: spamBlockWords = ' . ($this->formSettings['spamBlockWords'] ?? 'NOT SET'));
-			error_log('RSCF DEBUG [SpamCheck]: Filtered POST array count: ' . count($eeArray));
-		}
+		eeRSCF_Debug_Log('spamBlock = ' . ($this->formSettings['spamBlock'] ?? 'NOT SET'), 'SpamCheck');
+		eeRSCF_Debug_Log('spamBlockBots = ' . ($this->formSettings['spamBlockBots'] ?? 'NOT SET'), 'SpamCheck');
+		eeRSCF_Debug_Log('spamEnglishOnly = ' . ($this->formSettings['spamEnglishOnly'] ?? 'NOT SET'), 'SpamCheck');
+		eeRSCF_Debug_Log('spamBlockFishy = ' . ($this->formSettings['spamBlockFishy'] ?? 'NOT SET'), 'SpamCheck');
+		eeRSCF_Debug_Log('spamBlockWords = ' . ($this->formSettings['spamBlockWords'] ?? 'NOT SET'), 'SpamCheck');
+		eeRSCF_Debug_Log('Filtered POST array count: ' . count($eeArray), 'SpamCheck');
 
 		// Spam Bots
 		if($this->formSettings['spamBlockBots'] == 'YES') {
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SpamCheck]: Checking honeypot...');
-			}
+			eeRSCF_Debug_Log('Checking honeypot...', 'SpamCheck');
 
 			// Make sure honeypot field name is set
 			$honeypotField = isset($this->formSettings['spamHoneypot']) ? $this->formSettings['spamHoneypot'] : 'link';
 
 			if($this->formSettings['spamBlock'] AND isset($_POST[$honeypotField]) AND !empty(sanitize_text_field(wp_unslash($_POST[$honeypotField])))) { // Honeypot. This field should never be completed.
 				$this->log['catch'][] = 'Spambot Catch: Honeypot Field Completed.';
-				if (WP_DEBUG) {
-					error_log('RSCF DEBUG [SpamCheck]: Honeypot triggered! Field: ' . $honeypotField . ' Value: ' . sanitize_text_field(wp_unslash($_POST[$honeypotField])));
-				}
+				eeRSCF_Debug_Log('Honeypot triggered! Field: ' . $honeypotField . ' Value: ' . sanitize_text_field(wp_unslash($_POST[$honeypotField])), 'SpamCheck');
 			} else {
-				if (WP_DEBUG) {
-					error_log('RSCF DEBUG [SpamCheck]: Honeypot check passed. Field: ' . $honeypotField . ' Value: "' . (isset($_POST[$honeypotField]) ? sanitize_text_field(wp_unslash($_POST[$honeypotField])) : 'NOT SET') . '"');
-				}
+				eeRSCF_Debug_Log('Honeypot check passed. Field: ' . $honeypotField . ' Value: "' . (isset($_POST[$honeypotField]) ? sanitize_text_field(wp_unslash($_POST[$honeypotField])) : 'NOT SET') . '"', 'SpamCheck');
 			}
 		}		// English Only
 		if($this->formSettings['spamEnglishOnly'] == 'YES') {
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SpamCheck]: Checking English only...');
-			}
+			eeRSCF_Debug_Log('Checking English only...', 'SpamCheck');
 
 			foreach($eeArray as $eeKey => $eeValue) {
 
@@ -408,32 +396,24 @@ class eeRSCF_MailClass {
 					// If you can't read it, block it.
 					if(preg_match('/[А-Яа-яЁё]/u', $eeValue) OR preg_match('/\p{Han}+/u', $eeValue)) {
 						$this->log['catch'][] = "Non-English Language Detected";
-						if (WP_DEBUG) {
-							error_log('RSCF DEBUG [SpamCheck]: Non-English detected in field: ' . $eeKey . ' Value: ' . $eeValue);
-						}
+						eeRSCF_Debug_Log('Non-English detected in field: ' . $eeKey . ' Value: ' . $eeValue, 'SpamCheck');
 						break;
 					}
 				}
 			}
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SpamCheck]: English only check completed');
-			}
+			eeRSCF_Debug_Log('English only check completed', 'SpamCheck');
 		}
 
 		// Block Fishiness
 		if($this->formSettings['spamBlockFishy'] == 'YES') {
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SpamCheck]: Checking fishy content...');
-			}
+			eeRSCF_Debug_Log('Checking fishy content...', 'SpamCheck');
 
 			// Check for duplicated info in fields (spam)
 			$eeValues = array_count_values($eeArray);
 			foreach($eeValues as $eeValue) {
 				if($eeValue > 2) {
 					$this->log['catch'][] = "3x Duplicated Same Field Entries";
-					if (WP_DEBUG) {
-						error_log('RSCF DEBUG [SpamCheck]: Duplicate entries detected');
-					}
+					eeRSCF_Debug_Log('Duplicate entries detected', 'SpamCheck');
 				}
 			}
 
@@ -441,28 +421,20 @@ class eeRSCF_MailClass {
 
 				if(strpos($eeValue, '&#') OR strpos($eeValue, '&#') === 0) {
 					$this->log['catch'][] = "Malicious Submission";
-					if (WP_DEBUG) {
-						error_log('RSCF DEBUG [SpamCheck]: Malicious submission detected in field: ' . $eeKey);
-					}
+					eeRSCF_Debug_Log('Malicious submission detected in field: ' . $eeKey, 'SpamCheck');
 				}
 
 				if(strpos($eeValue, '[url]') OR strpos($eeValue, '[url]') === 0) {
 					$this->log['catch'][] = "Form Tampering";
-					if (WP_DEBUG) {
-						error_log('RSCF DEBUG [SpamCheck]: Form tampering detected in field: ' . $eeKey);
-					}
+					eeRSCF_Debug_Log('Form tampering detected in field: ' . $eeKey, 'SpamCheck');
 				}
 
 				if(strlen(wp_strip_all_tags($eeValue)) != strlen($eeValue) ) {
 					$this->log['catch'][] = "HTML Tags Found";
-					if (WP_DEBUG) {
-						error_log('RSCF DEBUG [SpamCheck]: HTML tags found in field: ' . $eeKey . ' Original: ' . strlen($eeValue) . ' Stripped: ' . strlen(wp_strip_all_tags($eeValue)));
-					}
+					eeRSCF_Debug_Log('HTML tags found in field: ' . $eeKey . ' Original: ' . strlen($eeValue) . ' Stripped: ' . strlen(wp_strip_all_tags($eeValue)), 'SpamCheck');
 				}
 			}
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SpamCheck]: Fishy content check completed');
-			}
+			eeRSCF_Debug_Log('Fishy content check completed', 'SpamCheck');
 		}
 
 
@@ -545,9 +517,7 @@ class eeRSCF_MailClass {
 				}
 
 				if (!wp_mail($eeTo, $eeSubject, $eeBody, $eeHeaders)) {
-					if (WP_DEBUG) {
-						error_log('RSCF DEBUG [SpamCheck]: Notice Email Failed to Send');
-					}
+					eeRSCF_Debug_Log('Notice Email Failed to Send', 'SpamCheck');
 				}
 
 				// Remove SMTP hook after sending
@@ -562,23 +532,17 @@ class eeRSCF_MailClass {
 
 		if(count($this->log['catch']) >= 1) {
 
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SpamCheck]: Spam Check FAIL!');
-				error_log('RSCF DEBUG [SpamCheck]: Spam triggers: ' . implode(', ', $this->log['catch']));
-			}
+			eeRSCF_Debug_Log('Spam Check FAIL!', 'SpamCheck');
+			eeRSCF_Debug_Log('Spam triggers: ' . implode(', ', $this->log['catch']), 'SpamCheck');
 
 			// Log detailed debugging information for development
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SpamCheck]: Spam Detection Triggered: ' . implode(', ', $this->log['catch']));
-			}
+			eeRSCF_Debug_Log('Spam Detection Triggered: ' . implode(', ', $this->log['catch']), 'SpamCheck');
 
 			return TRUE; // THIS IS SPAM !!!
 
 		} else {
 
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SpamCheck]: Spam Check OKAY!');
-			}
+			eeRSCF_Debug_Log('Spam Check OKAY!', 'SpamCheck');
 			return FALSE; // Seems okay...
 		}
 	}
