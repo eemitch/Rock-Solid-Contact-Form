@@ -53,80 +53,56 @@ class eeRSCF_MailClass {
 		global $eeRSCF;
 
 		// DEBUG: Start of post processing
-		if (WP_DEBUG) {
-			error_log('RSCF DEBUG [PostProcess]: Starting post processing...');
-			error_log('RSCF DEBUG [PostProcess]: POST data count: ' . count($_POST));
-		}
+		eeRSCF_Debug_Log('Starting post processing...', 'PostProcess');
+		eeRSCF_Debug_Log('POST data count: ' . count($_POST), 'PostProcess');
 
 		// Verify nonce for form processing security
 		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['ee-rock-solid-nonce'])), 'ee-rock-solid')) {
 			$this->log['catch'][] = 'Nonce verification failed';
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [PostProcess]: Nonce verification failed!');
-			}
+			eeRSCF_Debug_Log('Nonce verification failed!', 'PostProcess');
 			return false;
 		}
 
-		if (WP_DEBUG) {
-			error_log('RSCF DEBUG [PostProcess]: Nonce verification passed');
-		}
+		eeRSCF_Debug_Log('Nonce verification passed', 'PostProcess');
 
-		if (WP_DEBUG) {
-			error_log('RSCF DEBUG [PostProcess]: Processing the post...');
-		}
+		eeRSCF_Debug_Log('Processing the post...', 'PostProcess');
 
 		$eeIgnore = ['eeRSCF', 'eeRSCF_ID', 'ee-rock-solid-nonce', '_wp_http_referer', 'SCRIPT_REFERER'];
 
-		if (WP_DEBUG) {
-			error_log('RSCF DEBUG [PostProcess]: Ignored fields: ' . implode(', ', $eeIgnore));
-		}
+		eeRSCF_Debug_Log('Ignored fields: ' . implode(', ', $eeIgnore), 'PostProcess');
 
 		foreach ($_POST as $eeKey => $eeValue) {
 
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [PostProcess]: Processing field: ' . $eeKey . ' = "' . $eeValue . '"');
-			}
+			eeRSCF_Debug_Log('Processing field: ' . $eeKey . ' = "' . $eeValue . '"', 'PostProcess');
 
 			if (in_array($eeKey, $eeIgnore) || empty($eeValue)) {
-				if (WP_DEBUG) {
-					error_log('RSCF DEBUG [PostProcess]: Skipping field ' . $eeKey . ' (ignored or empty)');
-				}
+				eeRSCF_Debug_Log('Skipping field ' . $eeKey . ' (ignored or empty)', 'PostProcess');
 				continue;
 			}
 
 			// SECURITY: Comprehensive input validation and sanitization
 			$originalValue = $eeValue;
 
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [PostProcess]: Sanitizing field ' . $eeKey . ' with original value: "' . $originalValue . '"');
-			}
+			eeRSCF_Debug_Log('Sanitizing field ' . $eeKey . ' with original value: "' . $originalValue . '"', 'PostProcess');
 
 			// Sanitize and validate specific fields
 			switch (true) {
 				case strpos($eeKey, 'mail') !== false:
 					$eeValue = sanitize_email($eeValue);
 					if (!is_email($eeValue)) {
-						if (WP_DEBUG) {
-							error_log('RSCF DEBUG [PostProcess]: Invalid email detected: ' . $originalValue);
-						}
+						eeRSCF_Debug_Log('Invalid email detected: ' . $originalValue, 'PostProcess');
 						continue 2; // Skip to the next $_POST item
 					}
 					$this->sender = strtolower($eeValue);
-					if (WP_DEBUG) {
-						error_log('RSCF DEBUG [PostProcess]: Email field processed, sender set to: ' . $this->sender);
-					}
+					eeRSCF_Debug_Log('Email field processed, sender set to: ' . $this->sender, 'PostProcess');
 					break;
 				case strpos($eeKey, 'ebsite') !== false:
 					$eeValue = esc_url_raw($eeValue, ['http', 'https']);
 					if (empty($eeValue)) {
-						if (WP_DEBUG) {
-							error_log('RSCF DEBUG [PostProcess]: Invalid website URL detected: ' . $originalValue);
-						}
+						eeRSCF_Debug_Log('Invalid website URL detected: ' . $originalValue, 'PostProcess');
 						continue 2; // Skip to the next $_POST item
 					}
-					if (WP_DEBUG) {
-						error_log('RSCF DEBUG [PostProcess]: Website field processed: ' . $eeValue);
-					}
+					eeRSCF_Debug_Log('Website field processed: ' . $eeValue, 'PostProcess');
 					break;
 				default:
 					// SECURITY: Enhanced sanitization for all other fields
@@ -135,22 +111,16 @@ class eeRSCF_MailClass {
 
 						// SECURITY: Reject if sanitization changed the content significantly
 						if (method_exists($this->mainClass, 'eeRSCF_SecurityCheck') && $this->mainClass->eeRSCF_SecurityCheck($originalValue, $eeValue, $eeKey)) {
-							if (WP_DEBUG) {
-								error_log('RSCF DEBUG [PostProcess]: Security check failed for field ' . $eeKey . '. Original: "' . $originalValue . '" Sanitized: "' . $eeValue . '"');
-							}
+							eeRSCF_Debug_Log('Security check failed for field ' . $eeKey . '. Original: "' . $originalValue . '" Sanitized: "' . $eeValue . '"', 'PostProcess');
 							continue 2; // Skip to the next $_POST item
 						}
 					} else {
 						// Fallback sanitization if main class methods not available
 						$eeValue = sanitize_text_field($eeValue);
-						if (WP_DEBUG) {
-							error_log('RSCF DEBUG [PostProcess]: Using fallback sanitization for field: ' . $eeKey);
-						}
+						eeRSCF_Debug_Log('Using fallback sanitization for field: ' . $eeKey, 'PostProcess');
 					}
 
-					if (WP_DEBUG) {
-						error_log('RSCF DEBUG [PostProcess]: Default field processed. Original: "' . $originalValue . '" Sanitized: "' . $eeValue . '"');
-					}
+					eeRSCF_Debug_Log('Default field processed. Original: "' . $originalValue . '" Sanitized: "' . $eeValue . '"', 'PostProcess');
 					break;
 			}
 
@@ -158,15 +128,11 @@ class eeRSCF_MailClass {
 			$processedEntry = $eeField . ': ' . $eeValue;
 			$this->thePost[] = $processedEntry;
 
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [PostProcess]: Added to thePost: "' . $processedEntry . '"');
-			}
+			eeRSCF_Debug_Log('Added to thePost: "' . $processedEntry . '"', 'PostProcess');
 		}
 
-		if (WP_DEBUG) {
-			error_log('RSCF DEBUG [PostProcess]: Processing completed. Total entries: ' . count($this->thePost));
-			error_log('RSCF DEBUG [PostProcess]: Final thePost array: ' . print_r($this->thePost, true));
-		}
+		eeRSCF_Debug_Log('Processing completed. Total entries: ' . count($this->thePost), 'PostProcess');
+		eeRSCF_Debug_Log('Final thePost array: ' . print_r($this->thePost, true), 'PostProcess');
 
 		return $this->thePost;
 	}
@@ -187,15 +153,11 @@ class eeRSCF_MailClass {
 			}
 		}		// Check referrer is from same site.
 		if(!isset($_REQUEST['ee-rock-solid-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['ee-rock-solid-nonce'])), 'ee-rock-solid')) {
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SendEmail]: Submission is not from this website');
-			}
+			eeRSCF_Debug_Log('Submission is not from this website', 'SendEmail');
 			return FALSE;
 		}
 
-		if (WP_DEBUG) {
-			error_log('RSCF DEBUG [SendEmail]: Sending the Email...');
-		}
+		eeRSCF_Debug_Log('Sending the Email...', 'SendEmail');
 
 		$this->eeRSCF_PostProcess();
 
@@ -216,38 +178,26 @@ class eeRSCF_MailClass {
 						// $_FILES is passed to WordPress secure upload handler
 						$eeFileURL = $eeFileClass->eeUploader($_FILES['file'],  'ee-contact'  ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 					} else {
-						if (WP_DEBUG) {
-							error_log('RSCF DEBUG [SendEmail]: File type not allowed: ' . $fileExt);
-						}
+						eeRSCF_Debug_Log('File type not allowed: ' . $fileExt, 'SendEmail');
 					}
 				} else {
-					if (WP_DEBUG) {
-						error_log('RSCF DEBUG [SendEmail]: File too large: ' . $_FILES['file']['size'] . ' bytes');
-					}
+					eeRSCF_Debug_Log('File too large: ' . $_FILES['file']['size'] . ' bytes', 'SendEmail');
 				}
 			} else {
-				if (WP_DEBUG) {
-					error_log('RSCF DEBUG [SendEmail]: Invalid file upload data');
-				}
+				eeRSCF_Debug_Log('Invalid file upload data', 'SendEmail');
 			}
 		}
 
 		if(!$this->log['errors'] AND !empty($this->thePost)) {
 
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SendEmail]: Preparing the Email...');
-			}
+			eeRSCF_Debug_Log('Preparing the Email...', 'SendEmail');
 
 			// Configure SMTP if enabled
 			if ($this->formSettings['emailMode'] == 'SMTP') {
 				add_action('phpmailer_init', array($this, 'eeRSCF_configure_smtp'));
-				if (WP_DEBUG) {
-					error_log('RSCF DEBUG [SendEmail]: SMTP Mode Enabled');
-				}
+				eeRSCF_Debug_Log('SMTP Mode Enabled', 'SendEmail');
 			} else {
-				if (WP_DEBUG) {
-					error_log('RSCF DEBUG [SendEmail]: Using WordPress Default Mailer');
-				}
+				eeRSCF_Debug_Log('Using WordPress Default Mailer', 'SendEmail');
 			}
 
 			// Loop through and see if we have a Subject field
@@ -290,9 +240,7 @@ class eeRSCF_MailClass {
 
 		if( wp_mail($this->formSettings['to'], $eeSubject, $eeBody, $eeHeaders) ) {
 
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SendEmail]: WP Mail Sent successfully');
-			}
+			eeRSCF_Debug_Log('WP Mail Sent successfully', 'SendEmail');
 
 			// Remove SMTP hook to prevent affecting other emails
 				if ($this->formSettings['emailMode'] == 'SMTP') {
@@ -305,9 +253,7 @@ class eeRSCF_MailClass {
 
 			} else {
 
-				if (WP_DEBUG) {
-					error_log('RSCF DEBUG [SendEmail]: PHP Message Failed to Send.');
-				}
+				eeRSCF_Debug_Log('PHP Message Failed to Send.', 'SendEmail');
 
 				// Remove SMTP hook even on failure
 				if ($this->formSettings['emailMode'] == 'SMTP') {
@@ -316,9 +262,7 @@ class eeRSCF_MailClass {
 			}
 
 		} else {
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SendEmail]: Message not sent. Please try again.');
-			}
+			eeRSCF_Debug_Log('Message not sent. Please try again.', 'SendEmail');
 		}
 	}
 
@@ -330,9 +274,7 @@ class eeRSCF_MailClass {
 		// Only configure SMTP if the setting is enabled
 		if ($this->formSettings['emailMode'] == 'SMTP') {
 
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SMTP]: Configuring SMTP...');
-			}
+			eeRSCF_Debug_Log('Configuring SMTP...', 'SMTP');
 
 			// Enable SMTP
 			$phpmailer->isSMTP();
@@ -389,9 +331,7 @@ class eeRSCF_MailClass {
 				$phpmailer->isHTML(false);
 			}
 
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [SMTP]: SMTP Configuration Complete');
-			}
+			eeRSCF_Debug_Log('SMTP Configuration Complete', 'SMTP');
 		}
 	}
 
@@ -404,16 +344,12 @@ class eeRSCF_MailClass {
 	private function eeRSCF_formSpamCheck() {
 
 		// DEBUG: First thing - check if we're even reaching this function
-		if (defined('eeRSCF_Debug') && eeRSCF_Debug) {
-			error_log('RSCF DEBUG: formSpamCheck function called');
-		}
+		eeRSCF_Debug_Log('formSpamCheck function called', 'SpamCheck');
 
 		// Verify nonce for form processing security
 		if (!isset($_POST['ee-rock-solid-nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['ee-rock-solid-nonce'])), 'ee-rock-solid')) {
 			$this->log['catch'][] = 'Nonce verification failed';
-			if (defined('eeRSCF_Debug') && eeRSCF_Debug) {
-				error_log('RSCF DEBUG [SpamCheck]: Nonce verification failed!');
-			}
+			eeRSCF_Debug_Log('Nonce verification failed!', 'SpamCheck');
 			return false;
 		}
 
