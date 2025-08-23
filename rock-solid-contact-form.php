@@ -8,7 +8,7 @@ Plugin Name: Rock Solid Contact Form
 Plugin URI: https://elementengage.com
 Description: A basic contact form that focuses on spam prevention and deliverability
 Author: Mitchell Bennis - Element Engage, LLC
-Version: 2.1.2
+Version: 2.1.3
 Author URI: https://elementengage.com
 License: GPLv2 or later
 Text Domain: rock-solid-contact-form
@@ -22,7 +22,7 @@ define('eeRSCF_Debug', TRUE); // Enables extended reporting
 
 // This Plugin
 define('eeRSCF_SLUG', 'rock-solid-contact-form');
-define('eeRSCF_Version', '2.1.2');
+define('eeRSCF_Version', '2.1.3');
 
 // Remote Spam Words List
 define('eeRSCF_RemoteSpamWordsURL', 'http://eeserver1.net/ee-common-spam-words.txt'); // One phrase per line
@@ -59,7 +59,6 @@ function eeRSCF_Setup() {
 	// Get our settings first
 	if(empty($eeRSCF->formSettings)) {
 		$eeRSCF->formSettings = get_option('eeRSCF_Settings');
-		$eeRSCF->confirm = get_option('eeRSCF_Confirm');
 
 		// If no settings found, use defaults
 		if(empty($eeRSCF->formSettings)) {
@@ -73,9 +72,12 @@ function eeRSCF_Setup() {
 		if(empty($eeRSCF->formSettings['email'])) {
 			$eeRSCF->formSettings['email'] = get_option('admin_email');
 		}
-		if(empty($eeRSCF->confirm)) {
-			$eeRSCF->confirm = home_url();
-		}
+	}
+
+	// Always load the confirmation URL (moved outside conditional)
+	$eeRSCF->confirm = get_option('eeRSCF_Confirm');
+	if(empty($eeRSCF->confirm)) {
+		$eeRSCF->confirm = home_url();
 	}
 
 	// Now initialize the other classes that depend on settings

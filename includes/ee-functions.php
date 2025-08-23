@@ -208,76 +208,229 @@ function eeRSCF_UpdatePlugin() {
 
 	global $eeRSCF;
 
-	$eeRSCF->formSettings = get_option('eeRSCF_Settings_1');
 	$eeVersion = get_option('eeRSCF_Version');
-	if($eeVersion == eeRSCF_Version) { return TRUE; } // Return if we're good.
 
-	if($eeRSCF->formSettings OR $eeVersion) { // Installed
+	// Check if we need to migrate from old version
+	$oldSettings = get_option('eeRSCF_Settings_1');
+	$newSettings = get_option('eeRSCF_Settings');
 
-		if(version_compare($eeVersion, eeRSCF_Version, '<') ) {
+	if ($oldSettings) {
+		// Migration needed from old version - use old settings even if new ones exist
+		if (eeRSCF_Debug) {
+			error_log('RSCF DEBUG [Migration]: Migrating from eeRSCF_Settings_1 to eeRSCF_Settings');
+		}
 
-			$eeRSCF->formSettings = get_option('eeRSCF_Settings_1');
+		// Copy old settings to new format
+		$migratedSettings = $oldSettings;
 
-		if(!empty($eeRSCF->formSettings)) {
+		// Force SMTP off for migration (as requested)
+		$migratedSettings['emailMode'] = 'PHP';
 
-			// Move the confirmation URL to its own option
-			if($eeRSCF->formSettings['confirm']) {
-				$eeRSCF->confirm = $eeRSCF->formSettings['confirm'];
-			}				// Complete missing FROM address if needed
-				if(empty($eeRSCF->formSettings['email'])) {
-					$eeRSCF->formSettings['email'] = get_option('admin_emial');
-				}
+		// Ensure the complete fields structure exists for proper form functionality
+		if (!isset($migratedSettings['fields']) || !is_array($migratedSettings['fields'])) {
+			$migratedSettings['fields'] = array();
+		}
 
-				// Get rid of dots in file types
-				$formats = $eeRSCF->formSettings['fileFormats'];
-				$formats = preg_replace('/\s*\.([a-z0-9]+)/i', ' $1', $formats);
-				$formats = trim($formats);
+		// Only add missing fields with defaults - preserve existing user configurations
+		$defaultFields = array(
+			'first-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'First Name'),
+			'last-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Last Name'),
+			'biz-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Business Name'),
+			'address1' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Address'),
+			'address2' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Address 2'),
+			'city' => array('show' => 'YES', 'req' => 'NO', 'label' => 'City'),
+			'state' => array('show' => 'YES', 'req' => 'NO', 'label' => 'State'),
+			'zip' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Postal Code'),
+			'phone' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Phone'),
+			'website' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Website'),
+			'other' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Other'),
+			'subject' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Subject'),
+			'attachments' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Attachments')
+		);
 
-				$eeRSCF->formSettings['fileFormats'] = $formats;
-
-				// Out with the Old - Clean up legacy options using WordPress functions
-				$legacy_options = array(
-					'eeRSCF_spamBlock',
-					'eeRSCF_spamBlockBots',
-					'eeRSCF_spamHoneypot',
-					'eeRSCF_spamEnglishOnly',
-					'eeRSCF_spamBlockFishy',
-					'eeRSCF_spamBlockWords',
-					'eeRSCF_spamBlockedWords',
-					'eeRSCF_spamBlockCommonWords',
-					'eeRSCF_spamSendAttackNotice',
-					'eeRSCF_spamNoticeEmail'
-				);
-
-				foreach ($legacy_options as $option_name) {
-					delete_option($option_name);
-				}
-
-				unset($eeRSCF->formSettings['name']);
-				unset($eeRSCF->formSettings['confirm']);
-
-				// In with the New
-				update_option('eeRSCF_Version' , eeRSCF_Version);
-				update_option('eeRSCF_Settings', $eeRSCF->formSettings); // In with the New
-				update_option('eeRSCF_Confirm', $eeRSCF->confirm);
-
-				return TRUE;
+		foreach ($defaultFields as $fieldName => $fieldDefaults) {
+			if (!isset($migratedSettings['fields'][$fieldName])) {
+				$migratedSettings['fields'][$fieldName] = $fieldDefaults;
 			}
 		}
 
-	} else { // New Installation
+		// Ensure attachment settings are present
+		if (!isset($migratedSettings['fileMaxSize'])) {
+			$migratedSettings['fileMaxSize'] = '8';
+		}
+		if (!isset($migratedSettings['fileFormats'])) {
+			$migratedSettings['fileFormats'] = 'gif, jpg, jpeg, bmp, png, tif, tiff, txt, eps, psd, ai, pdf, doc, xls, ppt, docx, xlsx, pptx, odt, ods, odp, odg, wav, wmv, wma, flv, 3gp, avi, mov, mp4, m4v, mp3, webm, zip';
+		}
 
-		// Install Settings
-		if(empty($eeRSCF->formSettings)) {
-			$eeRSCF->contactFormDefault['to'] = get_option('admin_email');
-			$eeRSCF->contactFormDefault['email'] = get_option('admin_email');
-			update_option('eeRSCF_Settings', $eeRSCF->contactFormDefault);
-			$eeRSCF->confirm = home_url();
-			update_option('eeRSCF_Confirm', $eeRSCF->confirm);
-			$eeRSCF->formSettings = $eeRSCF->contactFormDefault;
-			update_option('eeRSCF_Version' , eeRSCF_Version);
+		// Clean up dots in file formats if present
+		if (isset($migratedSettings['fileFormats'])) {
+			$formats = $migratedSettings['fileFormats'];
+			$formats = preg_replace('/\s*\.([a-z0-9]+)/i', ' $1', $formats);
+			$formats = str_replace('.', '', $formats); // Remove any remaining dots
+			$formats = trim($formats);
+			$migratedSettings['fileFormats'] = $formats;
+		}
+
+		// Move confirmation URL to separate option
+		$confirmUrl = home_url();
+		if (isset($migratedSettings['confirm'])) {
+			$confirmUrl = $migratedSettings['confirm'];
+			unset($migratedSettings['confirm']);
+		}
+
+		// Complete missing FROM address if needed
+		if (empty($migratedSettings['email'])) {
+			$migratedSettings['email'] = get_option('admin_email');
+		}
+
+		// Remove deprecated fields
+		unset($migratedSettings['name']);
+		unset($migratedSettings['formName']);
+
+		// Save migrated settings
+		update_option('eeRSCF_Settings', $migratedSettings);
+		update_option('eeRSCF_Confirm', $confirmUrl);
+		update_option('eeRSCF_Version', eeRSCF_Version);
+
+		// Clean up old options
+		delete_option('eeRSCF_Settings_1');
+
+		// Clean up duplicate individual spam options and old SMTP mode
+		$legacy_options = array(
+			'eeRSCF_spamBlock',
+			'eeRSCF_spamBlockBots',
+			'eeRSCF_spamHoneypot',
+			'eeRSCF_spamEnglishOnly',
+			'eeRSCF_spamBlockFishy',
+			'eeRSCF_spamBlockWords',
+			'eeRSCF_spamBlockedWords',
+			'eeRSCF_spamBlockCommonWords',
+			'eeRSCF_spamSendAttackNotice',
+			'eeRSCF_spamNoticeEmail',
+			'eeRSCF_Mode' // Remove the old SMTP mode option
+		);
+
+		foreach ($legacy_options as $option_name) {
+			delete_option($option_name);
+		}
+
+		// Load the migrated settings
+		$eeRSCF->formSettings = $migratedSettings;
+
+		if (eeRSCF_Debug) {
+			error_log('RSCF DEBUG [Migration]: Migration completed successfully');
+		}
+
+		return TRUE;
+	}
+
+	// Normal version check for existing installations
+	if ($eeVersion == eeRSCF_Version) {
+		$eeRSCF->formSettings = get_option('eeRSCF_Settings');
+		return TRUE;
+	}
+
+	// Handle version upgrades for existing new-format installations
+	if ($newSettings && $eeVersion) {
+		if (version_compare($eeVersion, eeRSCF_Version, '<')) {
+
+			// Ensure the complete fields structure exists for proper form functionality
+			if (!isset($newSettings['fields']) || !is_array($newSettings['fields'])) {
+				$newSettings['fields'] = array();
+			}
+
+			// Only add missing fields with defaults - preserve existing user configurations
+			$defaultFields = array(
+				'first-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'First Name'),
+				'last-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Last Name'),
+				'biz-name' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Business Name'),
+				'address1' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Address'),
+				'address2' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Address 2'),
+				'city' => array('show' => 'YES', 'req' => 'NO', 'label' => 'City'),
+				'state' => array('show' => 'YES', 'req' => 'NO', 'label' => 'State'),
+				'zip' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Postal Code'),
+				'phone' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Phone'),
+				'website' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Website'),
+				'other' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Other'),
+				'subject' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Subject'),
+				'attachments' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Attachments')
+			);
+
+			foreach ($defaultFields as $fieldName => $fieldDefaults) {
+				if (!isset($newSettings['fields'][$fieldName])) {
+					$newSettings['fields'][$fieldName] = $fieldDefaults;
+				}
+			}
+
+			// Ensure attachment settings are present in existing installations
+			if (!isset($newSettings['fileMaxSize'])) {
+				$newSettings['fileMaxSize'] = '8';
+			}
+			if (!isset($newSettings['fileFormats'])) {
+				$newSettings['fileFormats'] = 'gif, jpg, jpeg, bmp, png, tif, tiff, txt, eps, psd, ai, pdf, doc, xls, ppt, docx, xlsx, pptx, odt, ods, odp, odg, wav, wmv, wma, flv, 3gp, avi, mov, mp4, m4v, mp3, webm, zip';
+			}
+
+			// Clean up file formats
+			if (isset($newSettings['fileFormats'])) {
+				$formats = $newSettings['fileFormats'];
+				$formats = preg_replace('/\s*\.([a-z0-9]+)/i', ' $1', $formats);
+				$formats = str_replace('.', '', $formats);
+				$formats = trim($formats);
+				$newSettings['fileFormats'] = $formats;
+			}
+
+			// Clean up legacy options during version upgrade
+			delete_option('eeRSCF_Settings_1'); // Remove old settings format
+
+			// Clean up duplicate individual spam options and old SMTP mode
+			$legacy_options = array(
+				'eeRSCF_spamBlock',
+				'eeRSCF_spamBlockBots',
+				'eeRSCF_spamHoneypot',
+				'eeRSCF_spamEnglishOnly',
+				'eeRSCF_spamBlockFishy',
+				'eeRSCF_spamBlockWords',
+				'eeRSCF_spamBlockedWords',
+				'eeRSCF_spamBlockCommonWords',
+				'eeRSCF_spamSendAttackNotice',
+				'eeRSCF_spamNoticeEmail',
+				'eeRSCF_Mode' // Remove the old SMTP mode option
+			);
+
+			foreach ($legacy_options as $option_name) {
+				delete_option($option_name);
+			}
+
+			// Update settings and version
+			update_option('eeRSCF_Settings', $newSettings);
+			update_option('eeRSCF_Version', eeRSCF_Version);
+
+			$eeRSCF->formSettings = $newSettings;
+
+			if (eeRSCF_Debug) {
+				error_log('RSCF DEBUG [Update]: Plugin updated to version ' . eeRSCF_Version . ' with legacy cleanup');
+			}
+
 			return TRUE;
 		}
+	}
+
+	// Fresh installation
+	if (empty($newSettings)) {
+		$eeRSCF->contactFormDefault['to'] = get_option('admin_email');
+		$eeRSCF->contactFormDefault['email'] = get_option('admin_email');
+
+		update_option('eeRSCF_Settings', $eeRSCF->contactFormDefault);
+		update_option('eeRSCF_Confirm', home_url());
+		update_option('eeRSCF_Version', eeRSCF_Version);
+
+		$eeRSCF->formSettings = $eeRSCF->contactFormDefault;
+
+		if (eeRSCF_Debug) {
+			error_log('RSCF DEBUG [Install]: Fresh installation completed');
+		}
+
+		return TRUE;
 	}
 
 	return FALSE;
