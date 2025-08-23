@@ -38,10 +38,7 @@ class eeRSCF_AdminClass {
     // Process Admin Settings
 	public function eeRSCF_AdminSettingsProcess()	{
 
-		if (WP_DEBUG) {
-			echo "<!-- RSCF DEBUG: Processing Form Settings -->";
-			error_log('RSCF DEBUG [AdminClass]: Processing Form Settings');
-		}
+		eeRSCF_Debug_Log('Processing Form Settings', 'AdminClass');
 
 		if(!empty($_POST) AND isset($_POST['ee-rock-solid-settings-nonce']) AND check_admin_referer( 'ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
 
@@ -79,10 +76,7 @@ class eeRSCF_AdminClass {
 
 							if(strpos($eeString, ',')) { // More than one address
 
-								if (WP_DEBUG) {
-									echo "<!-- RSCF DEBUG: Multiple address for " . esc_attr($to) . " field -->";
-									error_log('RSCF DEBUG [AdminClass]: Multiple address for ' . $to . ' field.');
-								}
+								eeRSCF_Debug_Log('Multiple address for ' . $to . ' field', 'AdminClass');
 
 								$emails = explode(',', $eeString); // Make array
 
@@ -94,9 +88,7 @@ class eeRSCF_AdminClass {
 										$eeSet .= $email . ','; // Assemble addresses for storage
 									} else {
 										$this->log['errors'][] = 'Bad ' . $to . ' Address: ' . $email;
-										if (WP_DEBUG) {
-											error_log('RSCF DEBUG [AdminClass]: Bad ' . $to . ' Address: ' . $email);
-										}
+										eeRSCF_Debug_Log('Bad ' . $to . ' Address: ' . $email, 'AdminClass');
 									}
 								}
 
@@ -105,16 +97,11 @@ class eeRSCF_AdminClass {
 							} elseif($eeString) { // Just one address
 
 								if(filter_var($eeString, FILTER_VALIDATE_EMAIL)) {
-									if (WP_DEBUG) {
-										echo "<!-- RSCF DEBUG: Single address for " . esc_attr($to) . " field -->";
-										error_log('RSCF DEBUG [AdminClass]: Single address for ' . $to . ' field.');
-									}
+									eeRSCF_Debug_Log('Single address for ' . $to . ' field', 'AdminClass');
 									$eeSet .= $eeString;
 								} else {
 									$this->log['errors'][] = 'Bad ' . $to . ' Address: ' . (isset($_POST['eeAdmin' . $to]) ? sanitize_text_field(wp_unslash($_POST['eeAdmin' . $to])) : '');
-									if (WP_DEBUG) {
-										error_log('RSCF DEBUG [AdminClass]: Bad ' . $to . ' Address: ' . (isset($_POST['eeAdmin' . $to]) ? sanitize_text_field(wp_unslash($_POST['eeAdmin' . $to])) : ''));
-									}
+									eeRSCF_Debug_Log('Bad ' . $to . ' Address: ' . (isset($_POST['eeAdmin' . $to]) ? sanitize_text_field(wp_unslash($_POST['eeAdmin' . $to])) : ''), 'AdminClass');
 								}
 							}
 
@@ -125,9 +112,7 @@ class eeRSCF_AdminClass {
 
 				} else {
 					$this->log['errors'][] = 'Need at Least One Email Address';
-					if (WP_DEBUG) {
-						error_log('RSCF DEBUG [AdminClass]: Need at Least One Email Address');
-					}
+					eeRSCF_Debug_Log('Need at Least One Email Address', 'AdminClass');
 				}
 
 			// Sanitize and check for fields array

@@ -10,10 +10,7 @@ function eeRSCF_Settings() {
 
 	$eeRSCF->formID = 1;
 
-	if (WP_DEBUG) {
-		echo "<!-- RSCF DEBUG: eeRSCF Settings Page Loaded -->";
-		error_log('RSCF DEBUG [Settings]: eeRSCF Settings Page Loaded');
-	}
+	eeRSCF_Debug_Log('eeRSCF Settings Page Loaded', 'Settings');
 
 	// Process if POST
 	if (isset($_POST['eeRSCF_Settings']) && check_admin_referer('ee-rock-solid-settings', 'ee-rock-solid-settings-nonce')) {
@@ -79,7 +76,7 @@ function eeRSCF_Settings() {
 	$eeOutput .= '</div>'; // End wrap
 
 	// Debug Mode Output
-	if (WP_DEBUG) {
+	if (eeRSCF_Debug) {
 		$eeOutput .= eeDevOutput($eeRSCF->log);
 	}
 

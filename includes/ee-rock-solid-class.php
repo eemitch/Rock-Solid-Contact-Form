@@ -210,10 +210,7 @@ class eeRSCF_Class {
 
 	public function eeRSCF_formDisplay() {
 
-		if (WP_DEBUG) {
-			echo "<!-- RSCF DEBUG: Displaying the Form... -->";
-			error_log('RSCF DEBUG [FormDisplay]: Displaying the Form...');
-		}
+		eeRSCF_Debug_Log('Displaying the Form...', 'FormDisplay');
 
 		if($this->log['errors']) {
 			$this->theFormOutput .= '
