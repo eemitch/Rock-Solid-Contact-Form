@@ -216,7 +216,7 @@ function eeRSCF_UpdatePlugin() {
 
 	if ($oldSettings) {
 		// Migration needed from old version - use old settings even if new ones exist
-		if (eeRSCF_Debug) {
+		if (WP_DEBUG) {
 			error_log('RSCF DEBUG [Migration]: Migrating from eeRSCF_Settings_1 to eeRSCF_Settings');
 		}
 
@@ -317,7 +317,7 @@ function eeRSCF_UpdatePlugin() {
 		// Load the migrated settings
 		$eeRSCF->formSettings = $migratedSettings;
 
-		if (eeRSCF_Debug) {
+		if (WP_DEBUG) {
 			error_log('RSCF DEBUG [Migration]: Migration completed successfully');
 		}
 
@@ -407,7 +407,7 @@ function eeRSCF_UpdatePlugin() {
 
 			$eeRSCF->formSettings = $newSettings;
 
-			if (eeRSCF_Debug) {
+			if (WP_DEBUG) {
 				error_log('RSCF DEBUG [Update]: Plugin updated to version ' . eeRSCF_Version . ' with legacy cleanup');
 			}
 
@@ -426,7 +426,7 @@ function eeRSCF_UpdatePlugin() {
 
 		$eeRSCF->formSettings = $eeRSCF->contactFormDefault;
 
-		if (eeRSCF_Debug) {
+		if (WP_DEBUG) {
 			error_log('RSCF DEBUG [Install]: Fresh installation completed');
 		}
 
@@ -434,6 +434,16 @@ function eeRSCF_UpdatePlugin() {
 	}
 
 	return FALSE;
+}
+
+
+// Common Error Logging Function
+function eeRSCF_Debug_Log($message, $context = 'General') {
+
+	// Will only log errors if WordPress debugging and this plugin's debugging is set to TRUE
+	if (WP_DEBUG && eeRSCF_Debug) {
+        error_log(sprintf('RSCF DEBUG [%s]: %s', $context, $message));
+    }
 }
 
 

@@ -10,7 +10,7 @@ function eeRSCF_Settings() {
 
 	$eeRSCF->formID = 1;
 
-	if (eeRSCF_Debug) {
+	if (WP_DEBUG) {
 		echo "<!-- RSCF DEBUG: eeRSCF Settings Page Loaded -->";
 		error_log('RSCF DEBUG [Settings]: eeRSCF Settings Page Loaded');
 	}
@@ -79,7 +79,7 @@ function eeRSCF_Settings() {
 	$eeOutput .= '</div>'; // End wrap
 
 	// Debug Mode Output
-	if (eeRSCF_Debug) {
+	if (WP_DEBUG) {
 		$eeOutput .= eeDevOutput($eeRSCF->log);
 	}
 

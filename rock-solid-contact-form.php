@@ -17,7 +17,6 @@ Domain Path: /languages
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-// DEV MODE  --> When TRUE, the log file is written onto the page.
 define('eeRSCF_Debug', TRUE); // Enables extended reporting
 
 // This Plugin

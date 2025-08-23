@@ -38,7 +38,7 @@ class eeRSCF_AdminClass {
     // Process Admin Settings
 	public function eeRSCF_AdminSettingsProcess()	{
 
-		if (eeRSCF_Debug) {
+		if (WP_DEBUG) {
 			echo "<!-- RSCF DEBUG: Processing Form Settings -->";
 			error_log('RSCF DEBUG [AdminClass]: Processing Form Settings');
 		}
@@ -79,7 +79,7 @@ class eeRSCF_AdminClass {
 
 							if(strpos($eeString, ',')) { // More than one address
 
-								if (eeRSCF_Debug) {
+								if (WP_DEBUG) {
 									echo "<!-- RSCF DEBUG: Multiple address for " . esc_attr($to) . " field -->";
 									error_log('RSCF DEBUG [AdminClass]: Multiple address for ' . $to . ' field.');
 								}
@@ -94,7 +94,7 @@ class eeRSCF_AdminClass {
 										$eeSet .= $email . ','; // Assemble addresses for storage
 									} else {
 										$this->log['errors'][] = 'Bad ' . $to . ' Address: ' . $email;
-										if (eeRSCF_Debug) {
+										if (WP_DEBUG) {
 											error_log('RSCF DEBUG [AdminClass]: Bad ' . $to . ' Address: ' . $email);
 										}
 									}
@@ -105,14 +105,14 @@ class eeRSCF_AdminClass {
 							} elseif($eeString) { // Just one address
 
 								if(filter_var($eeString, FILTER_VALIDATE_EMAIL)) {
-									if (eeRSCF_Debug) {
+									if (WP_DEBUG) {
 										echo "<!-- RSCF DEBUG: Single address for " . esc_attr($to) . " field -->";
 										error_log('RSCF DEBUG [AdminClass]: Single address for ' . $to . ' field.');
 									}
 									$eeSet .= $eeString;
 								} else {
 									$this->log['errors'][] = 'Bad ' . $to . ' Address: ' . (isset($_POST['eeAdmin' . $to]) ? sanitize_text_field(wp_unslash($_POST['eeAdmin' . $to])) : '');
-									if (eeRSCF_Debug) {
+									if (WP_DEBUG) {
 										error_log('RSCF DEBUG [AdminClass]: Bad ' . $to . ' Address: ' . (isset($_POST['eeAdmin' . $to]) ? sanitize_text_field(wp_unslash($_POST['eeAdmin' . $to])) : ''));
 									}
 								}
@@ -125,7 +125,7 @@ class eeRSCF_AdminClass {
 
 				} else {
 					$this->log['errors'][] = 'Need at Least One Email Address';
-					if (eeRSCF_Debug) {
+					if (WP_DEBUG) {
 						error_log('RSCF DEBUG [AdminClass]: Need at Least One Email Address');
 					}
 				}
