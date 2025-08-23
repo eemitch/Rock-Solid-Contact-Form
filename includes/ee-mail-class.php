@@ -132,7 +132,7 @@ class eeRSCF_MailClass {
 		}
 
 		eeRSCF_Debug_Log('Processing completed. Total entries: ' . count($this->thePost), 'PostProcess');
-		eeRSCF_Debug_Log('Final thePost array: ' . print_r($this->thePost, true), 'PostProcess');
+		eeRSCF_Debug_Log('Final thePost array: ' . wp_json_encode($this->thePost), 'PostProcess');
 
 		return $this->thePost;
 	}
@@ -167,14 +167,19 @@ class eeRSCF_MailClass {
 		// Debug file upload state
 		eeRSCF_Debug_Log('File upload debug - $_FILES[file] isset: ' . (isset($_FILES['file']) ? 'YES' : 'NO'), 'SendEmail');
 		eeRSCF_Debug_Log('File upload debug - $_FILES[file] empty: ' . (empty($_FILES['file']) ? 'YES' : 'NO'), 'SendEmail');
-		if (isset($_FILES['file'])) {
-			eeRSCF_Debug_Log('File upload debug - $_FILES[file] structure: ' . print_r($_FILES['file'], true), 'SendEmail');
+		if (isset($_FILES['file']) && is_array($_FILES['file'])) {
+			eeRSCF_Debug_Log('File upload debug - $_FILES[file] structure: ' . wp_json_encode($_FILES['file']), 'SendEmail');
 		}
 		eeRSCF_Debug_Log('File upload debug - attachments show: ' . ($this->formSettings['fields']['attachments']['show'] ?? 'NOT SET'), 'SendEmail');
 		eeRSCF_Debug_Log('File upload debug - attachments req: ' . ($this->formSettings['fields']['attachments']['req'] ?? 'NOT SET'), 'SendEmail');
 
 		// Check if a file was actually uploaded (not just form field present)
-		$fileUploaded = isset($_FILES['file']) && isset($_FILES['file']['name']) && !empty($_FILES['file']['name']) && $_FILES['file']['error'] === UPLOAD_ERR_OK;
+		$fileUploaded = isset($_FILES['file'])
+			&& is_array($_FILES['file'])
+			&& isset($_FILES['file']['name'])
+			&& !empty($_FILES['file']['name'])
+			&& isset($_FILES['file']['error'])
+			&& $_FILES['file']['error'] === UPLOAD_ERR_OK;
 		eeRSCF_Debug_Log('File upload debug - fileUploaded: ' . ($fileUploaded ? 'YES' : 'NO'), 'SendEmail');
 
 		if($fileUploaded AND $this->formSettings['fields']['attachments']['show'] == 'YES') {
@@ -186,8 +191,9 @@ class eeRSCF_MailClass {
 			if (isset($_FILES['file']['name']) && isset($_FILES['file']['size'])) {
 				$fileExt = strtolower(pathinfo(sanitize_file_name($_FILES['file']['name']), PATHINFO_EXTENSION));
 				$max_size = $this->formSettings['fileMaxSize'] * 1048576; // Convert MB to Bytes
+				$file_size = intval($_FILES['file']['size']);
 
-				if( $_FILES['file']['size'] <= $max_size ) {
+				if( $file_size <= $max_size ) {
 					if( in_array($fileExt,$formatsArray) ) {
 						// $_FILES is passed to WordPress secure upload handler
 						$eeFileURL = $eeFileClass->eeUploader($_FILES['file'],  'ee-contact'  ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -197,8 +203,8 @@ class eeRSCF_MailClass {
 						eeRSCF_Debug_Log('File type not allowed: ' . $fileExt, 'SendEmail');
 					}
 				} else {
-					$this->log['errors'][] = 'File too large: ' . round($_FILES['file']['size'] / 1048576, 2) . 'MB. Maximum allowed: ' . $this->formSettings['fileMaxSize'] . 'MB';
-					eeRSCF_Debug_Log('File too large: ' . $_FILES['file']['size'] . ' bytes', 'SendEmail');
+					$this->log['errors'][] = 'File too large: ' . round($file_size / 1048576, 2) . 'MB. Maximum allowed: ' . $this->formSettings['fileMaxSize'] . 'MB';
+					eeRSCF_Debug_Log('File too large: ' . $file_size . ' bytes', 'SendEmail');
 				}
 			} else {
 				$this->log['errors'][] = 'Invalid file upload data. Please try uploading your file again.';
@@ -407,7 +413,7 @@ class eeRSCF_MailClass {
 			// Make sure honeypot field name is set
 			$honeypotField = isset($this->formSettings['spamHoneypot']) ? $this->formSettings['spamHoneypot'] : 'link';
 
-			if($this->formSettings['spamBlock'] AND isset($_POST[$honeypotField]) AND !empty(sanitize_text_field(wp_unslash($_POST[$honeypotField])))) { // Honeypot. This field should never be completed.
+			if(isset($_POST[$honeypotField]) AND !empty(sanitize_text_field(wp_unslash($_POST[$honeypotField])))) { // Honeypot. This field should never be completed.
 				$this->log['catch'][] = 'Spambot Catch: Honeypot Field Completed.';
 				eeRSCF_Debug_Log('Honeypot triggered! Field: ' . $honeypotField . ' Value: ' . sanitize_text_field(wp_unslash($_POST[$honeypotField])), 'SpamCheck');
 			} else {

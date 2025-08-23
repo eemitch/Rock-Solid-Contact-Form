@@ -62,7 +62,7 @@ class eeRSCF_Class {
 			'website' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Website'),
 			'other' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Other'),
 			'subject' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Subject'),
-			'attachments' => array('show' => 'YES', 'req' => 'NO', 'label' => 'Attachments')
+			'attachments' => array('show' => 'YES', 'req' => 'YES', 'label' => 'Attachments')
 		),
 		'fileMaxSize' => 8,
 		'fileFormats' => 'gif, jpg, jpeg, bmp, png, tif, tiff, txt, eps, psd, ai, pdf, doc, xls, ppt, docx, xlsx, pptx, odt, ods, odp, odg, wav, wmv, wma, flv, 3gp, avi, mov, mp4, m4v, mp3, webm, zip',
@@ -297,7 +297,19 @@ class eeRSCF_Class {
 				<label for="eeRSCF_files">' . esc_html__('Attachment', 'rock-solid-contact-form') . '</label>
 				<input type="file" name="file" id="eeRSCF_files" accept="';
 
-				$this->theFormOutput .= esc_attr($this->formSettings['fileFormats']) . '" />';
+				$this->theFormOutput .= esc_attr($this->formSettings['fileFormats']) . '"';
+
+				// Add required attribute if attachment is required
+				if($this->formSettings['fields']['attachments']['req'] == 'YES') {
+					$this->theFormOutput .= ' required';
+				}
+
+				$this->theFormOutput .= ' />';
+
+				// Add required asterisk if attachment is required
+				if($this->formSettings['fields']['attachments']['req'] == 'YES') {
+					$this->theFormOutput .= '<span class="eeRSCF_Required">*</span>';
+				}
 
 				$this->theFormOutput .= '
 				</div>';

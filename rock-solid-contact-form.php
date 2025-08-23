@@ -17,7 +17,7 @@ Domain Path: /languages
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-define('eeRSCF_Debug', TRUE); // Enables extended reporting
+define('eeRSCF_Debug', TRUE); // Enable extended reporting
 
 // This Plugin
 define('eeRSCF_SLUG', 'rock-solid-contact-form');
