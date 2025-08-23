@@ -597,18 +597,14 @@ class eeRSCF_MailClass {
 			}
 
 			if (!$mail_sent) {
-				if (WP_DEBUG) {
-					error_log('RSCF DEBUG [NoticeEmail]: Notice email failed to send');
-				}
+				eeRSCF_Debug_Log('Notice email failed to send', 'NoticeEmail');
 				return FALSE;
 			}
 
 			return TRUE;
 
 		} else {
-			if (WP_DEBUG) {
-				error_log('RSCF DEBUG [NoticeEmail]: Notice email missing required parameters');
-			}
+			eeRSCF_Debug_Log('Notice email missing required parameters', 'NoticeEmail');
 			return FALSE;
 		}
 	}
