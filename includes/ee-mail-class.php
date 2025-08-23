@@ -163,7 +163,21 @@ class eeRSCF_MailClass {
 
 		// File Attachment
 		$eeFileURL = FALSE;
-		if(!empty($_FILES['file']) AND $this->formSettings['fields']['attachments']['show'] == 'YES') {
+
+		// Debug file upload state
+		eeRSCF_Debug_Log('File upload debug - $_FILES[file] isset: ' . (isset($_FILES['file']) ? 'YES' : 'NO'), 'SendEmail');
+		eeRSCF_Debug_Log('File upload debug - $_FILES[file] empty: ' . (empty($_FILES['file']) ? 'YES' : 'NO'), 'SendEmail');
+		if (isset($_FILES['file'])) {
+			eeRSCF_Debug_Log('File upload debug - $_FILES[file] structure: ' . print_r($_FILES['file'], true), 'SendEmail');
+		}
+		eeRSCF_Debug_Log('File upload debug - attachments show: ' . ($this->formSettings['fields']['attachments']['show'] ?? 'NOT SET'), 'SendEmail');
+		eeRSCF_Debug_Log('File upload debug - attachments req: ' . ($this->formSettings['fields']['attachments']['req'] ?? 'NOT SET'), 'SendEmail');
+
+		// Check if a file was actually uploaded (not just form field present)
+		$fileUploaded = isset($_FILES['file']) && isset($_FILES['file']['name']) && !empty($_FILES['file']['name']) && $_FILES['file']['error'] === UPLOAD_ERR_OK;
+		eeRSCF_Debug_Log('File upload debug - fileUploaded: ' . ($fileUploaded ? 'YES' : 'NO'), 'SendEmail');
+
+		if($fileUploaded AND $this->formSettings['fields']['attachments']['show'] == 'YES') {
 
 			$formatsArray = explode(',', $this->formSettings['fileFormats']);
 			$formatsArray = array_filter(array_map('trim', $formatsArray));
@@ -177,6 +191,7 @@ class eeRSCF_MailClass {
 					if( in_array($fileExt,$formatsArray) ) {
 						// $_FILES is passed to WordPress secure upload handler
 						$eeFileURL = $eeFileClass->eeUploader($_FILES['file'],  'ee-contact'  ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+						eeRSCF_Debug_Log('File uploaded successfully: ' . $eeFileURL, 'SendEmail');
 					} else {
 						$this->log['errors'][] = 'File type not allowed: ' . $fileExt . '. Please use one of the following formats: ' . implode(', ', $formatsArray);
 						eeRSCF_Debug_Log('File type not allowed: ' . $fileExt, 'SendEmail');
@@ -189,6 +204,17 @@ class eeRSCF_MailClass {
 				$this->log['errors'][] = 'Invalid file upload data. Please try uploading your file again.';
 				eeRSCF_Debug_Log('Invalid file upload data', 'SendEmail');
 			}
+		} elseif (!$fileUploaded
+			AND $this->formSettings['fields']['attachments']['show'] == 'YES'
+			AND $this->formSettings['fields']['attachments']['req'] == 'YES') {
+			// If no file uploaded but attachment field is required, add error
+			$this->log['errors'][] = 'File attachment is required. Please attach a file and try again.';
+			eeRSCF_Debug_Log('Required file attachment missing', 'SendEmail');
+		} elseif (!$fileUploaded
+			AND $this->formSettings['fields']['attachments']['show'] == 'YES'
+			AND $this->formSettings['fields']['attachments']['req'] == 'NO') {
+			// No file uploaded but field is not required - this is OK
+			eeRSCF_Debug_Log('No file uploaded, but attachment field is not required - proceeding', 'SendEmail');
 		}
 
 		if(!$this->log['errors'] AND !empty($this->thePost)) {
