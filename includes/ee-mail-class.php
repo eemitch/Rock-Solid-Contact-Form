@@ -178,12 +178,15 @@ class eeRSCF_MailClass {
 						// $_FILES is passed to WordPress secure upload handler
 						$eeFileURL = $eeFileClass->eeUploader($_FILES['file'],  'ee-contact'  ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 					} else {
+						$this->log['errors'][] = 'File type not allowed: ' . $fileExt . '. Please use one of the following formats: ' . implode(', ', $formatsArray);
 						eeRSCF_Debug_Log('File type not allowed: ' . $fileExt, 'SendEmail');
 					}
 				} else {
+					$this->log['errors'][] = 'File too large: ' . round($_FILES['file']['size'] / 1048576, 2) . 'MB. Maximum allowed: ' . $this->formSettings['fileMaxSize'] . 'MB';
 					eeRSCF_Debug_Log('File too large: ' . $_FILES['file']['size'] . ' bytes', 'SendEmail');
 				}
 			} else {
+				$this->log['errors'][] = 'Invalid file upload data. Please try uploading your file again.';
 				eeRSCF_Debug_Log('Invalid file upload data', 'SendEmail');
 			}
 		}
